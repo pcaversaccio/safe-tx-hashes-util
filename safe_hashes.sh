@@ -13,6 +13,11 @@
 # -o pipefail: Return the exit status of the first failed command in a pipeline.
 set -euo pipefail
 
+# Set the terminal formatting constants.
+readonly GREEN="\e[32m"
+readonly UNDERLINE="\e[4m"
+readonly RESET="\e[0m"
+
 # Set the type hash constants.
 # => `keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");`
 # See: https://github.com/safe-global/safe-smart-account/blob/a0a1d4292006e26c4dbd52282f4c932e1ffca40f/contracts/Safe.sol#L54-L57.
@@ -72,15 +77,6 @@ declare -A CHAIN_IDS=(
     [zksync]=324
 )
 
-# Utility function to list all supported networks.
-list_networks() {
-    echo "Supported Networks:"
-    for network in "${!CHAIN_IDS[@]}"; do
-        echo "  $network (${CHAIN_IDS[$network]})"
-    done
-    exit 0
-}
-
 # Utility function to display the usage information.
 usage() {
     echo "Usage: $0 [--help] [--list-networks] --network <network> --address <address> --nonce <nonce>"
@@ -97,14 +93,78 @@ usage() {
     exit 1
 }
 
-# Utility function to retrieve the API URL of the selected network.
-get_api_url() {
-    echo "${API_URLS[$1]:-Invalid network}" || exit 1
+# Utility function to list all supported networks.
+list_networks() {
+    echo "Supported Networks:"
+    for network in "${!CHAIN_IDS[@]}"; do
+        echo "  $network (${CHAIN_IDS[$network]})"
+    done
+    exit 0
 }
 
-# Utility function to retrieve the chain ID of the selected network.
-get_chain_id() {
-    echo "${CHAIN_IDS[$1]:-Invalid network}" || exit 1
+# Utility function to print a section header.
+print_header() {
+    local title=$1
+    if [ -t 1 ] && tput sgr0 >/dev/null 2>&1; then
+        # Terminal supports formatting.
+        printf "\n${UNDERLINE}%s${RESET}\n" "$title"
+    else
+        # Fallback for terminals without formatting support.
+        printf "\n%s\n" "> $title:"
+    fi
+}
+
+# Utility function to print a labelled value.
+print_field() {
+    local label=$1
+    local value=$2
+    local empty_line=${3:-false}
+    if [ -t 1 ] && tput sgr0 >/dev/null 2>&1; then
+        # Terminal supports formatting.
+        printf "%s: ${GREEN}%s${RESET}\n" "$label" "$value"
+    else
+        # Fallback for terminals without formatting support.
+        printf "%s: %s\n" "$label" "$value"
+    fi
+
+    # Print an empty line if requested.
+    if [ "$empty_line" == "true" ]; then
+        echo
+    fi
+}
+
+# Utility function to print the transaction data.
+print_transaction_data() {
+    local address=$1
+    local to=$2
+    local data=$3
+    local message=$4
+
+    print_header "Data"
+    print_field "Address" "$address"
+    print_field "To" "$to"
+    print_field "Data" "$data"
+    print_field "Message" "$message"
+}
+
+# Utility function to format the hash (keep `0x` lowercase, rest uppercase).
+format_hash() {
+    local hash=$1
+    local prefix="${hash:0:2}"
+    local rest="${hash:2}"
+    echo "${prefix,,}${rest^^}"
+}
+
+# Utility function to print the hash information.
+print_hash_info() {
+    local domain_hash=$1
+    local message_hash=$2
+    local safe_tx_hash=$3
+
+    print_header "Hashes"
+    print_field "Domain hash" "$(format_hash "$domain_hash")"
+    print_field "Message hash" "$(format_hash "$message_hash")"
+    print_field "Safe transaction hash" "$safe_tx_hash"
 }
 
 # Utility function to calculate the domain and message hashes.
@@ -137,27 +197,20 @@ calculate_hashes() {
     # Calculate the Safe transaction hash.
     local safe_tx_hash=$(chisel eval "keccak256(abi.encodePacked(bytes1(0x19), bytes1(0x01), bytes32($domain_hash), bytes32($message_hash)))" | awk '/Data:/ {gsub(/\x1b\[[0-9;]*m/, "", $3); print $3}')
 
-    # Function to format the hash (keep `0x` lowercase, rest uppercase).
-    format_hash() {
-        local hash=$1
-        local prefix="${hash:0:2}"
-        local rest="${hash:2}"
-        echo "${prefix,,}${rest^^}"
-    }
-
-    # Print the retrieved source data
-    echo
-    echo "> Data"
-    echo "Address: $address"
-    echo "To: $to"
-    echo "Data: $data"
-    echo "Message: $message"
-    echo
+    # Print the retrieved transaction data.
+    print_transaction_data "$address" "$to" "$data" "$message"
     # Print the results with the same formatting for "Domain hash" and "Message hash" as a Ledger hardware device.
-    echo "> Hashes"
-    echo "Domain hash: $(format_hash "$domain_hash")"
-    echo "Message hash: $(format_hash "$message_hash")"
-    echo "Safe transaction hash: $safe_tx_hash"
+    print_hash_info "$domain_hash" "$message_hash" "$safe_tx_hash"
+}
+
+# Utility function to retrieve the API URL of the selected network.
+get_api_url() {
+    echo "${API_URLS[$1]:-Invalid network}" || exit 1
+}
+
+# Utility function to retrieve the chain ID of the selected network.
+get_chain_id() {
+    echo "${CHAIN_IDS[$1]:-Invalid network}" || exit 1
 }
 
 # Safe Transaction Hashes Calculator
@@ -208,9 +261,9 @@ calculate_safe_tx_hashes() {
     # Calculate and display the hashes.
     echo "==================================="
     echo "= Selected Network Configurations ="
-    echo "==================================="
-    echo "Network: $network"
-    echo -e "Chain ID: $chain_id\n"
+    echo -e "===================================\n"
+    print_field "Network" "$network"
+    print_field "Chain ID" "$chain_id" true
     echo "============================"
     echo "= Data and Computed Hashes ="
     echo "============================"
