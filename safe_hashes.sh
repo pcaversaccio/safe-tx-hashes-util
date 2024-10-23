@@ -145,7 +145,16 @@ calculate_hashes() {
         echo "${prefix,,}${rest^^}"
     }
 
+    # Print the retrieved source data
+    echo
+    echo "> Data"
+    echo "Address: $address"
+    echo "To: $to"
+    echo "Data: $data"
+    echo "Message: $message"
+    echo
     # Print the results with the same formatting for "Domain hash" and "Message hash" as a Ledger hardware device.
+    echo "> Hashes"
     echo "Domain hash: $(format_hash "$domain_hash")"
     echo "Message hash: $(format_hash "$message_hash")"
     echo "Safe transaction hash: $safe_tx_hash"
@@ -202,9 +211,9 @@ calculate_safe_tx_hashes() {
     echo "==================================="
     echo "Network: $network"
     echo -e "Chain ID: $chain_id\n"
-    echo "==================="
-    echo "= Computed Hashes ="
-    echo "==================="
+    echo "============================"
+    echo "= Data and Computed Hashes ="
+    echo "============================"
     calculate_hashes "$chain_id" "$address" "$to" "$value" "$data" "$operation" "$safe_tx_gas" "$base_gas" "$gas_price" "$gas_token" "$refund_receiver" "$nonce"
 }
 
