@@ -104,13 +104,13 @@ list_networks() {
 
 # Utility function to print a section header.
 print_header() {
-    local title=$1
+    local header=$1
     if [ -t 1 ] && tput sgr0 >/dev/null 2>&1; then
         # Terminal supports formatting.
-        printf "\n${UNDERLINE}%s${RESET}\n" "$title"
+        printf "\n${UNDERLINE}%s${RESET}\n" "$header"
     else
         # Fallback for terminals without formatting support.
-        printf "\n%s\n" "> $title:"
+        printf "\n%s\n" "> $header:"
     fi
 }
 
