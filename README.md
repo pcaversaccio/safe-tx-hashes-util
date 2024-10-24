@@ -1,5 +1,7 @@
 # Safe Multisig Transaction Hashes
 
+> |)0/\/'T TR|\_|5T, \/3R1FY!
+
 This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by retrieving transaction details from the [Safe transaction service API](https://docs.safe.global/core-api/transaction-service-overview) and computing both the domain and message hashes using the [EIP-712](https://eips.ethereum.org/EIPS/eip-712) standard.
 
 ## Supported Networks
@@ -69,7 +71,7 @@ Chain ID: 42161
 = Transaction Data and Computed Hashes =
 ========================================
 
-> Transaction Data:
+Transaction Data
 Multisig address: 0x111CEEee040739fD91D29C34C33E6B3E112F2177
 To: 0x111CEEee040739fD91D29C34C33E6B3E112F2177
 Data: 0x0d582f130000000000000000000000000c75fa5a5f1c0997e3eea425cfa13184ed0ec9e50000000000000000000000000000000000000000000000000000000000000003
@@ -88,7 +90,9 @@ Parameters: [
   }
 ]
 
-> Hashes:
+WARNING: This method modifies the owners or threshold of the Safe. Proceed with caution!
+
+Hashes
 Domain hash: 0x1CF7F9B1EFE3BC47FE02FD27C649FEA19E79D66040683A1C86C7490C80BF7291
 Message hash: 0xD9109EA63C50ECD3B80B6B27ED5C5A9FD3D546C2169DFB69BFA7BA24CD14C7A5
 Safe transaction hash: 0x0cb7250b8becd7069223c54e2839feaed4cee156363fbfe5dd0a48e75c4e25b3

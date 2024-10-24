@@ -15,16 +15,18 @@ set -euo pipefail
 
 # Set the terminal formatting constants.
 readonly GREEN="\e[32m"
+readonly RED="\e[31m"
 readonly UNDERLINE="\e[4m"
+readonly BOLD="\e[1m"
 readonly RESET="\e[0m"
 
 # Set the type hash constants.
 # => `keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");`
 # See: https://github.com/safe-global/safe-smart-account/blob/a0a1d4292006e26c4dbd52282f4c932e1ffca40f/contracts/Safe.sol#L54-L57.
-DOMAIN_SEPARATOR_TYPEHASH="0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218"
+readonly DOMAIN_SEPARATOR_TYPEHASH="0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218"
 # => `keccak256("SafeTx(address to,uint256 value,bytes data,uint8 operation,uint256 safeTxGas,uint256 baseGas,uint256 gasPrice,address gasToken,address refundReceiver,uint256 nonce)");`
 # See: https://github.com/safe-global/safe-smart-account/blob/a0a1d4292006e26c4dbd52282f4c932e1ffca40f/contracts/Safe.sol#L59-L62.
-SAFE_TX_TYPEHASH="0xbb8310d486368db6bd6f849402fdd73ad53d316b5a4b2644ad6efe0f941286d8"
+readonly SAFE_TX_TYPEHASH="0xbb8310d486368db6bd6f849402fdd73ad53d316b5a4b2644ad6efe0f941286d8"
 
 # Define the supported networks from the Safe transaction service.
 # See https://docs.safe.global/core-api/transaction-service-supported-networks.
@@ -79,17 +81,19 @@ declare -A CHAIN_IDS=(
 
 # Utility function to display the usage information.
 usage() {
-    echo "Usage: $0 [--help] [--list-networks] --network <network> --address <address> --nonce <nonce>"
-    echo
-    echo "Options:"
-    echo "  --help              Display this help message"
-    echo "  --list-networks     List all supported networks and their chain IDs"
-    echo "  --network <network> Specify the network (required)"
-    echo "  --address <address> Specify the Safe multisig address (required)"
-    echo "  --nonce <nonce>     Specify the transaction nonce (required)"
-    echo
-    echo "Example:"
-    echo "  $0 --network ethereum --address 0x1234...5678 --nonce 42"
+    cat <<EOF
+Usage: $0 [--help] [--list-networks] --network <network> --address <address> --nonce <nonce>
+
+Options:
+  --help              Display this help message
+  --list-networks     List all supported networks and their chain IDs
+  --network <network> Specify the network (required)
+  --address <address> Specify the Safe multisig address (required)
+  --nonce <nonce>     Specify the transaction nonce (required)
+
+Example:
+  $0 --network ethereum --address 0x1234...5678 --nonce 42
+EOF
     exit 1
 }
 
@@ -119,6 +123,7 @@ print_field() {
     local label=$1
     local value=$2
     local empty_line=${3:-false}
+
     if [ -t 1 ] && tput sgr0 >/dev/null 2>&1; then
         # Terminal supports formatting.
         printf "%s: ${GREEN}%s${RESET}\n" "$label" "$value"
@@ -180,6 +185,14 @@ print_decoded_data() {
 
         print_field "Method" "$method"
         print_field "Parameters" "$parameters"
+
+        # Check if the called method is sensitive and print a warning in bold.
+        case "$method" in
+        addOwnerWithThreshold | removeOwner | swapOwner | changeThreshold)
+            echo
+            echo -e "${BOLD}${RED}WARNING: This method modifies the owners or threshold of the Safe. Proceed with caution!${RESET}"
+            ;;
+        esac
     fi
 }
 
@@ -200,19 +213,34 @@ calculate_hashes() {
     local data_decoded=${13}
 
     # Calculate the domain hash.
-    local domain_hash=$(chisel eval "keccak256(abi.encode($DOMAIN_SEPARATOR_TYPEHASH, $chain_id, $address))" | awk '/Data:/ {gsub(/\x1b\[[0-9;]*m/, "", $3); print $3}')
+    local domain_hash=$(chisel eval "keccak256(abi.encode($DOMAIN_SEPARATOR_TYPEHASH, $chain_id, $address))" |
+        awk '/Data:/ {gsub(/\x1b\[[0-9;]*m/, "", $3); print $3}')
 
     # Calculate the data hash.
     # The dynamic value `bytes` is encoded as a `keccak256` hash of its content.
     # See: https://eips.ethereum.org/EIPS/eip-712#definition-of-encodedata.
     local data_hashed=$(cast keccak "$data")
+
     # Encode the message.
-    local message=$(cast abi-encode "SafeTxStruct(bytes32,address,uint256,bytes32,uint8,uint256,uint256,uint256,address,address,uint256)" "$SAFE_TX_TYPEHASH" "$to" "$value" "$data_hashed" "$operation" "$safe_tx_gas" "$base_gas" "$gas_price" "$gas_token" "$refund_receiver" "$nonce")
+    local message=$(cast abi-encode "SafeTxStruct(bytes32,address,uint256,bytes32,uint8,uint256,uint256,uint256,address,address,uint256)" \
+        "$SAFE_TX_TYPEHASH" \
+        "$to" \
+        "$value" \
+        "$data_hashed" \
+        "$operation" \
+        "$safe_tx_gas" \
+        "$base_gas" \
+        "$gas_price" \
+        "$gas_token" \
+        "$refund_receiver" \
+        "$nonce")
+
     # Calculate the message hash.
     local message_hash=$(cast keccak "$message")
 
     # Calculate the Safe transaction hash.
-    local safe_tx_hash=$(chisel eval "keccak256(abi.encodePacked(bytes1(0x19), bytes1(0x01), bytes32($domain_hash), bytes32($message_hash)))" | awk '/Data:/ {gsub(/\x1b\[[0-9;]*m/, "", $3); print $3}')
+    local safe_tx_hash=$(chisel eval "keccak256(abi.encodePacked(bytes1(0x19), bytes1(0x01), bytes32($domain_hash), bytes32($message_hash)))" |
+        awk '/Data:/ {gsub(/\x1b\[[0-9;]*m/, "", $3); print $3}')
 
     # Print the retrieved transaction data.
     print_transaction_data "$address" "$to" "$data" "$message"
@@ -233,7 +261,7 @@ get_chain_id() {
 }
 
 # Safe Transaction Hashes Calculator
-# This function orchestrates the entire process of calculating the Safe transaction hash:
+# This function orchestrates the entire process of calculating the Safe transaction hashes:
 # 1. Parses command-line arguments (`network`, `address`, `nonce`).
 # 2. Validates that all required parameters are provided.
 # 3. Retrieves the API URL and chain ID for the specified network.
@@ -257,7 +285,7 @@ calculate_safe_tx_hashes() {
     done
 
     # Check if the required parameters are provided.
-    [[ -z "$network" || -z "$address" || -z "$nonce" ]] && usage
+    [ -z "$network" -o -z "$address" -o -z "$nonce" ] && usage
 
     # Get the API URL and chain ID for the specified network.
     local api_url=$(get_api_url "$network")
@@ -281,11 +309,11 @@ This occurrence is normal if you are deliberately replacing an existing transact
 However, if your Safe interface displays only a single transaction, this could indicate
 potential irregular activity requiring your attention.$(tput sgr0)
 
-Kindly specify the transaction's array value.
+Kindly specify the transaction's array value (available range: 0-$((${count} - 1))).
 You can find the array values at the following endpoint:
 $(tput setaf 2)$endpoint$(tput sgr0)
 
-Please enter the index of the array (starting with 0):
+Please enter the index of the array:
 EOF
 
         while true; do
@@ -329,7 +357,19 @@ EOF
     echo "========================================"
     echo "= Transaction Data and Computed Hashes ="
     echo "========================================"
-    calculate_hashes "$chain_id" "$address" "$to" "$value" "$data" "$operation" "$safe_tx_gas" "$base_gas" "$gas_price" "$gas_token" "$refund_receiver" "$nonce" "$data_decoded"
+    calculate_hashes "$chain_id" \
+        "$address" \
+        "$to" \
+        "$value" \
+        "$data" \
+        "$operation" \
+        "$safe_tx_gas" \
+        "$base_gas" \
+        "$gas_price" \
+        "$gas_token" \
+        "$refund_receiver" \
+        "$nonce" \
+        "$data_decoded"
 }
 
 calculate_safe_tx_hashes "$@"
