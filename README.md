@@ -60,7 +60,7 @@ chmod +x safe_hashes.sh
 ```
 
 > [!TIP]
-> The _executable_ version is committed to GitHub, so anyone cloning or pulling this repository will automatically receive the [script](./safe_hashes.sh) with the correct permissions.
+> The script is already set as _executable_ in the repository, so you can run it immediately after cloning or pulling the repository without needing to change permissions.
 
 ### macOS Users: Upgrading Bash
 
