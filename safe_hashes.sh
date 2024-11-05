@@ -38,13 +38,9 @@ readonly DOMAIN_SEPARATOR_TYPEHASH="0x47e79534a245952e8b16893a336b85a3d9ea9fa8c5
 # See: https://github.com/safe-global/safe-smart-account/blob/a0a1d4292006e26c4dbd52282f4c932e1ffca40f/contracts/Safe.sol#L59-L62.
 readonly SAFE_TX_TYPEHASH="0xbb8310d486368db6bd6f849402fdd73ad53d316b5a4b2644ad6efe0f941286d8"
 
-# Define the associative arrays for the API URLs and chain IDs.
-declare -A API_URLS
-declare -A CHAIN_IDS
-
 # Define the supported networks from the Safe transaction service.
 # See https://docs.safe.global/core-api/transaction-service-supported-networks.
-API_URLS=(
+declare -A -r API_URLS=(
     ["arbitrum"]="https://safe-transaction-arbitrum.safe.global"
     ["aurora"]="https://safe-transaction-aurora.safe.global"
     ["avalanche"]="https://safe-transaction-avalanche.safe.global"
@@ -69,7 +65,7 @@ API_URLS=(
 )
 
 # Define the chain IDs of the supported networks from the Safe transaction service.
-CHAIN_IDS=(
+declare -A -r CHAIN_IDS=(
     ["arbitrum"]="42161"
     ["aurora"]="1313161554"
     ["avalanche"]="43114"
