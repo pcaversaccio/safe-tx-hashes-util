@@ -59,6 +59,9 @@ Before you invoke the script, make it executable:
 chmod +x safe_hashes.sh
 ```
 
+> [!TIP]
+> The _executable_ version is committed to GitHub, so anyone cloning or pulling this repository will automatically receive the [script](./safe_hashes.sh) with the correct permissions.
+
 ### macOS Users: Upgrading Bash
 
 This script requires Bash [`4.0`](https://tldp.org/LDP/abs/html/bashver4.html) or higher due to its use of associative arrays (introduced in Bash [`4.0`](https://tldp.org/LDP/abs/html/bashver4.html)). Unfortunately, macOS ships by default with Bash `3.2` due to licensing requirements. To use this script, install a newer version of Bash through [Homebrew](https://brew.sh):
