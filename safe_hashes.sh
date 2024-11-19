@@ -305,7 +305,7 @@ get_chain_id() {
 validate_address() {
     local address="$1"
     if [[ -z "$address" || ! "$address" =~ ^0x[a-fA-F0-9]{40}$ ]]; then
-        echo -e "${RED}Invalid Ethereum address format: \"${address}\"!${RESET}" >&2
+        echo -e "${RED}Invalid Ethereum address format: \"${address}\"${RESET}" >&2
         exit 1
     fi
 }
@@ -314,7 +314,7 @@ validate_address() {
 validate_nonce() {
     local nonce="$1"
     if [[ -z "$nonce" || ! "$nonce" =~ ^[0-9]+$ ]]; then
-        echo -e "${RED}Invalid or empty nonce: \"${nonce}\"! Must be a non-negative integer!${RESET}" >&2
+        echo -e "${RED}Invalid nonce value: \"${nonce}\". Must be a non-negative integer!${RESET}" >&2
         exit 1
     fi
 }
