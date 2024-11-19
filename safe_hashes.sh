@@ -291,14 +291,16 @@ validate_network() {
 
 # Utility function to retrieve the API URL of the selected network.
 get_api_url() {
-    validate_network "$1"
-    echo "${API_URLS[$1]}"
+    local network="$1"
+    validate_network "$network"
+    echo "${API_URLS[$network]}"
 }
 
 # Utility function to retrieve the chain ID of the selected network.
 get_chain_id() {
-    validate_network "$1"
-    echo "${CHAIN_IDS[$1]}"
+    local network="$1"
+    validate_network "$network"
+    echo "${CHAIN_IDS[$network]}"
 }
 
 # Utility function to validate the multisig address.
