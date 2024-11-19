@@ -345,7 +345,7 @@ calculate_safe_tx_hashes() {
         esac
     done
 
-    # Validate if the required parameters are correct.
+    # Validate if the required parameters have the correct format.
     ! validate_network "$network" || ! validate_address "$address" || ! validate_nonce "$nonce"
 
     # Get the API URL and chain ID for the specified network.
