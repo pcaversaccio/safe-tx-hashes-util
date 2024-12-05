@@ -429,7 +429,7 @@ EOF
     local nonce=$(echo "$response" | jq -r ".results[$idx].nonce // \"0\"")
     local data_decoded=$(echo "$response" | jq -r ".results[$idx].dataDecoded // \"0x\"")
 
-    # Get the Safe version.
+    # Get the Safe multisig version.
     local version=$(curl -sf "${api_url}/api/v1/safes/${address}/" | jq -r ".version // \"0.0.0\"")
 
     # Calculate and display the hashes.
