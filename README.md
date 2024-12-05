@@ -9,6 +9,9 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 > [!NOTE]
 > This Bash [script](./safe_hashes.sh) relies on the [Safe transaction service API](https://docs.safe.global/core-api/transaction-service-overview), which requires transactions to be proposed and _logged_ in the service before they can be retrieved. Consequently, the initial transaction proposer cannot access the transaction at the proposal stage, making this approach incompatible with 1-of-1 multisigs.
 
+> [!IMPORTANT]
+> All Safe versions starting from 1.0.0 and newer are supported.
+
 ## Supported Networks
 
 - Arbitrum (identifier: `arbitrum`, chain ID: `42161`)
