@@ -248,11 +248,11 @@ calculate_hashes() {
     local domain_separator_typehash="$DOMAIN_SEPARATOR_TYPEHASH"
     local domain_hash_args="$domain_separator_typehash, $chain_id, $address"
 
-    # Safe versions can have the format `X.Y.Z+L2`.
+    # Safe multisig versions can have the format `X.Y.Z+L2`.
     # Remove any suffix after and including the `+` in the version string for comparison.
-    clean_version=$(echo "$version" | sed 's/+.*//')
+    clean_version=$(echo "$version" | sed "s/+.*//")
 
-    # Safe versions `<= 1.2.0` use a legacy (i.e. without `chainId`) `DOMAIN_SEPARATOR_TYPEHASH` value.
+    # Safe multisig versions `<= 1.2.0` use a legacy (i.e. without `chainId`) `DOMAIN_SEPARATOR_TYPEHASH` value.
     # Starting with version `1.3.0`, the `chainId` field was introduced: https://github.com/safe-global/safe-smart-account/pull/264.
     if [[ "$(printf "%s\n%s" "$clean_version" "1.2.0" | sort -V | head -n1)" == "$clean_version" ]]; then
         domain_separator_typehash="$DOMAIN_SEPARATOR_TYPEHASH_OLD"
