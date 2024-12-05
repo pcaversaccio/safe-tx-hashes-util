@@ -41,6 +41,9 @@ readonly RESET="\e[0m"
 # => `keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");`
 # See: https://github.com/safe-global/safe-smart-account/blob/a0a1d4292006e26c4dbd52282f4c932e1ffca40f/contracts/Safe.sol#L54-L57.
 readonly DOMAIN_SEPARATOR_TYPEHASH="0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218"
+# => `keccak256("EIP712Domain(address verifyingContract)");`
+# See: https://github.com/safe-global/safe-smart-account/blob/v1.0.0/contracts/GnosisSafe.sol#L20-L23.
+readonly DOMAIN_SEPARATOR_TYPEHASH_OLD="0x035aff83d86937d35b32e04f0ddc6ff469290eef2f1b692d8a815c89404d4749"
 # => `keccak256("SafeTx(address to,uint256 value,bytes data,uint8 operation,uint256 safeTxGas,uint256 baseGas,uint256 gasPrice,address gasToken,address refundReceiver,uint256 nonce)");`
 # See: https://github.com/safe-global/safe-smart-account/blob/a0a1d4292006e26c4dbd52282f4c932e1ffca40f/contracts/Safe.sol#L59-L62.
 readonly SAFE_TX_TYPEHASH="0xbb8310d486368db6bd6f849402fdd73ad53d316b5a4b2644ad6efe0f941286d8"
@@ -240,9 +243,24 @@ calculate_hashes() {
     local refund_receiver=${11}
     local nonce=${12}
     local data_decoded=${13}
+    local version=${14}
+
+    local domain_separator_typehash="$DOMAIN_SEPARATOR_TYPEHASH"
+    local domain_hash_args="$domain_separator_typehash, $chain_id, $address"
+
+    # Safe versions can have the format `X.Y.Z+L2`.
+    # Remove any suffix after and including the `+` in the version string for comparison.
+    clean_version=$(echo "$version" | sed 's/+.*//')
+
+    # Safe versions `<= 1.2.0` use a legacy (i.e. without `chainId`) `DOMAIN_SEPARATOR_TYPEHASH` value.
+    # Starting with version `1.3.0`, the `chainId` field was introduced: https://github.com/safe-global/safe-smart-account/pull/264.
+    if [[ "$(printf "%s\n%s" "$clean_version" "1.2.0" | sort -V | head -n1)" == "$clean_version" ]]; then
+        domain_separator_typehash="$DOMAIN_SEPARATOR_TYPEHASH_OLD"
+        domain_hash_args="$domain_separator_typehash, $address"
+    fi
 
     # Calculate the domain hash.
-    local domain_hash=$(chisel eval "keccak256(abi.encode($DOMAIN_SEPARATOR_TYPEHASH, $chain_id, $address))" |
+    local domain_hash=$(chisel eval "keccak256(abi.encode($domain_hash_args))" |
         awk '/Data:/ {gsub(/\x1b\[[0-9;]*m/, "", $3); print $3}')
 
     # Calculate the data hash.
@@ -354,7 +372,7 @@ calculate_safe_tx_hashes() {
     local endpoint="${api_url}/api/v1/safes/${address}/multisig-transactions/?nonce=${nonce}"
 
     # Fetch the transaction data from the API.
-    local response=$(curl -s "$endpoint")
+    local response=$(curl -sf "$endpoint")
     local count=$(echo "$response" | jq -r ".count // \"0\"")
     local idx=0
 
@@ -411,6 +429,9 @@ EOF
     local nonce=$(echo "$response" | jq -r ".results[$idx].nonce // \"0\"")
     local data_decoded=$(echo "$response" | jq -r ".results[$idx].dataDecoded // \"0x\"")
 
+    # Get the Safe version.
+    local version=$(curl -sf "${api_url}/api/v1/safes/${address}/" | jq -r ".version // \"0.0.0\"")
+
     # Calculate and display the hashes.
     echo "==================================="
     echo "= Selected Network Configurations ="
@@ -432,7 +453,8 @@ EOF
         "$gas_token" \
         "$refund_receiver" \
         "$nonce" \
-        "$data_decoded"
+        "$data_decoded" \
+        "$version"
 }
 
 calculate_safe_tx_hashes "$@"
