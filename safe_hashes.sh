@@ -47,6 +47,9 @@ readonly DOMAIN_SEPARATOR_TYPEHASH_OLD="0x035aff83d86937d35b32e04f0ddc6ff469290e
 # => `keccak256("SafeTx(address to,uint256 value,bytes data,uint8 operation,uint256 safeTxGas,uint256 baseGas,uint256 gasPrice,address gasToken,address refundReceiver,uint256 nonce)");`
 # See: https://github.com/safe-global/safe-smart-account/blob/a0a1d4292006e26c4dbd52282f4c932e1ffca40f/contracts/Safe.sol#L59-L62.
 readonly SAFE_TX_TYPEHASH="0xbb8310d486368db6bd6f849402fdd73ad53d316b5a4b2644ad6efe0f941286d8"
+# => `keccak256("SafeTx(address to,uint256 value,bytes data,uint8 operation,uint256 safeTxGas,uint256 dataGas,uint256 gasPrice,address gasToken,address refundReceiver,uint256 nonce)");`
+# See: https://github.com/safe-global/safe-smart-account/blob/427d6f7e779431333c54bcb4d4cde31e4d57ce96/contracts/GnosisSafe.sol#L25-L28.
+readonly SAFE_TX_TYPEHASH_OLD="0x14d461bc7412367e924637b363c7bf29b8f47e2f84869f4426e5633d8af47b20"
 
 # Define the supported networks from the Safe transaction service.
 # See https://docs.safe.global/core-api/transaction-service-supported-networks.
@@ -252,6 +255,12 @@ calculate_hashes() {
     # Remove any suffix after and including the `+` in the version string for comparison.
     clean_version=$(echo "$version" | sed "s/+.*//")
 
+    # Ensure that the Safe multisig version is `>= 0.1.0`.
+    if [[ "$(printf "%s\n%s" "$clean_version" "0.1.0" | sort -V | head -n1)" == "$clean_version" && "$clean_version" != "0.1.0" ]]; then
+        echo "$(tput setaf 3)Safe multisig version \"${clean_version}\" is not supported!$(tput setaf 0)"
+        exit 0
+    fi
+
     # Safe multisig versions `<= 1.2.0` use a legacy (i.e. without `chainId`) `DOMAIN_SEPARATOR_TYPEHASH` value.
     # Starting with version `1.3.0`, the `chainId` field was introduced: https://github.com/safe-global/safe-smart-account/pull/264.
     if [[ "$(printf "%s\n%s" "$clean_version" "1.2.0" | sort -V | head -n1)" == "$clean_version" ]]; then
@@ -268,9 +277,18 @@ calculate_hashes() {
     # See: https://eips.ethereum.org/EIPS/eip-712#definition-of-encodedata.
     local data_hashed=$(cast keccak "$data")
 
+    local safe_tx_typehash="$SAFE_TX_TYPEHASH"
+
+    # Safe multisig versions `< 1.0.0` use a legacy (i.e. the parameter value `baseGas` was
+    # called `dataGas` previously) `SAFE_TX_TYPEHASH` value. Starting with version `1.0.0`,
+    # `baseGas` was introduced: https://github.com/safe-global/safe-smart-account/pull/90.
+    if [[ "$(printf "%s\n%s" "$clean_version" "1.0.0" | sort -V | head -n1)" == "$clean_version" && "$clean_version" != "1.0.0" ]]; then
+        safe_tx_typehash="$SAFE_TX_TYPEHASH_OLD"
+    fi
+
     # Encode the message.
     local message=$(cast abi-encode "SafeTxStruct(bytes32,address,uint256,bytes32,uint8,uint256,uint256,uint256,address,address,uint256)" \
-        "$SAFE_TX_TYPEHASH" \
+        "$safe_tx_typehash" \
         "$to" \
         "$value" \
         "$data_hashed" \
