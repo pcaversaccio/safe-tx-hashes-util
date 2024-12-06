@@ -250,6 +250,7 @@ calculate_hashes() {
 
     local domain_separator_typehash="$DOMAIN_SEPARATOR_TYPEHASH"
     local domain_hash_args="$domain_separator_typehash, $chain_id, $address"
+    local safe_tx_typehash="$SAFE_TX_TYPEHASH"
 
     # Safe multisig versions can have the format `X.Y.Z+L2`.
     # Remove any suffix after and including the `+` in the version string for comparison.
@@ -276,8 +277,6 @@ calculate_hashes() {
     # The dynamic value `bytes` is encoded as a `keccak256` hash of its content.
     # See: https://eips.ethereum.org/EIPS/eip-712#definition-of-encodedata.
     local data_hashed=$(cast keccak "$data")
-
-    local safe_tx_typehash="$SAFE_TX_TYPEHASH"
 
     # Safe multisig versions `< 1.0.0` use a legacy (i.e. the parameter value `baseGas` was
     # called `dataGas` previously) `SAFE_TX_TYPEHASH` value. Starting with version `1.0.0`,
