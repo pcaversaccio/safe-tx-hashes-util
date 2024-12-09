@@ -442,9 +442,9 @@ calculate_offchain_message_hashes() {
     echo -e "===================================\n"
     print_field "Network" "$network"
     print_field "Chain ID" "$chain_id" true
-    echo "========================================"
+    echo "===================================="
     echo "= Message Data and Computed Hashes ="
-    echo "========================================"
+    echo "===================================="
 
     # Print off-chain message hash information.
     print_header "Message Data"
