@@ -8,7 +8,7 @@
 # @author pcaversaccio
 
 # Check the Bash version compatibility.
-if [[ "$BASH_VERSINFO" -lt 4 ]]; then
+if [[ "${BASH_VERSINFO:-0}" -lt 4 ]]; then
     echo "Error: This script requires Bash 4.0 or higher."
     echo "Current version: $BASH_VERSION"
     echo "Please upgrade your Bash installation."
@@ -50,6 +50,9 @@ readonly SAFE_TX_TYPEHASH="0xbb8310d486368db6bd6f849402fdd73ad53d316b5a4b2644ad6
 # => `keccak256("SafeTx(address to,uint256 value,bytes data,uint8 operation,uint256 safeTxGas,uint256 dataGas,uint256 gasPrice,address gasToken,address refundReceiver,uint256 nonce)");`
 # See: https://github.com/safe-global/safe-smart-account/blob/427d6f7e779431333c54bcb4d4cde31e4d57ce96/contracts/GnosisSafe.sol#L25-L28.
 readonly SAFE_TX_TYPEHASH_OLD="0x14d461bc7412367e924637b363c7bf29b8f47e2f84869f4426e5633d8af47b20"
+# => `keccak256("SafeMessage(bytes message)");`
+# See: https://github.com/safe-global/safe-smart-account/blob/febab5e4e859e6e65914f17efddee415e4992961/contracts/libraries/SignMessageLib.sol#L12-L13.
+readonly SAFE_MSG_TYPEHASH="0x60b3cbf8b4a223d68d641b3b6ddf9a298e7f33710cf3d3a9d1146b5a6150fbca"
 
 # Define the supported networks from the Safe transaction service.
 # See https://docs.safe.global/core-api/transaction-service-supported-networks.
@@ -105,17 +108,23 @@ declare -A -r CHAIN_IDS=(
 # Utility function to display the usage information.
 usage() {
     cat <<EOF
-Usage: $0 [--help] [--list-networks] --network <network> --address <address> --nonce <nonce>
+Usage: $0 [--help] [--list-networks]
+       --network <network> --address <address> --nonce <nonce>
+       --message <file>
 
 Options:
   --help              Display this help message
   --list-networks     List all supported networks and their chain IDs
   --network <network> Specify the network (required)
   --address <address> Specify the Safe multisig address (required)
-  --nonce <nonce>     Specify the transaction nonce (required)
+  --nonce <nonce>     Specify the transaction nonce (required for transaction hashes)
+  --message <file>    Specify the message file (required for off-chain message hashes)
 
-Example:
+Example for transaction hashes:
   $0 --network ethereum --address 0x1234...5678 --nonce 42
+
+Example for off-chain message hashes:
+  $0 --network ethereum --address 0x1234...5678 --message message.txt
 EOF
     exit 1
 }
@@ -231,6 +240,47 @@ print_decoded_data() {
     fi
 }
 
+# Utility function to get the clean Safe multisig version.
+get_version() {
+    version=$1
+    # Safe multisig versions can have the format `X.Y.Z+L2`.
+    # Remove any suffix after and including the `+` in the version string for comparison.
+    clean_version=$(echo "$version" | sed "s/+.*//")
+    echo "$clean_version"
+}
+
+# Utility function to validate the Safe multisig version.
+validate_version() {
+    version=$1
+    clean_version=$(get_version "$version")
+    # Ensure that the Safe multisig version is `>= 0.1.0`.
+    if [[ "$(printf "%s\n%s" "$clean_version" "0.1.0" | sort -V | head -n1)" == "$clean_version" && "$clean_version" != "0.1.0" ]]; then
+        echo "$(tput setaf 3)Safe multisig version \"${clean_version}\" is not supported!$(tput setaf 0)"
+        exit 0
+    fi
+}
+
+# Utility function to calculate the domain hash.
+calculate_domain_hash() {
+    version=$1
+    domain_separator_typehash=$2
+    domain_hash_args=$3
+
+    clean_version=$(get_version "$version")
+
+    # Safe multisig versions `<= 1.2.0` use a legacy (i.e. without `chainId`) `DOMAIN_SEPARATOR_TYPEHASH` value.
+    # Starting with version `1.3.0`, the `chainId` field was introduced: https://github.com/safe-global/safe-smart-account/pull/264.
+    if [[ "$(printf "%s\n%s" "$clean_version" "1.2.0" | sort -V | head -n1)" == "$clean_version" ]]; then
+        domain_separator_typehash="$DOMAIN_SEPARATOR_TYPEHASH_OLD"
+        domain_hash_args="$domain_separator_typehash, $address"
+    fi
+
+    # Calculate the domain hash.
+    local domain_hash=$(chisel eval "keccak256(abi.encode($domain_hash_args))" |
+        awk '/Data:/ {gsub(/\x1b\[[0-9;]*m/, "", $3); print $3}')
+    echo "$domain_hash"
+}
+
 # Utility function to calculate the domain and message hashes.
 calculate_hashes() {
     local chain_id=$1
@@ -252,26 +302,11 @@ calculate_hashes() {
     local domain_hash_args="$domain_separator_typehash, $chain_id, $address"
     local safe_tx_typehash="$SAFE_TX_TYPEHASH"
 
-    # Safe multisig versions can have the format `X.Y.Z+L2`.
-    # Remove any suffix after and including the `+` in the version string for comparison.
-    clean_version=$(echo "$version" | sed "s/+.*//")
-
-    # Ensure that the Safe multisig version is `>= 0.1.0`.
-    if [[ "$(printf "%s\n%s" "$clean_version" "0.1.0" | sort -V | head -n1)" == "$clean_version" && "$clean_version" != "0.1.0" ]]; then
-        echo "$(tput setaf 3)Safe multisig version \"${clean_version}\" is not supported!$(tput setaf 0)"
-        exit 0
-    fi
-
-    # Safe multisig versions `<= 1.2.0` use a legacy (i.e. without `chainId`) `DOMAIN_SEPARATOR_TYPEHASH` value.
-    # Starting with version `1.3.0`, the `chainId` field was introduced: https://github.com/safe-global/safe-smart-account/pull/264.
-    if [[ "$(printf "%s\n%s" "$clean_version" "1.2.0" | sort -V | head -n1)" == "$clean_version" ]]; then
-        domain_separator_typehash="$DOMAIN_SEPARATOR_TYPEHASH_OLD"
-        domain_hash_args="$domain_separator_typehash, $address"
-    fi
+    # Validate the Safe multisig version.
+    validate_version "$version"
 
     # Calculate the domain hash.
-    local domain_hash=$(chisel eval "keccak256(abi.encode($domain_hash_args))" |
-        awk '/Data:/ {gsub(/\x1b\[[0-9;]*m/, "", $3); print $3}')
+    domain_hash=$(calculate_domain_hash "$version" "$domain_separator_typehash" "$domain_hash_args")
 
     # Calculate the data hash.
     # The dynamic value `bytes` is encoded as a `keccak256` hash of its content.
@@ -356,6 +391,72 @@ validate_nonce() {
     fi
 }
 
+# Utility function to validate the message file.
+validate_message_file() {
+    local message_file="$1"
+    if [[ ! -f "$message_file" ]]; then
+        echo -e "${RED}Message file not found: \"${message_file}\"${RESET}" >&2
+        exit 1
+    fi
+    if [[ ! -s "$message_file" ]]; then
+        echo -e "${RED}Message file is empty: \"${message_file}\"${RESET}" >&2
+        exit 1
+    fi
+}
+
+# Utility function to calculate the domain and message hashes for off-chain messages.
+calculate_offchain_message_hashes() {
+    local network=$1
+    local chain_id=$2
+    local address=$3
+    local message_file=$4
+    local version=$5
+
+    validate_message_file "$message_file"
+
+    # Validate the Safe multisig version.
+    validate_version "$version"
+
+    message_raw=$(< "$message_file")
+    # Normalise line endings to LF (\n).
+    message_raw=$(echo "$message_raw" | tr -d '\r')
+    local hashed_message=$(cast hash-message "$message_raw")
+
+    local domain_separator_typehash="$DOMAIN_SEPARATOR_TYPEHASH"
+    local domain_hash_args="$domain_separator_typehash, $chain_id, $address"
+
+    # Calculate the domain hash.
+    domain_hash=$(calculate_domain_hash "$version" "$domain_separator_typehash" "$domain_hash_args")
+
+    # Calculate the message hash.
+    local message_hash=$(chisel eval "keccak256(abi.encode(bytes32($SAFE_MSG_TYPEHASH), keccak256(abi.encode(bytes32($hashed_message)))))" |
+        awk '/Data:/ {gsub(/\x1b\[[0-9;]*m/, "", $3); print $3}')
+
+    # Calculate the Safe message hash.
+    local safe_msg_hash=$(chisel eval "keccak256(abi.encodePacked(bytes1(0x19), bytes1(0x01), bytes32($domain_hash), bytes32($message_hash)))" |
+        awk '/Data:/ {gsub(/\x1b\[[0-9;]*m/, "", $3); print $3}')
+
+    # Calculate and display the hashes.
+    echo "==================================="
+    echo "= Selected Network Configurations ="
+    echo -e "===================================\n"
+    print_field "Network" "$network"
+    print_field "Chain ID" "$chain_id" true
+    echo "========================================"
+    echo "= Message Data and Computed Hashes ="
+    echo "========================================"
+
+    # Print off-chain message hash information.
+    print_header "Message Data"
+    print_field "Multisig address" "$address"
+    print_field "Message" "$message_raw"
+    print_header "Hashes"
+    print_field "Raw message hash" "$hashed_message"
+    print_field "Domain hash" "$(format_hash "$domain_hash")"
+    print_field "Message hash" "$(format_hash "$message_hash")"
+    print_field "Safe message hash" "$safe_msg_hash"
+}
+
 # Safe Transaction Hashes Calculator
 # This function orchestrates the entire process of calculating the Safe transaction hashes:
 # 1. Parses command-line arguments (`network`, `address`, `nonce`).
@@ -366,7 +467,7 @@ validate_nonce() {
 # 6. Extracts the relevant transaction details from the API response.
 # 7. Calls the `calculate_hashes` function to compute and display the results.
 calculate_safe_tx_hashes() {
-    local network="" address="" nonce=""
+    local network="" address="" nonce="" message_file=""
 
     # Parse the command line arguments.
     while [[ $# -gt 0 ]]; do
@@ -375,18 +476,36 @@ calculate_safe_tx_hashes() {
             --network) network="$2"; shift 2 ;;
             --address) address="$2"; shift 2 ;;
             --nonce) nonce="$2"; shift 2 ;;
+            --message) message_file="$2"; shift 2 ;;
             --list-networks) list_networks ;;
             *) echo "Unknown option: $1" >&2; usage ;;
         esac
     done
 
-    # Validate if the required parameters have the correct format.
-    ! validate_network "$network" || ! validate_address "$address" || ! validate_nonce "$nonce"
-
     # Get the API URL and chain ID for the specified network.
     local api_url=$(get_api_url "$network")
     local chain_id=$(get_chain_id "$network")
     local endpoint="${api_url}/api/v1/safes/${address}/multisig-transactions/?nonce=${nonce}"
+
+    # Get the Safe multisig version.
+    local version=$(curl -sf "${api_url}/api/v1/safes/${address}/" | jq -r ".version // \"0.0.0\"")
+
+    # Validate if the required parameters have the correct format.
+    validate_network "$network"
+    validate_address "$address"
+
+    # Calculate the domain and message hashes for off-chain messages.
+    if [[ -n "$message_file" ]]; then
+        if [[ -n "$nonce" ]]; then
+            echo -e "${RED}Error: When calculating off-chain message hashes, do not specify a nonce.${RESET}" >&2
+            exit 1
+        fi
+        calculate_offchain_message_hashes "$network" "$chain_id" "$address" "$message_file" "$version"
+        exit 0
+    fi
+
+    # Validate if the nonce parameter has the correct format.
+    validate_nonce "$nonce"
 
     # Fetch the transaction data from the API.
     local response=$(curl -sf "$endpoint")
@@ -445,9 +564,6 @@ EOF
     local refund_receiver=$(echo "$response" | jq -r ".results[$idx].refundReceiver // \"0x0000000000000000000000000000000000000000\"")
     local nonce=$(echo "$response" | jq -r ".results[$idx].nonce // \"0\"")
     local data_decoded=$(echo "$response" | jq -r ".results[$idx].dataDecoded // \"0x\"")
-
-    # Get the Safe multisig version.
-    local version=$(curl -sf "${api_url}/api/v1/safes/${address}/" | jq -r ".version // \"0.0.0\"")
 
     # Calculate and display the hashes.
     echo "==================================="
