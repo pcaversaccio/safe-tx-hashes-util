@@ -1,8 +1,16 @@
-# Safe Multisig Transaction Hashes
+# Safe Multisig Transaction Hashes <!-- omit from toc -->
 
 ```console
 |)0/\/'T TR|\_|5T, \/3R1FY! 🫡
 ```
+
+- [Supported Networks](#supported-networks)
+- [Usage](#usage)
+  - [macOS Users: Upgrading Bash](#macos-users-upgrading-bash)
+- [Safe Transaction Hash Calculation](#safe-transaction-hash-calculation)
+- [Safe Message Hash Calculation](#safe-message-hash-calculation)
+- [Trust Assumptions](#trust-assumptions)
+- [Community-Maintained User Interface Implementations](#community-maintained-user-interface-implementations)
 
 This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by retrieving transaction details from the [Safe transaction service API](https://docs.safe.global/core-api/transaction-service-overview) and computing both the domain and message hashes using the [EIP-712](https://eips.ethereum.org/EIPS/eip-712) standard.
 
@@ -45,7 +53,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 > For macOS users, please refer to the [macOS Users: Upgrading Bash](#macos-users-upgrading-bash) section.
 
 ```console
-./safe_hashes.sh [--help] [--list-networks] --network <network> --address <address> --nonce <nonce>
+./safe_hashes.sh [--help] [--list-networks] --network <network> --address <address> --nonce <nonce> --message <file>
 ```
 
 **Options:**
@@ -54,7 +62,8 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - `--list-networks`: List all supported networks and their chain IDs.
 - `--network <network>`: Specify the network (e.g., `ethereum`, `polygon`).
 - `--address <address>`: Specify the Safe multisig address.
-- `--nonce <nonce>`: Specify the transaction nonce.
+- `--nonce <nonce>`: Specify the transaction nonce (required for transaction hashes).
+- `--message <file>`: Specify the message file (required for off-chain message hashes).
 
 Before you invoke the [script](./safe_hashes.sh), make it executable:
 
@@ -107,7 +116,9 @@ You can verify your Bash version after the installation:
 bash --version
 ```
 
-## Example
+## Safe Transaction Hash Calculation
+
+To calculate transaction hashes for a specific transaction, you need to specify the `network`, `address`, and `nonce` parameter. An example:
 
 ```console
 ./safe_hashes.sh --network arbitrum --address 0x111CEEee040739fD91D29C34C33E6B3E112F2177 --nonce 234
@@ -161,6 +172,67 @@ To list all supported networks:
 
 ```console
 ./safe_hashes.sh --list-networks
+```
+
+## Safe Message Hash Calculation
+
+In addition to transaction hashes, this script supports calculating hashes for off-chain messages using the [EIP-712](https://eips.ethereum.org/EIPS/eip-712) standard. To calculate message hashes for a specific message, you need to specify the `network`, `address`, and `message` parameter. The `message` parameter is a valid filename containing the raw message. Please note that the script normalises line endings to `LF` (`\n`).
+
+An example: Save the following message into a `message.txt` file.
+
+```txt
+Welcome to OpenSea!
+
+Click to sign in and accept the OpenSea Terms of Service (https://opensea.io/tos) and Privacy Policy (https://opensea.io/privacy).
+
+This request will not trigger a blockchain transaction or cost any gas fees.
+
+Wallet address:
+0x657ff0d4ec65d82b2bc1247b0a558bcd2f80a0f1
+
+Nonce:
+ea499f2f-fdbc-4d04-92c4-b60aba887e06
+```
+
+Now invoke:
+
+```console
+./safe_hashes.sh --network sepolia --address 0x657ff0D4eC65D82b2bC1247b0a558bcd2f80A0f1 --message message.txt
+```
+
+The [script](./safe_hashes.sh) will output the raw message, domain, message, and Safe message hashes, allowing you to easily verify them against the values displayed on your Ledger hardware wallet screen:
+
+```console
+===================================
+= Selected Network Configurations =
+===================================
+
+Network: sepolia
+Chain ID: 11155111
+
+====================================
+= Message Data and Computed Hashes =
+====================================
+
+> Message Data:
+Multisig address: 0x657ff0D4eC65D82b2bC1247b0a558bcd2f80A0f1
+Message: Welcome to OpenSea!
+
+Click to sign in and accept the OpenSea Terms of Service (https://opensea.io/tos) and Privacy Policy (https://opensea.io/privacy).
+
+This request will not trigger a blockchain transaction or cost any gas fees.
+
+Wallet address:
+0x657ff0d4ec65d82b2bc1247b0a558bcd2f80a0f1
+
+Nonce:
+ea499f2f-fdbc-4d04-92c4-b60aba887e06
+
+> Hashes:
+Raw message hash: 0xcb1a9208c1a7c191185938c7d304ed01db68677eea4e689d688469aa72e34236
+Domain hash: 0x611379C19940CAEE095CDB12BEBE6A9FA9ABB74CDB1FBD7377C49A1F198DC24F
+Message hash: 0xA5D2F507A16279357446768DB4BD47A03BCA0B6ACAC4632A4C2C96AF20D6F6E5
+Safe message hash: 0x1866b559f56261ada63528391b93a1fe8e2e33baf7cace94fc6b42202d16ea08
 ```
 
 ## Trust Assumptions
