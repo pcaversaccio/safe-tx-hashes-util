@@ -176,7 +176,7 @@ To list all supported networks:
 
 ## Safe Message Hashes
 
-This [script](./safe_hashes.sh) not only calculates Safe transaction hashes but also supports computing the corresponding hashes for off-chain messages following the [EIP-712](https://eips.ethereum.org/EIPS/eip-712) standard. To calculate the Safe message hashes for a specific message, specify the `network`, `address`, and `message` parameters. The `message` parameter must be the name of a valid file containing the raw message. Note that the script normalises line endings to `LF` (`\n`) in the message file.
+This [script](./safe_hashes.sh) not only calculates Safe transaction hashes but also supports computing the corresponding hashes for off-chain messages following the [EIP-712](https://eips.ethereum.org/EIPS/eip-712) standard. To calculate the Safe message hashes for a specific message, specify the `network`, `address`, and `message` parameters. The `message` parameter must specify a valid file containing the raw message. This can be either the file name or a relative path (e.g., `path/to/message.txt`). Note that the script normalises line endings to `LF` (`\n`) in the message file.
 
 An example: Save the following message to a file named `message.txt`:
 
