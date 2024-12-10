@@ -240,19 +240,20 @@ print_decoded_data() {
     fi
 }
 
-# Utility function to get the clean Safe multisig version.
+# Utility function to extract the clean Safe multisig version.
 get_version() {
-    version=$1
+    local version=$1
     # Safe multisig versions can have the format `X.Y.Z+L2`.
     # Remove any suffix after and including the `+` in the version string for comparison.
-    clean_version=$(echo "$version" | sed "s/+.*//")
+    local clean_version=$(echo "$version" | sed "s/+.*//")
     echo "$clean_version"
 }
 
 # Utility function to validate the Safe multisig version.
 validate_version() {
-    version=$1
-    clean_version=$(get_version "$version")
+    local version=$1
+    local clean_version=$(get_version "$version")
+
     # Ensure that the Safe multisig version is `>= 0.1.0`.
     if [[ "$(printf "%s\n%s" "$clean_version" "0.1.0" | sort -V | head -n1)" == "$clean_version" && "$clean_version" != "0.1.0" ]]; then
         echo "$(tput setaf 3)Safe multisig version \"${clean_version}\" is not supported!$(tput setaf 0)"
@@ -262,11 +263,14 @@ validate_version() {
 
 # Utility function to calculate the domain hash.
 calculate_domain_hash() {
-    version=$1
-    domain_separator_typehash=$2
-    domain_hash_args=$3
+    local version=$1
+    local domain_separator_typehash=$2
+    local domain_hash_args=$3
 
-    clean_version=$(get_version "$version")
+    local clean_version=$(get_version "$version")
+
+    # Validate the Safe multisig version.
+    validate_version "$version"
 
     # Safe multisig versions `<= 1.2.0` use a legacy (i.e. without `chainId`) `DOMAIN_SEPARATOR_TYPEHASH` value.
     # Starting with version `1.3.0`, the `chainId` field was introduced: https://github.com/safe-global/safe-smart-account/pull/264.
@@ -306,7 +310,7 @@ calculate_hashes() {
     validate_version "$version"
 
     # Calculate the domain hash.
-    domain_hash=$(calculate_domain_hash "$version" "$domain_separator_typehash" "$domain_hash_args")
+    local domain_hash=$(calculate_domain_hash "$version" "$domain_separator_typehash" "$domain_hash_args")
 
     # Calculate the data hash.
     # The dynamic value `bytes` is encoded as a `keccak256` hash of its content.
@@ -417,9 +421,9 @@ calculate_offchain_message_hashes() {
     # Validate the Safe multisig version.
     validate_version "$version"
 
-    message_raw=$(< "$message_file")
+    local message_raw=$(< "$message_file")
     # Normalise line endings to LF (\n).
-    message_raw=$(echo "$message_raw" | tr -d '\r')
+    message_raw=$(echo "$message_raw" | tr -d "\r")
     local hashed_message=$(cast hash-message "$message_raw")
 
     local domain_separator_typehash="$DOMAIN_SEPARATOR_TYPEHASH"
@@ -445,8 +449,6 @@ calculate_offchain_message_hashes() {
     echo "===================================="
     echo "= Message Data and Computed Hashes ="
     echo "===================================="
-
-    # Print off-chain message hash information.
     print_header "Message Data"
     print_field "Multisig address" "$address"
     print_field "Message" "$message_raw"
