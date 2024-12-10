@@ -252,6 +252,11 @@ get_version() {
 # Utility function to validate the Safe multisig version.
 validate_version() {
     local version=$1
+    if [[ -z "$version" ]]; then
+        echo "$(tput setaf 3)No Safe multisig contract found for the specified network. Please ensure that you have selected the correct network.$(tput setaf 0)"
+        exit 0
+    fi
+
     local clean_version=$(get_version "$version")
 
     # Ensure that the Safe multisig version is `>= 0.1.0`.
@@ -423,8 +428,9 @@ calculate_offchain_message_hashes() {
     # Validate the Safe multisig version.
     validate_version "$version"
 
-    # Normalise line endings to LF (\n).
-    local message_raw=$(< "$message_file" | tr -d "\r")
+    local message_raw=$(< "$message_file")
+    # Normalise line endings to `LF` (`\n`).
+    message_raw=$(echo "$message_raw" | tr -d "\r")
     local hashed_message=$(cast hash-message "$message_raw")
 
     local domain_separator_typehash="$DOMAIN_SEPARATOR_TYPEHASH"
