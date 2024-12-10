@@ -459,16 +459,20 @@ calculate_offchain_message_hashes() {
     print_field "Safe message hash" "$safe_msg_hash"
 }
 
-# Safe Transaction Hashes Calculator
-# This function orchestrates the entire process of calculating the Safe transaction hashes:
-# 1. Parses command-line arguments (`network`, `address`, `nonce`).
+# Safe Transaction/Message Hashes Calculator
+# This function orchestrates the entire process of calculating the Safe transaction/message hashes:
+# 1. Parses command-line arguments (`network`, `address`, `nonce`, `message`).
 # 2. Validates that all required parameters are provided.
 # 3. Retrieves the API URL and chain ID for the specified network.
 # 4. Constructs the API endpoint URL.
-# 5. Fetches the transaction data from the Safe transaction service API.
-# 6. Extracts the relevant transaction details from the API response.
-# 7. Calls the `calculate_hashes` function to compute and display the results.
-calculate_safe_tx_hashes() {
+# 5. If a message file is provided:
+#    - Validates that no nonce is specified (as it's not applicable for off-chain message hashes).
+#    - Calls `calculate_offchain_message_hashes` to compute and display the message hashes.
+# 6. If a nonce is provided:
+#    - Fetches the transaction data from the Safe transaction service API.
+#    - Extracts the relevant transaction details from the API response.
+#    - Calls the `calculate_hashes` function to compute and display the results.
+calculate_safe_hashes() {
     local network="" address="" nonce="" message_file=""
 
     # Parse the command line arguments.
@@ -592,4 +596,4 @@ EOF
         "$version"
 }
 
-calculate_safe_tx_hashes "$@"
+calculate_safe_hashes "$@"
