@@ -4,14 +4,6 @@
 |)0/\/'T TR|\_|5T, \/3R1FY! 🫡
 ```
 
-- [Supported Networks](#supported-networks)
-- [Usage](#usage)
-  - [macOS Users: Upgrading Bash](#macos-users-upgrading-bash)
-- [Safe Transaction Hashes](#safe-transaction-hashes)
-- [Safe Message Hashes](#safe-message-hashes)
-- [Trust Assumptions](#trust-assumptions)
-- [Community-Maintained User Interface Implementations](#community-maintained-user-interface-implementations)
-
 This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by retrieving transaction details from the [Safe transaction service API](https://docs.safe.global/core-api/transaction-service-overview) and computing both the domain and message hashes using the [EIP-712](https://eips.ethereum.org/EIPS/eip-712) standard.
 
 > [!NOTE]
@@ -19,6 +11,14 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 
 > [!IMPORTANT]
 > All Safe multisig versions starting from `0.1.0` and newer are supported.
+
+- [Supported Networks](#supported-networks)
+- [Usage](#usage)
+  - [macOS Users: Upgrading Bash](#macos-users-upgrading-bash)
+- [Safe Transaction Hashes](#safe-transaction-hashes)
+- [Safe Message Hashes](#safe-message-hashes)
+- [Trust Assumptions](#trust-assumptions)
+- [Community-Maintained User Interface Implementations](#community-maintained-user-interface-implementations)
 
 ## Supported Networks
 
