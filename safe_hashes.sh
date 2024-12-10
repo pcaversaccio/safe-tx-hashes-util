@@ -214,8 +214,8 @@ print_decoded_data() {
         print_field "Method" "0x (ETH Transfer)"
         print_field "Parameters" "[]"
     else
-        method=$(echo "$data_decoded" | jq -r ".method")
-        parameters=$(echo "$data_decoded" | jq -r ".parameters")
+        local method=$(echo "$data_decoded" | jq -r ".method")
+        local parameters=$(echo "$data_decoded" | jq -r ".parameters")
 
         print_field "Method" "$method"
         print_field "Parameters" "$parameters"
@@ -401,11 +401,11 @@ validate_nonce() {
 validate_message_file() {
     local message_file="$1"
     if [[ ! -f "$message_file" ]]; then
-        echo -e "${RED}Message file not found: \"${message_file}\"${RESET}" >&2
+        echo -e "${RED}Message file not found: \"${message_file}\"!${RESET}" >&2
         exit 1
     fi
     if [[ ! -s "$message_file" ]]; then
-        echo -e "${RED}Message file is empty: \"${message_file}\"${RESET}" >&2
+        echo -e "${RED}Message file is empty: \"${message_file}\"!${RESET}" >&2
         exit 1
     fi
 }
@@ -423,16 +423,15 @@ calculate_offchain_message_hashes() {
     # Validate the Safe multisig version.
     validate_version "$version"
 
-    local message_raw=$(< "$message_file")
     # Normalise line endings to LF (\n).
-    message_raw=$(echo "$message_raw" | tr -d "\r")
+    local message_raw=$(< "$message_file" | tr -d "\r")
     local hashed_message=$(cast hash-message "$message_raw")
 
     local domain_separator_typehash="$DOMAIN_SEPARATOR_TYPEHASH"
     local domain_hash_args="$domain_separator_typehash, $chain_id, $address"
 
     # Calculate the domain hash.
-    domain_hash=$(calculate_domain_hash "$version" "$domain_separator_typehash" "$domain_hash_args")
+    local domain_hash=$(calculate_domain_hash "$version" "$domain_separator_typehash" "$domain_hash_args")
 
     # Calculate the message hash.
     local message_hash=$(chisel eval "keccak256(abi.encode(bytes32($SAFE_MSG_TYPEHASH), keccak256(abi.encode(bytes32($hashed_message)))))" |
@@ -490,6 +489,10 @@ calculate_safe_hashes() {
         esac
     done
 
+    # Validate if the required parameters have the correct format.
+    validate_network "$network"
+    validate_address "$address"
+
     # Get the API URL and chain ID for the specified network.
     local api_url=$(get_api_url "$network")
     local chain_id=$(get_chain_id "$network")
@@ -497,10 +500,6 @@ calculate_safe_hashes() {
 
     # Get the Safe multisig version.
     local version=$(curl -sf "${api_url}/api/v1/safes/${address}/" | jq -r ".version // \"0.0.0\"")
-
-    # Validate if the required parameters have the correct format.
-    validate_network "$network"
-    validate_address "$address"
 
     # Calculate the domain and message hashes for off-chain messages.
     if [[ -n "$message_file" ]]; then
@@ -548,7 +547,7 @@ EOF
                 continue
             fi
 
-            array_value=$(echo "$response" | jq ".results[$idx]")
+            local array_value=$(echo "$response" | jq ".results[$idx]")
 
             if [[ $array_value == null ]]; then
                 echo "$(tput setaf 1)Error: No transaction found at index $idx. Please try again.$(tput sgr0)"
