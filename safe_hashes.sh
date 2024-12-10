@@ -267,10 +267,10 @@ calculate_domain_hash() {
     local domain_separator_typehash=$2
     local domain_hash_args=$3
 
-    local clean_version=$(get_version "$version")
-
     # Validate the Safe multisig version.
     validate_version "$version"
+
+    local clean_version=$(get_version "$version")
 
     # Safe multisig versions `<= 1.2.0` use a legacy (i.e. without `chainId`) `DOMAIN_SEPARATOR_TYPEHASH` value.
     # Starting with version `1.3.0`, the `chainId` field was introduced: https://github.com/safe-global/safe-smart-account/pull/264.
@@ -308,6 +308,8 @@ calculate_hashes() {
 
     # Validate the Safe multisig version.
     validate_version "$version"
+
+    local clean_version=$(get_version "$version")
 
     # Calculate the domain hash.
     local domain_hash=$(calculate_domain_hash "$version" "$domain_separator_typehash" "$domain_hash_args")
