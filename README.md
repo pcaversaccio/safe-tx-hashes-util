@@ -15,6 +15,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - [Supported Networks](#supported-networks)
 - [Usage](#usage)
   - [macOS Users: Upgrading Bash](#macos-users-upgrading-bash)
+    - [Optional: Set the New Bash as Your Default Shell](#optional-set-the-new-bash-as-your-default-shell)
 - [Safe Transaction Hashes](#safe-transaction-hashes)
 - [Safe Message Hashes](#safe-message-hashes)
 - [Trust Assumptions](#trust-assumptions)
@@ -98,23 +99,40 @@ This [script](./safe_hashes.sh) requires Bash [`4.0`](https://tldp.org/LDP/abs/h
 brew install bash
 ```
 
-3. Add the new shell to the list of allowed shells:
+3. Verify you have at least version 4.0 or higher of bash
+
+```bash
+bash --version
+```
+
+#### Optional: Set the New Bash as Your Default Shell
+
+1. Get your bash path (`BASH_PATH`)
+
+```bash
+which bash
+```
+
+2. Add the new shell to the list of allowed shells:
+
+It's usually either:
 
 ```console
 sudo bash -c 'echo /usr/local/bin/bash >> /etc/shells'
 ```
 
-4. Optionally, make it your default shell:
+or
 
 ```console
-chsh -s /usr/local/bin/bash
+sudo bash -c 'echo /opt/homebrew/bin/bash >> /etc/shells'
 ```
 
-You can verify your Bash version after the installation:
+3. Make it your default shell:
 
 ```console
-bash --version
+chsh -s BASH_PATH
 ```
+
 
 ## Safe Transaction Hashes
 
