@@ -503,6 +503,11 @@ calculate_offchain_message_hashes() {
 #    - Extracts the relevant transaction details from the API response.
 #    - Calls the `calculate_hashes` function to compute and display the results.
 calculate_safe_hashes() {
+    # Show help if no arguments are provided
+    if [[ $# -eq 0 ]]; then
+        usage
+    fi
+
     local network="" address="" nonce="" message_file=""
 
     # Parse the command line arguments.
