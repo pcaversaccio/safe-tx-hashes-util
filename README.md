@@ -99,7 +99,7 @@ This [script](./safe_hashes.sh) requires Bash [`4.0`](https://tldp.org/LDP/abs/h
 brew install bash
 ```
 
-3. Verify that you are using Bash version `4.0` or higher:
+3. Verify that you are using Bash version [`4.0`](https://tldp.org/LDP/abs/html/bashver4.html) or higher:
 
 ```console
 bash --version
