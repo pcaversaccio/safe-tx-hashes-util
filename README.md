@@ -15,6 +15,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - [Supported Networks](#supported-networks)
 - [Usage](#usage)
   - [macOS Users: Upgrading Bash](#macos-users-upgrading-bash)
+    - [Optional: Set the New Bash as Your Default Shell](#optional-set-the-new-bash-as-your-default-shell)
 - [Safe Transaction Hashes](#safe-transaction-hashes)
 - [Safe Message Hashes](#safe-message-hashes)
 - [Initialize Safe Transaction Hashes and raw mode](#initialize-safe-transaction-hashes-and-raw-mode)
@@ -99,23 +100,43 @@ This [script](./safe_hashes.sh) requires Bash [`4.0`](https://tldp.org/LDP/abs/h
 brew install bash
 ```
 
-3. Add the new shell to the list of allowed shells:
-
-```console
-sudo bash -c 'echo /usr/local/bin/bash >> /etc/shells'
-```
-
-4. Optionally, make it your default shell:
-
-```console
-chsh -s /usr/local/bin/bash
-```
-
-You can verify your Bash version after the installation:
+3. Verify that you are using Bash version [`4.0`](https://tldp.org/LDP/abs/html/bashver4.html) or higher:
 
 ```console
 bash --version
 ```
+
+#### Optional: Set the New Bash as Your Default Shell
+
+1. Find the path to your Bash installation (`BASH_PATH`):
+
+```console
+which bash
+```
+
+2. Add the new shell to the list of allowed shells:
+
+Depending on your Mac's architecture and where [Homebrew](https://brew.sh) installs Bash, you will use one of the following commands:
+
+```console
+# For Intel-based Macs or if Homebrew is installed in the default location.
+sudo bash -c 'echo /usr/local/bin/bash >> /etc/shells'
+```
+
+or
+
+```console
+# For Apple Silicon (M1/M2) Macs or if you installed Homebrew using the default path for Apple Silicon.
+sudo bash -c 'echo /opt/homebrew/bin/bash >> /etc/shells'
+```
+
+3. Set the new Bash as your default shell:
+
+```console
+chsh -s BASH_PATH
+```
+
+Make sure to replace `BASH_PATH` with the actual path you retrieved in step 1.
 
 ## Safe Transaction Hashes
 
