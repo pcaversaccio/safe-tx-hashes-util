@@ -149,7 +149,7 @@ Example for transaction hashes:
 Example for off-chain message hashes:
   $0 --network ethereum --address 0x1234...5678 --message message.txt
 EOF
-    exit 1
+    exit "${1:-1}"
 }
 
 # Utility function to list all supported networks.
@@ -177,7 +177,7 @@ print_header() {
 print_field() {
     local label=$1
     local value=$2
-    local empty_line=${3:-false}
+    local empty_line="${3:-false}"
 
     if [[ -t 1 ]] && tput sgr0 >/dev/null 2>&1; then
         # Terminal supports formatting.
@@ -503,7 +503,7 @@ calculate_offchain_message_hashes() {
 #    - Extracts the relevant transaction details from the API response.
 #    - Calls the `calculate_hashes` function to compute and display the results.
 calculate_safe_hashes() {
-    # Show help if no arguments are provided
+    # Display the help message if no arguments are provided.
     if [[ $# -eq 0 ]]; then
         usage
     fi
@@ -513,7 +513,7 @@ calculate_safe_hashes() {
     # Parse the command line arguments.
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --help) usage ;;
+            --help) usage 0 ;;
             --network) network="$2"; shift 2 ;;
             --address) address="$2"; shift 2 ;;
             --nonce) nonce="$2"; shift 2 ;;

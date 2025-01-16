@@ -99,40 +99,43 @@ This [script](./safe_hashes.sh) requires Bash [`4.0`](https://tldp.org/LDP/abs/h
 brew install bash
 ```
 
-3. Verify you have at least version 4.0 or higher of bash
+3. Verify that you are using Bash version `4.0` or higher:
 
-```bash
+```console
 bash --version
 ```
 
 #### Optional: Set the New Bash as Your Default Shell
 
-1. Get your bash path (`BASH_PATH`)
+1. Find the path to your Bash installation (`BASH_PATH`):
 
-```bash
+```console
 which bash
 ```
 
 2. Add the new shell to the list of allowed shells:
 
-It's usually either:
+Depending on your Mac's architecture and where [Homebrew](https://brew.sh) installs Bash, you will use one of the following commands:
 
 ```console
+# For Intel-based Macs or if Homebrew is installed in the default location.
 sudo bash -c 'echo /usr/local/bin/bash >> /etc/shells'
 ```
 
 or
 
 ```console
+# For Apple Silicon (M1/M2) Macs or if you installed Homebrew using the default path for Apple Silicon.
 sudo bash -c 'echo /opt/homebrew/bin/bash >> /etc/shells'
 ```
 
-3. Make it your default shell:
+3. Set the new Bash as your default shell:
 
 ```console
 chsh -s BASH_PATH
 ```
 
+Make sure to replace `BASH_PATH` with the actual path you retrieved in step 1.
 
 ## Safe Transaction Hashes
 
