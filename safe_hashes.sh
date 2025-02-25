@@ -115,6 +115,12 @@ declare -a -r SafeToL2Migration=(
     "0xfF83F6335d8930cBad1c0D439A841f01888D9f69" # SafeToL2Migration `v1.4.1` (canonical).
 )
 
+# Set the trusted (i.e. for delegate calls) `SafeToL2Setup` addresses:
+# SafeToL2Setup `v1.4.1` (canonical): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.4.1/safe_to_l2_setup.json#L7.
+declare -a -r SafeToL2Setup=(
+    "0xBD89A1CE4DDe368FFAB0eC35506eEcE0b1fFdc54" # SafeToL2Setup `v1.4.1` (canonical).
+)
+
 # Set the trusted (i.e. for delegate calls) `SignMessageLib` addresses:
 # SignMessageLib `v1.3.0` (canonical): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.3.0/sign_message_lib.json#L7,
 # SignMessageLib `v1.3.0` (eip155): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.3.0/sign_message_lib.json#L11,
@@ -134,6 +140,7 @@ declare -A -r TRUSTED_FOR_DELEGATE_CALL=(
     ["MultiSendCallOnly"]="${MultiSendCallOnly[@]}"
     ["SafeMigration"]="${SafeMigration[@]}"
     ["SafeToL2Migration"]="${SafeToL2Migration[@]}"
+    ["SafeToL2Setup"]="${SafeToL2Setup[@]}"
     ["SignMessageLib"]="${SignMessageLib[@]}"
 )
 
