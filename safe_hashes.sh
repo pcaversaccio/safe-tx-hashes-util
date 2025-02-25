@@ -425,6 +425,21 @@ validate_nonce() {
     fi
 }
 
+# Utility function to warn the user if the transaction includes a delegate call.
+warn_if_delegate_call() {
+    local operation="$1"
+    # Warn the user if `operation` equals `1`, implying a `delegatecall`.
+    # See: https://github.com/safe-global/safe-smart-account/blob/34359e8305d618b7d74e39ed370a6b59ab14f827/contracts/libraries/Enum.sol.
+    if [[ "$operation" -eq 1 ]]; then
+        echo
+        cat <<EOF
+${BOLD}${RED}WARNING: The transaction includes a delegate call!
+This may lead to unexpected behaviour or vulnerabilities.
+Please review it carefully before you sign!${RESET}
+EOF
+    fi
+}
+
 # Utility function to validate the message file.
 validate_message_file() {
     local message_file="$1"
@@ -605,6 +620,9 @@ EOF
     local refund_receiver=$(echo "$response" | jq -r ".results[$idx].refundReceiver // \"0x0000000000000000000000000000000000000000\"")
     local nonce=$(echo "$response" | jq -r ".results[$idx].nonce // \"0\"")
     local data_decoded=$(echo "$response" | jq -r ".results[$idx].dataDecoded // \"0x\"")
+
+    # Warn the user if the transaction includes a delegate call.
+    warn_if_delegate_call "$operation"
 
     # Calculate and display the hashes.
     echo "==================================="
