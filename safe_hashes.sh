@@ -191,7 +191,7 @@ declare -A -r CHAIN_IDS=(
     ["scroll"]="534352"
     ["sepolia"]="11155111"
     ["worldchain"]="480"
-    ["xlayer"]="195"
+    ["xlayer"]="196"
     ["zksync"]="324"
 )
 

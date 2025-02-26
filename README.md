@@ -44,7 +44,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - Scroll (identifier: `scroll`, chain ID: `534352`)
 - Sepolia (identifier: `sepolia`, chain ID: `11155111`)
 - World Chain (identifier: `worldchain`, chain ID: `480`)
-- X Layer (identifier: `xlayer`, chain ID: `195`)
+- X Layer (identifier: `xlayer`, chain ID: `196`)
 - ZKsync Era (identifier: `zksync`, chain ID: `324`)
 
 ## Usage
