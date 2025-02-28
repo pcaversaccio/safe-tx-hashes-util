@@ -133,18 +133,22 @@ usage() {
     cat <<EOF
 Usage: $0 [--help] [--list-networks]
        --network <network> --address <address> --nonce <nonce>
-       --message <file>
+       --message <file> --json <file>
 
 Options:
   --help              Display this help message
   --list-networks     List all supported networks and their chain IDs
-  --network <network> Specify the network (required)
-  --address <address> Specify the Safe multisig address (required)
-  --nonce <nonce>     Specify the transaction nonce (required for transaction hashes)
+  --network <network> Specify the network (required for API-based retrieval)
+  --address <address> Specify the Safe multisig address (required for API-based retrieval)
+  --nonce <nonce>     Specify the transaction nonce (required for transaction hashes via API)
   --message <file>    Specify the message file (required for off-chain message hashes)
+  --json <file>       Specify a JSON file with transaction data (alternative to API-based retrieval)
 
-Example for transaction hashes:
+Example for transaction hashes via API:
   $0 --network ethereum --address 0x1234...5678 --nonce 42
+
+Example for transaction hashes via JSON file:
+  $0 --json transaction.json
 
 Example for off-chain message hashes:
   $0 --network ethereum --address 0x1234...5678 --message message.txt
@@ -508,7 +512,7 @@ calculate_safe_hashes() {
         usage
     fi
 
-    local network="" address="" nonce="" message_file=""
+    local network="" address="" nonce="" message_file="" json_file=""
 
     # Parse the command line arguments.
     while [[ $# -gt 0 ]]; do
@@ -518,10 +522,98 @@ calculate_safe_hashes() {
             --address) address="$2"; shift 2 ;;
             --nonce) nonce="$2"; shift 2 ;;
             --message) message_file="$2"; shift 2 ;;
+            --json) json_file="$2"; shift 2 ;;
             --list-networks) list_networks ;;
             *) echo "Unknown option: $1" >&2; usage ;;
         esac
     done
+
+    # Handle JSON file input if provided
+    if [[ -n "$json_file" ]]; then
+        # Validate that the JSON file exists
+        if [[ ! -f "$json_file" ]]; then
+            echo -e "${BOLD}${RED}JSON file not found: \"${json_file}\"!${RESET}" >&2
+            exit 1
+        fi
+
+        # Read and parse the JSON file
+        local json_content=$(cat "$json_file")
+        
+        # Extract values from the JSON file
+        local chain_id=$(echo "$json_content" | jq -r ".chainid // \"\"")
+        local safe_address=$(echo "$json_content" | jq -r ".safe_address // \"\"")
+        local safe_version=$(echo "$json_content" | jq -r ".safe_version // \"\"")
+        local json_nonce=$(echo "$json_content" | jq -r ".nonce // \"\"")
+        local to_address=$(echo "$json_content" | jq -r ".to_address // \"0x0000000000000000000000000000000000000000\"")
+        local value=$(echo "$json_content" | jq -r ".value // \"0\"")
+        local data=$(echo "$json_content" | jq -r ".data // \"0x\"")
+        local operation=$(echo "$json_content" | jq -r ".operation // \"0\"")
+        local safe_tx_gas=$(echo "$json_content" | jq -r ".safe_transaction_gas // \"0\"")
+        local base_gas=$(echo "$json_content" | jq -r ".base_gas // \"0\"")
+        local gas_price=$(echo "$json_content" | jq -r ".gas_price // \"0\"")
+        local gas_token=$(echo "$json_content" | jq -r ".gas_token // \"0x0000000000000000000000000000000000000000\"")
+        local refund_receiver=$(echo "$json_content" | jq -r ".refund_receiver // \"0x0000000000000000000000000000000000000000\"")
+        
+        # Validate required fields
+        if [[ -z "$chain_id" ]]; then
+            echo -e "${BOLD}${RED}Missing required field 'chainid' in JSON file!${RESET}" >&2
+            exit 1
+        fi
+        if [[ -z "$safe_address" ]]; then
+            echo -e "${BOLD}${RED}Missing required field 'safe_address' in JSON file!${RESET}" >&2
+            exit 1
+        fi
+        if [[ -z "$safe_version" ]]; then
+            echo -e "${BOLD}${RED}Missing required field 'safe_version' in JSON file!${RESET}" >&2
+            exit 1
+        fi
+        if [[ -z "$json_nonce" ]]; then
+            echo -e "${BOLD}${RED}Missing required field 'nonce' in JSON file!${RESET}" >&2
+            exit 1
+        fi
+        
+        # Validate address format
+        if [[ ! "$safe_address" =~ ^0x[a-fA-F0-9]{40}$ ]]; then
+            echo -e "${BOLD}${RED}Invalid Ethereum address format for 'safe_address': \"${safe_address}\"${RESET}" >&2
+            exit 1
+        fi
+        
+        # Calculate and display the hashes
+        echo "==================================="
+        echo "= Selected Network Configurations ="
+        echo -e "===================================\n"
+        print_field "Chain ID" "$chain_id" true
+        echo "========================================"
+        echo "= Transaction Data and Computed Hashes ="
+        echo "========================================"
+        
+        # Since we're using a JSON file, we don't have decoded data
+        local data_decoded="0x"
+        
+        calculate_hashes "$chain_id" \
+            "$safe_address" \
+            "$to_address" \
+            "$value" \
+            "$data" \
+            "$operation" \
+            "$safe_tx_gas" \
+            "$base_gas" \
+            "$gas_price" \
+            "$gas_token" \
+            "$refund_receiver" \
+            "$json_nonce" \
+            "$data_decoded" \
+            "$safe_version"
+        
+        exit 0
+    fi
+
+    # For API-based retrieval, validate required parameters
+    if [[ -z "$network" || -z "$address" ]]; then
+        echo -e "${BOLD}${RED}Missing required parameters for API-based retrieval!${RESET}" >&2
+        echo -e "${BOLD}${RED}Please provide --network and --address, or use --json for file-based input.${RESET}" >&2
+        exit 1
+    fi
 
     # Validate if the required parameters have the correct format.
     validate_network "$network"

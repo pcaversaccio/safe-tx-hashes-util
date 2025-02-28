@@ -1,0 +1,15 @@
+{
+  "chainid": "1",
+  "safe_address": "0x1234567890123456789012345678901234567890",
+  "safe_version": "1.3.0",
+  "nonce": "42",
+  "to_address": "0xabcdef0123456789abcdef0123456789abcdef01",
+  "value": "1000000000000000000",
+  "data": "0x",
+  "operation": "0",
+  "safe_transaction_gas": "21000",
+  "base_gas": "0",
+  "gas_price": "20000000000",
+  "gas_token": "0x0000000000000000000000000000000000000000",
+  "refund_receiver": "0x0000000000000000000000000000000000000000"
+}
