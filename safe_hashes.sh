@@ -528,12 +528,13 @@ calculate_safe_hashes() {
     validate_address "$address"
 
     # Get the API URL and chain ID for the specified network.
-    local api_url=$(get_api_url "$network")
+    # local api_url=$(get_api_url "$network")$
+    local api_url="https://safe-client.safe.global/v1/chains"
     local chain_id=$(get_chain_id "$network")
-    local endpoint="${api_url}/api/v1/safes/${address}/multisig-transactions/?nonce=${nonce}"
+    local endpoint="${api_url}/${chain_id}/safes/${address}/multisig-transactions/raw?nonce=${nonce}"
 
     # Get the Safe multisig version.
-    local version=$(curl -sf "${api_url}/api/v1/safes/${address}/" | jq -r ".version // \"0.0.0\"")
+    local version="1.3.0" # -> set here your version!
 
     # Calculate the domain and message hashes for off-chain messages.
     if [[ -n "$message_file" ]]; then
