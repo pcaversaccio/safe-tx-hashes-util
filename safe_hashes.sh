@@ -336,7 +336,7 @@ get_version() {
 validate_version() {
     local version=$1
     if [[ -z "$version" ]]; then
-        echo "$(tput setaf 3)No Safe multisig contract found for the specified network. Please ensure that you have selected the correct network.$(tput setaf 0)"
+        echo "$(tput setaf 3)No Safe multisig contract found for the specified network. Please ensure that you have selected the correct network.$(tput sgr0)"
         exit 0
     fi
 
@@ -344,7 +344,7 @@ validate_version() {
 
     # Ensure that the Safe multisig version is `>= 0.1.0`.
     if [[ "$(printf "%s\n%s" "$clean_version" "0.1.0" | sort -V | head -n1)" == "$clean_version" && "$clean_version" != "0.1.0" ]]; then
-        echo "$(tput setaf 3)Safe multisig version \"${clean_version}\" is not supported!$(tput setaf 0)"
+        echo "$(tput setaf 3)Safe multisig version \"${clean_version}\" is not supported!$(tput sgr0)"
         exit 0
     fi
 }
@@ -633,7 +633,7 @@ calculate_safe_hashes() {
 
     # Inform the user that no transactions are available for the specified nonce.
     if [[ $count -eq 0 ]]; then
-        echo "$(tput setaf 3)No transaction is available for this nonce!$(tput setaf 0)"
+        echo "$(tput setaf 3)No transaction is available for this nonce!$(tput sgr0)"
         exit 0
     # Notify the user about multiple transactions with identical nonce values and prompt for user input.
     elif [[ $count -gt 1 ]]; then
