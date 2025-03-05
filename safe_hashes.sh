@@ -495,9 +495,10 @@ warn_if_delegate_call() {
     if [[ "$operation" -eq 1 && ! " ${TRUSTED_FOR_DELEGATE_CALL[@]} " =~ " ${to} " ]]; then
         echo
         cat <<EOF
-${BOLD}${RED}WARNING: The transaction includes an untrusted delegate call to address $to!
+$(tput setaf 1)WARNING: The transaction includes an untrusted delegate call to address $to!
 This may lead to unexpected behaviour or vulnerabilities.
-Please review it carefully before you sign!${RESET}
+Please review it carefully before you sign!$(tput sgr0)
+
 EOF
     fi
 }
