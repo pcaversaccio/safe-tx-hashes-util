@@ -2,6 +2,9 @@
 
 [![License: AGPL-3.0-only](https://img.shields.io/badge/License-AGPL--3.0--only-blue)](https://www.gnu.org/licenses/agpl-3.0)
 
+> [!IMPORTANT]
+> This [PR](https://github.com/pcaversaccio/safe-tx-hashes-util/pull/20) introduces a _temporary_ patch to use the [Safe Client Gateway API](https://safe-client.safe.global/api) since the [Safe Transaction Service API](https://docs.safe.global/core-api/transaction-service-overview) is currently unavailable. Please checkout the `feat/use-safe-client-gateway` branch until further notice.
+
 ```console
 |)0/\/'T TR|\_|5T, \/3R1FY! 🫡
 ```
