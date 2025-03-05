@@ -684,7 +684,7 @@ EOF
     local data_decoded=$(echo "$response" | jq -r ".results[$idx].dataDecoded // \"0x\"")
 
     # Warn the user if the transaction includes an untrusted delegate call.
-    warn_if_delegate_call "$operation"
+    warn_if_delegate_call "$operation" "$to"
 
     # Calculate and display the hashes.
     echo "==================================="
