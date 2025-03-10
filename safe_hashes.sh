@@ -60,6 +60,9 @@ if [[ "${DEBUG:-false}" == "true" ]]; then
     set -x
 fi
 
+# Set the zero address as global constant.
+readonly ZERO_ADDRESS="0x0000000000000000000000000000000000000000"
+
 # Set the type hash constants.
 # => `keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");`
 # See: https://github.com/safe-global/safe-smart-account/blob/a0a1d4292006e26c4dbd52282f4c932e1ffca40f/contracts/Safe.sol#L54-L57.
@@ -534,6 +537,28 @@ EOF
     fi
 }
 
+# Utility function to check for a potential gas token attack.
+check_gas_token_attack() {
+    local gas_price=$1
+    local gas_token=$2
+    local refund_receiver=$3
+    local warning_message=""
+
+    if [[ "$gas_token" != "$ZERO_ADDRESS" && "$refund_receiver" != "$ZERO_ADDRESS" ]]; then
+        warning_message+="$(tput setaf 1)WARNING: This transaction uses a custom gas token and a custom refund receiver.
+This combination can be used to hide a rerouting of funds through gas refunds.$(tput sgr0)\n"
+        if [[ "$gas_price" != "0" ]]; then
+            warning_message+="$(tput setaf 1)Furthermore, the gas price is non-zero, which increases the potential for hidden value transfers.$(tput sgr0)\n"
+        fi
+    elif [[ "$gas_token" != "$ZERO_ADDRESS" ]]; then
+        warning_message+="$(tput setaf 3)WARNING: This transaction uses a custom gas token. Please verify that this is intended.$(tput sgr0)\n"
+    elif [[ "$refund_receiver" != "$ZERO_ADDRESS" ]]; then
+        warning_message+="$(tput setaf 3)WARNING: This transaction uses a custom refund receiver. Please verify that this is intended.$(tput sgr0)\n"
+    fi
+
+    [[ -n "$warning_message" ]] && echo -e "$warning_message"
+}
+
 # Utility function to validate the message file.
 validate_message_file() {
     local message_file="$1"
@@ -717,6 +742,8 @@ EOF
 
     # Warn the user if the transaction includes an untrusted delegate call.
     warn_if_delegate_call "$operation" "$to"
+    # Check for a potential gas token attack.
+    check_gas_token_attack "$gas_price" "$gas_token" "$refund_receiver"
 
     # Calculate and display the hashes.
     echo "==================================="
