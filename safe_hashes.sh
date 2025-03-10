@@ -60,6 +60,9 @@ if [[ "${DEBUG:-false}" == "true" ]]; then
     set -x
 fi
 
+# Set the zero address as global constant.
+readonly ZERO_ADDRESS="0x0000000000000000000000000000000000000000"
+
 # Set the type hash constants.
 # => `keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");`
 # See: https://github.com/safe-global/safe-smart-account/blob/a0a1d4292006e26c4dbd52282f4c932e1ffca40f/contracts/Safe.sol#L54-L57.
@@ -76,6 +79,66 @@ readonly SAFE_TX_TYPEHASH_OLD="0x14d461bc7412367e924637b363c7bf29b8f47e2f84869f4
 # => `keccak256("SafeMessage(bytes message)");`
 # See: https://github.com/safe-global/safe-smart-account/blob/febab5e4e859e6e65914f17efddee415e4992961/contracts/libraries/SignMessageLib.sol#L12-L13.
 readonly SAFE_MSG_TYPEHASH="0x60b3cbf8b4a223d68d641b3b6ddf9a298e7f33710cf3d3a9d1146b5a6150fbca"
+
+# Set the trusted (i.e. for delegate calls) `MultiSend` addresses:
+# MultiSend `v1.1.1` (canonical): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.1.1/multi_send.json#L7,
+# MultiSend `v1.3.0` (canonical): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.3.0/multi_send.json#L7,
+# MultiSend `v1.3.0` (eip155): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.3.0/multi_send.json#L11,
+# MultiSend `v1.3.0` (zksync): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.3.0/multi_send.json#L15,
+# Multisend `v1.4.1` (canonical): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.4.1/multi_send.json#L7.
+declare -a -r MultiSend=(
+    "0x8D29bE29923b68abfDD21e541b9374737B49cdAD" # MultiSend `v1.1.1` (canonical).
+    "0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761" # MultiSend `v1.3.0` (canonical).
+    "0x998739BFdAAdde7C933B942a68053933098f9EDa" # MultiSend `v1.3.0` (eip155).
+    "0x0dFcccB95225ffB03c6FBB2559B530C2B7C8A912" # MultiSend `v1.3.0` (zksync).
+    "0x38869bf66a61cF6bDB996A6aE40D5853Fd43B526" # MultiSend `v1.4.1` (canonical).
+)
+
+# Set the trusted (i.e. for delegate calls) `MultiSendCallOnly` addresses:
+# MultiSendCallOnly `v1.3.0` (canonical): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.3.0/multi_send_call_only.json#L7,
+# MultiSendCallOnly `v1.3.0` (eip155): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.3.0/multi_send_call_only.json#L11,
+# MultiSendCallOnly `v1.3.0` (zksync): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.3.0/multi_send_call_only.json#L15,
+# MultiSendCallOnly `v1.4.1` (canonical): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.4.1/multi_send_call_only.json#L7.
+declare -a -r MultiSendCallOnly=(
+    "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D" # MultiSendCallOnly `v1.3.0` (canonical).
+    "0xA1dabEF33b3B82c7814B6D82A79e50F4AC44102B" # MultiSendCallOnly `v1.3.0` (eip155).
+    "0xf220D3b4DFb23C4ade8C88E526C1353AbAcbC38F" # MultiSendCallOnly `v1.3.0` (zksync).
+    "0x9641d764fc13c8B624c04430C7356C1C7C8102e2" # MultiSendCallOnly `v1.4.1` (canonical).
+)
+
+# Set the trusted (i.e. for delegate calls) `SafeMigration` addresses:
+# SafeMigration `v1.4.1` (canonical): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.4.1/safe_migration.json#L7.
+declare -a -r SafeMigration=(
+    "0x526643F69b81B008F46d95CD5ced5eC0edFFDaC6" # SafeMigration `v1.4.1` (canonical).
+)
+
+# Set the trusted (i.e. for delegate calls) `SafeToL2Migration` addresses:
+# SafeToL2Migration `v1.4.1` (canonical): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.4.1/safe_to_l2_migration.json#L7.
+declare -a -r SafeToL2Migration=(
+    "0xfF83F6335d8930cBad1c0D439A841f01888D9f69" # SafeToL2Migration `v1.4.1` (canonical).
+)
+
+# Set the trusted (i.e. for delegate calls) `SignMessageLib` addresses:
+# SignMessageLib `v1.3.0` (canonical): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.3.0/sign_message_lib.json#L7,
+# SignMessageLib `v1.3.0` (eip155): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.3.0/sign_message_lib.json#L11,
+# SignMessageLib `v1.3.0` (zksync): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.3.0/sign_message_lib.json#L15,
+# SignMessageLib `v1.4.1` (canonical): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.4.1/sign_message_lib.json#L7.
+declare -a -r SignMessageLib=(
+    "0xA65387F16B013cf2Af4605Ad8aA5ec25a2cbA3a2" # SignMessageLib `v1.3.0` (canonical).
+    "0x98FFBBF51bb33A056B08ddf711f289936AafF717" # SignMessageLib `v1.3.0` (eip155).
+    "0x357147caf9C0cCa67DfA0CF5369318d8193c8407" # SignMessageLib `v1.3.0` (zksync).
+    "0xd53cd0aB83D845Ac265BE939c57F53AD838012c9" # SignMessageLib `v1.4.1` (canonical).
+)
+
+# Set the trusted (i.e. for delegate calls) contract addresses.
+# See: https://github.com/safe-global/safe-transaction-service/blob/c3b42f0bebff74b99fcdd958aee54b149e27eca5/safe_transaction_service/contracts/management/commands/setup_safe_contracts.py#L10-L16.
+declare -A -r TRUSTED_FOR_DELEGATE_CALL=(
+    ["MultiSend"]="${MultiSend[@]}"
+    ["MultiSendCallOnly"]="${MultiSendCallOnly[@]}"
+    ["SafeMigration"]="${SafeMigration[@]}"
+    ["SafeToL2Migration"]="${SafeToL2Migration[@]}"
+    ["SignMessageLib"]="${SignMessageLib[@]}"
+)
 
 # Define the supported networks from the Safe transaction service.
 # See https://docs.safe.global/advanced/smart-account-supported-networks?service=Transaction+Service.
@@ -124,7 +187,7 @@ declare -A -r CHAIN_IDS=(
     ["scroll"]="534352"
     ["sepolia"]="11155111"
     ["worldchain"]="480"
-    ["xlayer"]="195"
+    ["xlayer"]="196"
     ["zksync"]="324"
 )
 
@@ -203,13 +266,41 @@ print_transaction_data() {
     local to=$2
     local value=$3
     local data=$4
-    local message=$5
+    local operation=$5
+    local safe_tx_gas=$6
+    local base_gas=$7
+    local gas_price=$8
+    local gas_token=$9
+    local refund_receiver=${10}
+    local nonce=${11}
+    local message=${12}
 
     print_header "Transaction Data"
     print_field "Multisig address" "$address"
     print_field "To" "$to"
     print_field "Value" "$value"
     print_field "Data" "$data"
+    case "$operation" in
+        1) 
+            if [[ "$operation" -eq 1 && ! " ${TRUSTED_FOR_DELEGATE_CALL[@]} " =~ " ${to} " ]]; then
+                print_field "Operation" "Delegatecall $(tput setaf 1)(UNTRUSTED DELEGATECALL; PLEASE VERIFY!)$(tput sgr0)"
+            else
+                print_field "Operation" "Delegatecall $(tput setaf 3)(trusted delegatecall)$(tput sgr0)"
+            fi
+            ;;
+        0) 
+            print_field "Operation" "Call"
+            ;;
+        *) 
+            print_field "Operation" "Unknown"
+            ;;
+    esac
+    print_field "Safe Transaction Gas" "$safe_tx_gas"
+    print_field "Base Gas" "$base_gas"
+    print_field "Gas Price" "$gas_price"
+    print_field "Gas Token" "$gas_token"
+    print_field "Refund Receiver" "$refund_receiver"
+    print_field "Nonce" "$nonce"
     print_field "Encoded message" "$message"
 }
 
@@ -235,11 +326,15 @@ print_hash_info() {
 
 # Utility function to print the ABI-decoded transaction data.
 print_decoded_data() {
-    local data_decoded=$1
+    local data=$1
+    local data_decoded=$2
 
-    if [[ "$data_decoded" == "0x" ]]; then
+    if [[ "$data" == "0x" && "$data_decoded" == "0x" ]]; then
         print_field "Method" "0x (ETH Transfer)"
         print_field "Parameters" "[]"
+    elif [[ "$data" != "0x" && "$data_decoded" == "0x" ]]; then
+        print_field "Method" "Unknown"
+        print_field "Parameters" "Unknown"
     else
         local method=$(echo "$data_decoded" | jq -r ".method")
         local parameters=$(echo "$data_decoded" | jq -r ".parameters")
@@ -280,7 +375,7 @@ get_version() {
 validate_version() {
     local version=$1
     if [[ -z "$version" ]]; then
-        echo "$(tput setaf 3)No Safe multisig contract found for the specified network. Please ensure that you have selected the correct network.$(tput setaf 0)"
+        echo "$(tput setaf 3)No Safe multisig contract found for the specified network. Please ensure that you have selected the correct network.$(tput sgr0)"
         exit 0
     fi
 
@@ -288,7 +383,7 @@ validate_version() {
 
     # Ensure that the Safe multisig version is `>= 0.1.0`.
     if [[ "$(printf "%s\n%s" "$clean_version" "0.1.0" | sort -V | head -n1)" == "$clean_version" && "$clean_version" != "0.1.0" ]]; then
-        echo "$(tput setaf 3)Safe multisig version \"${clean_version}\" is not supported!$(tput setaf 0)"
+        echo "$(tput setaf 3)Safe multisig version \"${clean_version}\" is not supported!$(tput sgr0)"
         exit 0
     fi
 }
@@ -380,9 +475,9 @@ calculate_hashes() {
         awk '/Data:/ {gsub(/\x1b\[[0-9;]*m/, "", $3); print $3}')
 
     # Print the retrieved transaction data.
-    print_transaction_data "$address" "$to" "$value" "$data" "$message"
+    print_transaction_data "$address" "$to" "$value" "$data" "$operation" "$safe_tx_gas" "$base_gas" "$gas_price" "$gas_token" "$refund_receiver" "$nonce" "$message"
     # Print the ABI-decoded transaction data.
-    print_decoded_data "$data_decoded"
+    print_decoded_data "$data" "$data_decoded"
     # Print the results with the same formatting for "Domain hash" and "Message hash" as a Ledger hardware device.
     print_hash_info "$domain_hash" "$message_hash" "$safe_tx_hash"
 }
@@ -427,6 +522,45 @@ validate_nonce() {
         echo -e "${BOLD}${RED}Invalid nonce value: \"${nonce}\". Must be a non-negative integer!${RESET}" >&2
         exit 1
     fi
+}
+
+# Utility function to warn the user if the transaction includes an untrusted delegate call.
+warn_if_delegate_call() {
+    local operation="$1"
+    local to="$2"
+
+    # Warn the user if `operation` equals `1`, implying a `delegatecall`, and if the `to` address is untrusted.
+    # See: https://github.com/safe-global/safe-smart-account/blob/34359e8305d618b7d74e39ed370a6b59ab14f827/contracts/libraries/Enum.sol.
+    if [[ "$operation" -eq 1 && ! " ${TRUSTED_FOR_DELEGATE_CALL[@]} " =~ " ${to} " ]]; then
+        echo
+        cat <<EOF
+$(tput setaf 1)WARNING: The transaction includes an untrusted delegate call to address $to!
+This may lead to unexpected behaviour or vulnerabilities. Please review it carefully before you sign!$(tput sgr0)
+
+EOF
+    fi
+}
+
+# Utility function to check for a potential gas token attack.
+check_gas_token_attack() {
+    local gas_price=$1
+    local gas_token=$2
+    local refund_receiver=$3
+    local warning_message=""
+
+    if [[ "$gas_token" != "$ZERO_ADDRESS" && "$refund_receiver" != "$ZERO_ADDRESS" ]]; then
+        warning_message+="$(tput setaf 1)WARNING: This transaction uses a custom gas token and a custom refund receiver.
+This combination can be used to hide a rerouting of funds through gas refunds.$(tput sgr0)\n"
+        if [[ "$gas_price" != "0" ]]; then
+            warning_message+="$(tput setaf 1)Furthermore, the gas price is non-zero, which increases the potential for hidden value transfers.$(tput sgr0)\n"
+        fi
+    elif [[ "$gas_token" != "$ZERO_ADDRESS" ]]; then
+        warning_message+="$(tput setaf 3)WARNING: This transaction uses a custom gas token. Please verify that this is intended.$(tput sgr0)\n"
+    elif [[ "$refund_receiver" != "$ZERO_ADDRESS" ]]; then
+        warning_message+="$(tput setaf 3)WARNING: This transaction uses a custom refund receiver. Please verify that this is intended.$(tput sgr0)\n"
+    fi
+
+    [[ -n "$warning_message" ]] && echo -e "$warning_message"
 }
 
 # Utility function to validate the message file.
@@ -647,7 +781,7 @@ calculate_safe_hashes() {
 
     # Inform the user that no transactions are available for the specified nonce.
     if [[ $count -eq 0 ]]; then
-        echo "$(tput setaf 3)No transaction is available for this nonce!$(tput setaf 0)"
+        echo "$(tput setaf 3)No transaction is available for this nonce!$(tput sgr0)"
         exit 0
     # Notify the user about multiple transactions with identical nonce values and prompt for user input.
     elif [[ $count -gt 1 ]]; then
@@ -697,6 +831,11 @@ EOF
     local refund_receiver=$(echo "$response" | jq -r ".results[$idx].refundReceiver // \"0x0000000000000000000000000000000000000000\"")
     local nonce=$(echo "$response" | jq -r ".results[$idx].nonce // \"0\"")
     local data_decoded=$(echo "$response" | jq -r ".results[$idx].dataDecoded // \"0x\"")
+
+    # Warn the user if the transaction includes an untrusted delegate call.
+    warn_if_delegate_call "$operation" "$to"
+    # Check for a potential gas token attack.
+    check_gas_token_attack "$gas_price" "$gas_token" "$refund_receiver"
 
     # Calculate and display the hashes.
     echo "==================================="
