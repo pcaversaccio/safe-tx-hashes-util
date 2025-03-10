@@ -60,6 +60,9 @@ if [[ "${DEBUG:-false}" == "true" ]]; then
     set -x
 fi
 
+# Set the zero address as global constant.
+readonly ZERO_ADDRESS="0x0000000000000000000000000000000000000000"
+
 # Set the type hash constants.
 # => `keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");`
 # See: https://github.com/safe-global/safe-smart-account/blob/a0a1d4292006e26c4dbd52282f4c932e1ffca40f/contracts/Safe.sol#L54-L57.
@@ -317,66 +320,6 @@ print_hash_info() {
     print_field "Safe transaction hash" "$safe_tx_hash"
 }
 
-# Utility function to check for potential gas token attack
-check_gas_token_attack() {
-    local gas_price=$1
-    local gas_token=$2
-    local refund_receiver=$3
-    local zero_address="0x0000000000000000000000000000000000000000"
-    
-    # Only proceed with checks if either gas_token or refund_receiver is not the zero address
-    if [[ "$gas_token" == "$zero_address" && "$refund_receiver" == "$zero_address" ]]; then
-        return 1
-    fi
-    
-    # Display gas configuration when custom values are detected
-    echo "======================"
-    echo "= Gas Configuration ="
-    echo "======================"
-    print_field "Gas Price" "$gas_price"
-    print_field "Gas Token" "$gas_token"
-    print_field "Refund Receiver" "$refund_receiver" true
-    
-    # Check for suspicious combinations
-    local is_suspicious=false
-    local warning_level="WARNING"
-    local warning_message=""
-    
-    # Check if a custom gas token is set (not the zero address)
-    if [[ "$gas_token" != "$zero_address" ]]; then
-        # Check if a custom refund receiver is set (not the zero address)
-        if [[ "$refund_receiver" != "$zero_address" ]]; then
-            is_suspicious=true
-            warning_level="ALERT"
-            warning_message="This transaction uses a custom gas token AND a custom refund receiver.\nThis combination may be used to hide a redirection of funds through gas refunds."
-            
-            # Any non-zero gas price with custom token and receiver should be carefully examined.
-            if [[ "$gas_price" != "0" ]]; then
-                warning_message+="\n\nThe gas price is non-zero, which increases the potential for hidden value transfer."
-            fi
-        else
-            is_suspicious=true
-            warning_message="This transaction uses a custom gas token.\nVerify that this is intentional."
-        fi
-    fi
-    
-    # If only the refund receiver is set to a custom address
-    if [[ "$refund_receiver" != "$zero_address" && "$is_suspicious" == "false" ]]; then
-        is_suspicious=true
-        warning_message="This transaction uses a custom refund receiver.\nVerify that this is intentional."
-    fi
-    
-    # Display warning if suspicious
-    if [[ "$is_suspicious" == "true" ]]; then
-        echo
-        echo -e "${BOLD}${RED}${warning_level}: Potential fund redirection risk!${RESET}"
-        echo -e "${BOLD}${RED}$(echo -e "$warning_message")${RESET}"
-        return 0
-    fi
-    
-    return 1
-}
-
 # Utility function to print the ABI-decoded transaction data.
 print_decoded_data() {
     local data=$1
@@ -531,8 +474,6 @@ calculate_hashes() {
     print_transaction_data "$address" "$to" "$value" "$data" "$operation" "$safe_tx_gas" "$base_gas" "$gas_price" "$gas_token" "$refund_receiver" "$nonce" "$message"
     # Print the ABI-decoded transaction data.
     print_decoded_data "$data" "$data_decoded"
-    # Check for potential gas token attack
-    check_gas_token_attack "$gas_price" "$gas_token" "$refund_receiver"
     # Print the results with the same formatting for "Domain hash" and "Message hash" as a Ledger hardware device.
     print_hash_info "$domain_hash" "$message_hash" "$safe_tx_hash"
 }
@@ -594,6 +535,28 @@ This may lead to unexpected behaviour or vulnerabilities. Please review it caref
 
 EOF
     fi
+}
+
+# Utility function to check for a potential gas token attack.
+check_gas_token_attack() {
+    local gas_price=$1
+    local gas_token=$2
+    local refund_receiver=$3
+    local warning_message=""
+
+    if [[ "$gas_token" != "$ZERO_ADDRESS" && "$refund_receiver" != "$ZERO_ADDRESS" ]]; then
+        warning_message+="$(tput setaf 1)WARNING: This transaction uses a custom gas token and a custom refund receiver.
+This combination can be used to hide a rerouting of funds through gas refunds.$(tput sgr0)\n"
+        if [[ "$gas_price" != "0" ]]; then
+            warning_message+="$(tput setaf 1)Furthermore, the gas price is non-zero, which increases the potential for hidden value transfers.$(tput sgr0)\n"
+        fi
+    elif [[ "$gas_token" != "$ZERO_ADDRESS" ]]; then
+        warning_message+="$(tput setaf 3)WARNING: This transaction uses a custom gas token. Please verify that this is intended.$(tput sgr0)\n"
+    elif [[ "$refund_receiver" != "$ZERO_ADDRESS" ]]; then
+        warning_message+="$(tput setaf 3)WARNING: This transaction uses a custom refund receiver. Please verify that this is intended.$(tput sgr0)\n"
+    fi
+
+    [[ -n "$warning_message" ]] && echo -e "$warning_message"
 }
 
 # Utility function to validate the message file.
@@ -779,6 +742,8 @@ EOF
 
     # Warn the user if the transaction includes an untrusted delegate call.
     warn_if_delegate_call "$operation" "$to"
+    # Check for a potential gas token attack.
+    check_gas_token_attack "$gas_price" "$gas_token" "$refund_receiver"
 
     # Calculate and display the hashes.
     echo "==================================="
