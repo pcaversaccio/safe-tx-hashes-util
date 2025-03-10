@@ -196,22 +196,19 @@ usage() {
     cat <<EOF
 Usage: $0 [--help] [--list-networks]
        --network <network> --address <address> --nonce <nonce>
-       --message <file> --json <file>
+       --message <file> --interactive
 
 Options:
   --help              Display this help message
   --list-networks     List all supported networks and their chain IDs
-  --network <network> Specify the network (required for API-based retrieval)
-  --address <address> Specify the Safe multisig address (required for API-based retrieval)
-  --nonce <nonce>     Specify the transaction nonce (required for transaction hashes via API)
+  --network <network> Specify the network (required)
+  --address <address> Specify the Safe multisig address (required)
+  --nonce <nonce>     Specify the transaction nonce (required for transaction hashes)
   --message <file>    Specify the message file (required for off-chain message hashes)
-  --json <file>       Specify a JSON file with transaction data (alternative to API-based retrieval)
+  --interactive       Use interactive mode (optional for transaction hashes)
 
-Example for transaction hashes via API:
+Example for transaction hashes:
   $0 --network ethereum --address 0x1234...5678 --nonce 42
-
-Example for transaction hashes via JSON file:
-  $0 --json transaction.json
 
 Example for off-chain message hashes:
   $0 --network ethereum --address 0x1234...5678 --message message.txt
@@ -335,6 +332,9 @@ print_decoded_data() {
     elif [[ "$data" != "0x" && "$data_decoded" == "0x" ]]; then
         print_field "Method" "Unknown"
         print_field "Parameters" "Unknown"
+    elif [[ "$data_decoded" == "interactive" ]]; then
+        print_field "Method" "Unavailable in interactive mode"
+        print_field "Parameters" "Unavailable in interactive mode"
     else
         local method=$(echo "$data_decoded" | jq -r ".method")
         local parameters=$(echo "$data_decoded" | jq -r ".parameters")
@@ -646,7 +646,7 @@ calculate_safe_hashes() {
         usage
     fi
 
-    local network="" address="" nonce="" message_file="" json_file=""
+    local network="" address="" nonce="" message_file="" interactive=""
 
     # Parse the command line arguments.
     while [[ $# -gt 0 ]]; do
@@ -656,98 +656,11 @@ calculate_safe_hashes() {
             --address) address="$2"; shift 2 ;;
             --nonce) nonce="$2"; shift 2 ;;
             --message) message_file="$2"; shift 2 ;;
-            --json) json_file="$2"; shift 2 ;;
+            --interactive) interactive="1"; shift ;;
             --list-networks) list_networks ;;
             *) echo "Unknown option: $1" >&2; usage ;;
         esac
     done
-
-    # Handle JSON file input if provided
-    if [[ -n "$json_file" ]]; then
-        # Validate that the JSON file exists
-        if [[ ! -f "$json_file" ]]; then
-            echo -e "${BOLD}${RED}JSON file not found: \"${json_file}\"!${RESET}" >&2
-            exit 1
-        fi
-
-        # Read and parse the JSON file
-        local json_content=$(cat "$json_file")
-        
-        # Extract values from the JSON file
-        local chain_id=$(echo "$json_content" | jq -r ".chainid // \"\"")
-        local safe_address=$(echo "$json_content" | jq -r ".safe_address // \"\"")
-        local safe_version=$(echo "$json_content" | jq -r ".safe_version // \"\"")
-        local json_nonce=$(echo "$json_content" | jq -r ".nonce // \"\"")
-        local to_address=$(echo "$json_content" | jq -r ".to_address // \"0x0000000000000000000000000000000000000000\"")
-        local value=$(echo "$json_content" | jq -r ".value // \"0\"")
-        local data=$(echo "$json_content" | jq -r ".data // \"0x\"")
-        local operation=$(echo "$json_content" | jq -r ".operation // \"0\"")
-        local safe_tx_gas=$(echo "$json_content" | jq -r ".safe_transaction_gas // \"0\"")
-        local base_gas=$(echo "$json_content" | jq -r ".base_gas // \"0\"")
-        local gas_price=$(echo "$json_content" | jq -r ".gas_price // \"0\"")
-        local gas_token=$(echo "$json_content" | jq -r ".gas_token // \"0x0000000000000000000000000000000000000000\"")
-        local refund_receiver=$(echo "$json_content" | jq -r ".refund_receiver // \"0x0000000000000000000000000000000000000000\"")
-        
-        # Validate required fields
-        if [[ -z "$chain_id" ]]; then
-            echo -e "${BOLD}${RED}Missing required field 'chainid' in JSON file!${RESET}" >&2
-            exit 1
-        fi
-        if [[ -z "$safe_address" ]]; then
-            echo -e "${BOLD}${RED}Missing required field 'safe_address' in JSON file!${RESET}" >&2
-            exit 1
-        fi
-        if [[ -z "$safe_version" ]]; then
-            echo -e "${BOLD}${RED}Missing required field 'safe_version' in JSON file!${RESET}" >&2
-            exit 1
-        fi
-        if [[ -z "$json_nonce" ]]; then
-            echo -e "${BOLD}${RED}Missing required field 'nonce' in JSON file!${RESET}" >&2
-            exit 1
-        fi
-        
-        # Validate address format
-        if [[ ! "$safe_address" =~ ^0x[a-fA-F0-9]{40}$ ]]; then
-            echo -e "${BOLD}${RED}Invalid Ethereum address format for 'safe_address': \"${safe_address}\"${RESET}" >&2
-            exit 1
-        fi
-        
-        # Calculate and display the hashes
-        echo "==================================="
-        echo "= Selected Network Configurations ="
-        echo -e "===================================\n"
-        print_field "Chain ID" "$chain_id" true
-        echo "========================================"
-        echo "= Transaction Data and Computed Hashes ="
-        echo "========================================"
-        
-        # Since we're using a JSON file, we don't have decoded data
-        local data_decoded="0x"
-        
-        calculate_hashes "$chain_id" \
-            "$safe_address" \
-            "$to_address" \
-            "$value" \
-            "$data" \
-            "$operation" \
-            "$safe_tx_gas" \
-            "$base_gas" \
-            "$gas_price" \
-            "$gas_token" \
-            "$refund_receiver" \
-            "$json_nonce" \
-            "$data_decoded" \
-            "$safe_version"
-        
-        exit 0
-    fi
-
-    # For API-based retrieval, validate required parameters
-    if [[ -z "$network" || -z "$address" ]]; then
-        echo -e "${BOLD}${RED}Missing required parameters for API-based retrieval!${RESET}" >&2
-        echo -e "${BOLD}${RED}Please provide --network and --address, or use --json for file-based input.${RESET}" >&2
-        exit 1
-    fi
 
     # Validate if the required parameters have the correct format.
     validate_network "$network"
@@ -761,8 +674,26 @@ calculate_safe_hashes() {
     # Get the Safe multisig version.
     local version=$(curl -sf "${api_url}/api/v1/safes/${address}/" | jq -r ".version // \"0.0.0\"")
 
+    # If --interactive mode is enabled, the version value will be overridden by the user's input.
+    if [[ -n "$interactive" ]]; then
+            cat <<EOF
+$(tput setaf 3)IMPORTANT: Leaving a parameter empty will use the value retrieved from the Safe transaction service API.
+The displayed "default" values are the values retrieved from the Safe transaction service API.$(tput sgr0)
+
+EOF
+        read -rp "Enter the Safe multisig version (default: $version): " user_version
+        if [[ -n "$user_version" ]]; then
+            version="$user_version"
+        fi
+        validate_version $version
+    fi
+
     # Calculate the domain and message hashes for off-chain messages.
     if [[ -n "$message_file" ]]; then
+        if [[ -n "$interactive" ]]; then
+            echo -e "${RED}Error: When calculating off-chain message hashes, do not specify the \`--interactive\` mode.${RESET}" >&2
+            exit 1
+        fi
         if [[ -n "$nonce" ]]; then
             echo -e "${RED}Error: When calculating off-chain message hashes, do not specify a nonce.${RESET}" >&2
             exit 1
@@ -776,16 +707,18 @@ calculate_safe_hashes() {
 
     # Fetch the transaction data from the API.
     local response=$(curl -sf "$endpoint")
-    local count=$(echo "$response" | jq -r ".count // \"0\"")
-    local idx=0
 
-    # Inform the user that no transactions are available for the specified nonce.
-    if [[ $count -eq 0 ]]; then
-        echo "$(tput setaf 3)No transaction is available for this nonce!$(tput sgr0)"
-        exit 0
-    # Notify the user about multiple transactions with identical nonce values and prompt for user input.
-    elif [[ $count -gt 1 ]]; then
-        cat <<EOF
+    local idx=0
+    if [[ -z "$interactive" ]]; then
+        local count=$(echo "$response" | jq -r ".count // \"0\"")
+
+        # Inform the user that no transactions are available for the specified nonce.
+        if [[ $count -eq 0 ]]; then
+            echo "$(tput setaf 3)No transaction is available for this nonce!$(tput sgr0)"
+            exit 0
+        # Notify the user about multiple transactions with identical nonce values and prompt for user input.
+        elif [[ $count -gt 1 ]]; then
+            cat <<EOF
 $(tput setaf 3)Several transactions with identical nonce values have been detected.
 This occurrence is normal if you are deliberately replacing an existing transaction.
 However, if your Safe interface displays only a single transaction, this could indicate
@@ -798,26 +731,27 @@ $(tput setaf 2)$endpoint$(tput sgr0)
 Please enter the index of the array:
 EOF
 
-        while true; do
-            read -r idx
+            while true; do
+                read -r idx
 
-            # Validate if user input is a number.
-            if ! [[ $idx =~ ^[0-9]+$ ]]; then
-                echo "$(tput setaf 1)Error: Please enter a valid number!$(tput sgr0)"
-                continue
-            fi
+                # Validate if user input is a number.
+                if ! [[ $idx =~ ^[0-9]+$ ]]; then
+                    echo "$(tput setaf 1)Error: Please enter a valid number!$(tput sgr0)"
+                    continue
+                fi
 
-            local array_value=$(echo "$response" | jq ".results[$idx]")
+                local array_value=$(echo "$response" | jq ".results[$idx]")
 
-            if [[ $array_value == null ]]; then
-                echo "$(tput setaf 1)Error: No transaction found at index $idx. Please try again.$(tput sgr0)"
-                continue
-            fi
+                if [[ $array_value == null ]]; then
+                    echo "$(tput setaf 1)Error: No transaction found at index $idx. Please try again.$(tput sgr0)"
+                    continue
+                fi
 
-            printf "\n"
+                printf "\n"
 
-            break
-        done
+                break
+            done
+        fi
     fi
 
     local to=$(echo "$response" | jq -r ".results[$idx].to // \"0x0000000000000000000000000000000000000000\"")
@@ -831,6 +765,51 @@ EOF
     local refund_receiver=$(echo "$response" | jq -r ".results[$idx].refundReceiver // \"0x0000000000000000000000000000000000000000\"")
     local nonce=$(echo "$response" | jq -r ".results[$idx].nonce // \"0\"")
     local data_decoded=$(echo "$response" | jq -r ".results[$idx].dataDecoded // \"0x\"")
+
+    # If --interactive mode is enabled, the parameter values will be overridden by the user's input.
+    if [[ -n "$interactive" ]]; then
+        read -rp "Enter the \`to\` address (default: $to): " user_input
+        to="${user_input:-$to}"
+        validate_address "$to"
+
+        read -rp "Enter the \`value\` (default: $value): " user_input
+        value="${user_input:-$value}"
+
+        read -rp "Enter the \`data\` (default: $data): " user_input
+        data="${user_input:-$data}"
+
+        while true; do
+            read -rp "Enter the \`operation\` (default: $operation; 0 = CALL, 1 = DELEGATECALL): " user_input
+            user_input="${user_input:-$operation}"
+            if [[ "$user_input" == "0" || "$user_input" == "1" ]]; then
+                operation="$user_input"
+                break
+            else
+                cat <<EOF
+$(tput setaf 3)Invalid input. Please enter either 0 (CALL) or 1 (DELEGATECALL).$(tput sgr0)
+EOF
+            fi
+        done
+
+        read -rp "Enter the \`safeTxGas\` (default: $safe_tx_gas): " user_input
+        safe_tx_gas="${user_input:-$safe_tx_gas}"
+
+        read -rp "Enter the \`baseGas\` (default: $base_gas): " user_input
+        base_gas="${user_input:-$base_gas}"
+
+        read -rp "Enter the \`gasPrice\` (default: $gas_price): " user_input
+        gas_price="${user_input:-$gas_price}"
+
+        read -rp "Enter the \`gasToken\` (default: $gas_token): " user_input
+        gas_token="${user_input:-$gas_token}"
+        validate_address "$gas_token"
+
+        read -rp "Enter the \`refundReceiver\` (default: $refund_receiver): " user_input
+        refund_receiver="${user_input:-$refund_receiver}"
+        validate_address "$refund_receiver"
+
+        data_decoded="interactive"
+    fi
 
     # Warn the user if the transaction includes an untrusted delegate call.
     warn_if_delegate_call "$operation" "$to"

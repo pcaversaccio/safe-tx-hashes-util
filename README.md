@@ -19,6 +19,9 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
   - [macOS Users: Upgrading Bash](#macos-users-upgrading-bash)
     - [Optional: Set the New Bash as Your Default Shell](#optional-set-the-new-bash-as-your-default-shell)
 - [Safe Transaction Hashes](#safe-transaction-hashes)
+  - [Interactive Mode](#interactive-mode)
+  - [Interactive Mode](#interactive-mode-1)
+    - [How It Works](#how-it-works)
 - [Safe Message Hashes](#safe-message-hashes)
 - [Trust Assumptions](#trust-assumptions)
 - [Community-Maintained User Interface Implementations](#community-maintained-user-interface-implementations)
@@ -57,7 +60,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 > For macOS users, please refer to the [macOS Users: Upgrading Bash](#macos-users-upgrading-bash) section.
 
 ```console
-./safe_hashes.sh [--help] [--list-networks] --network <network> --address <address> --nonce <nonce> --message <file> --json <file>
+./safe_hashes.sh [--help] [--list-networks] --network <network> --address <address> --nonce <nonce> --message <file> --interactive
 ```
 
 **Options:**
@@ -68,7 +71,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - `--address <address>`: Specify the Safe multisig address.
 - `--nonce <nonce>`: Specify the transaction nonce (required for transaction hashes).
 - `--message <file>`: Specify the message file (required for off-chain message hashes).
-- `--json <file>`: Specify a JSON file with transaction data (alternative to API-based retrieval).
+- `--interactive`: Use interactive mode (optional for transaction hashes).
 
 Before you invoke the [script](./safe_hashes.sh), make it executable:
 
@@ -143,11 +146,7 @@ Make sure to replace `BASH_PATH` with the actual path you retrieved in step 1.
 
 ## Safe Transaction Hashes
 
-To calculate the Safe transaction hashes for a specific transaction, you have two options:
-
-### Option 1: Using the Safe Transaction Service API
-
-To use the API, you need to specify the `network`, `address`, and `nonce` parameters. An example:
+To calculate the Safe transaction hashes for a specific transaction, you need to specify the `network`, `address`, and `nonce` parameters. An example:
 
 ```console
 ./safe_hashes.sh --network arbitrum --address 0x111CEEee040739fD91D29C34C33E6B3E112F2177 --nonce 234
@@ -210,35 +209,27 @@ To list all supported networks:
 ./safe_hashes.sh --list-networks
 ```
 
-### Option 2: Using a JSON Input File
+### Interactive Mode
 
-If the Safe API is unavailable or you want to calculate transaction hashes offline, you can provide the transaction data in a JSON file:
+Here’s a refined version of your section:
+
+### Interactive Mode
+
+When using `--interactive` mode, you will be prompted to provide values for various parameters. If you leave any parameter empty, the default value displayed in the terminal will be used. These defaults are either retrieved from the [Safe transaction service API](https://docs.safe.global/core-api/transaction-service-overview) or, in case of failure, fall back to zero values. This allows you to customize the parameters or proceed with the API-sourced defaults.
+
+#### How It Works
+
+- The script will prompt you to enter values for parameters like `to`, `value`, `data`, and others.
+- If you don't provide input, the default value fetched from the Safe API will be used. If there are multiple transactions for the same nonce, the first transaction with array value `0` is chosen.
+- Some parameters (e.g., `operation`) enforce valid options, but not all user input is sanity-checked. Please ensure you double-check your entries.
 
 ```console
-./safe_hashes.sh --json transaction.json
+./safe_hashes.sh --network arbitrum --address 0x111CEEee040739fD91D29C34C33E6B3E112F2177 --nonce 234 --interactive
 ```
 
-The JSON file should contain the following fields:
-
-```json
-{
-  "chainid": "1",                                           // Chain ID (required)
-  "safe_address": "0x1234567890123456789012345678901234567890", // Safe multisig address (required)
-  "safe_version": "1.3.0",                                  // Safe contract version (required)
-  "nonce": "42",                                            // Transaction nonce (required)
-  "to_address": "0xabcdef0123456789abcdef0123456789abcdef01", // Destination address
-  "value": "1000000000000000000",                           // Value in wei
-  "data": "0x",                                             // Transaction data
-  "operation": "0",                                         // Operation type (0=Call, 1=DelegateCall)
-  "safe_transaction_gas": "21000",                          // SafeTxGas
-  "base_gas": "0",                                          // BaseGas
-  "gas_price": "20000000000",                               // Gas price
-  "gas_token": "0x0000000000000000000000000000000000000000", // Gas token address
-  "refund_receiver": "0x0000000000000000000000000000000000000000" // Refund receiver address
-}
 ```
 
-A sample JSON file is provided in the repository as `sample_transaction.json`.
+```
 
 ## Safe Message Hashes
 
