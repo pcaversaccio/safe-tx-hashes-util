@@ -22,6 +22,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - [Safe Message Hashes](#safe-message-hashes)
 - [Trust Assumptions](#trust-assumptions)
 - [Community-Maintained User Interface Implementations](#community-maintained-user-interface-implementations)
+- [💸 Donation](#-donation)
 
 ## Supported Networks
 
@@ -31,20 +32,20 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - Base (identifier: `base`, chain ID: `8453`)
 - Base Sepolia (identifier: `base-sepolia`, chain ID: `84532`)
 - Blast (identifier: `blast`, chain ID: `81457`)
-- BSC (Binance Smart Chain) (identifier: `bsc`, chain ID: `56`)
+- BSC (BNB Smart Chain) (identifier: `bsc`, chain ID: `56`)
 - Celo (identifier: `celo`, chain ID: `42220`)
 - Ethereum (identifier: `ethereum`, chain ID: `1`)
 - Gnosis (identifier: `gnosis`, chain ID: `100`)
 - Gnosis Chiado (identifier: `gnosis-chiado`, chain ID: `10200`)
 - Linea (identifier: `linea`, chain ID: `59144`)
 - Mantle (identifier: `mantle`, chain ID: `5000`)
-- Optimism (identifier: `optimism`, chain ID: `10`)
+- OP (Optimism) (identifier: `optimism`, chain ID: `10`)
 - Polygon (identifier: `polygon`, chain ID: `137`)
 - Polygon zkEVM (identifier: `polygon-zkevm`, chain ID: `1101`)
 - Scroll (identifier: `scroll`, chain ID: `534352`)
 - Sepolia (identifier: `sepolia`, chain ID: `11155111`)
 - World Chain (identifier: `worldchain`, chain ID: `480`)
-- X Layer (identifier: `xlayer`, chain ID: `195`)
+- X Layer (identifier: `xlayer`, chain ID: `196`)
 - ZKsync Era (identifier: `zksync`, chain ID: `324`)
 
 ## Usage
@@ -199,6 +200,9 @@ To list all supported networks:
 
 ## Safe Message Hashes
 
+> [!IMPORTANT]
+> At present, this [script](./safe_hashes.sh) does not support calculating Safe message hashes for [EIP-712](https://eips.ethereum.org/EIPS/eip-712)-based messages due to the inherent complexity of parsing the message and identifying the relevant type hashes. However, you can find my easily adjustable Bash script version [here](https://github.com/pcaversaccio/zksync-emergency-upgrades/blob/main/safe_hashes.sh) to calculate Safe message hashes for [EIP-712](https://eips.ethereum.org/EIPS/eip-712)-based messages.
+
 This [script](./safe_hashes.sh) not only calculates Safe transaction hashes but also supports computing the corresponding hashes for off-chain messages following the [EIP-712](https://eips.ethereum.org/EIPS/eip-712) standard. To calculate the Safe message hashes for a specific message, specify the `network`, `address`, and `message` parameters. The `message` parameter must specify a valid file containing the raw message. This can be either the file name or a relative path (e.g., `path/to/message.txt`). Note that the [script](./safe_hashes.sh) normalises line endings to `LF` (`\n`) in the message file.
 
 An example: Save the following message to a file named `message.txt`:
@@ -269,10 +273,14 @@ Safe message hash: 0x1866b559f56261ada63528391b93a1fe8e2e33baf7cace94fc6b42202d1
 ## Community-Maintained User Interface Implementations
 
 > [!IMPORTANT]
-> Please be aware that user interface implementations may introduce additional trust assumptions, such as relying on `npm` dependencies that have not undergone thorough review. Always verify and cross-reference with the main [script](./safe_hashes.sh).
+> Please be aware that user interface implementations may introduce additional trust assumptions, such as relying on `npm` dependencies that have not undergone thorough review or a deployment process that could be compromised by an attacker. Always verify and cross-reference with the main [script](./safe_hashes.sh).
 
-- [`safehashpreview.com`](https://www.safehashpreview.com):
-  - Code: [`josepchetrit12/safe-tx-hashes-util`](https://github.com/josepchetrit12/safe-tx-hashes-util)
+- [`safeutils.openzeppelin.com`](https://safeutils.openzeppelin.com):
+  - Code: [`OpenZeppelin/safe-utils`](https://github.com/OpenZeppelin/safe-utils)
   - Authors: [`josepchetrit12`](https://github.com/josepchetrit12), [`xaler5`](https://github.com/xaler5)
+
+## 💸 Donation
+
+I am a strong advocate of the open-source and free software paradigm. However, if you feel my work deserves a donation, you can send it to this address: [`0xe9Fa0c8B5d7F79DeC36D3F448B1Ac4cEdedE4e69`](https://etherscan.io/address/0xe9Fa0c8B5d7F79DeC36D3F448B1Ac4cEdedE4e69). I can pledge that I will use this money to help fix more existing challenges in the Ethereum ecosystem 🤝.
 
 [^1]: It is theoretically possible to query transactions prior to the first signature; however, this functionality is not incorporated into the main [script](https://github.com/pcaversaccio/safe-tx-hashes-util/blob/main/safe_hashes.sh). To do so, you would proceed through the [Safe UI](https://app.safe.global) as usual, stopping at the page where the transaction is signed or executed. At this point, the action is recorded in the [Safe Transaction Service API](https://docs.safe.global/core-api/transaction-service-overview), allowing you to retrieve the unsigned transaction by setting `trusted=false` in the [API](https://docs.safe.global/core-api/transaction-service-reference/mainnet#List-a-Safe's-Multisig-Transactions) query within your Bash script. For example, you might use a query such as: `https://safe-transaction-arbitrum.safe.global/api/v1/safes/0xB24A3AA250E209bC95A4a9afFDF10c6D099B3d34/multisig-transactions/?trusted=false&nonce=4`. This decision to not implement this feature avoids potential confusion caused by unsigned transactions in the queue, especially when multiple transactions share the same nonce, making it unclear which one to act upon. If this feature aligns with your needs, feel free to fork the [script](https://github.com/pcaversaccio/safe-tx-hashes-util/blob/main/safe_hashes.sh) and modify it as necessary.
