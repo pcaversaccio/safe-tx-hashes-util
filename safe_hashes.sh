@@ -534,6 +534,7 @@ warn_if_delegate_call() {
     if [[ "$operation" -eq 1 && ! " ${TRUSTED_FOR_DELEGATE_CALL[@]} " =~ " ${to} " ]]; then
         echo
         cat <<EOF
+
 $(tput setaf 1)WARNING: The transaction includes an untrusted delegate call to address $to!
 This may lead to unexpected behaviour or vulnerabilities. Please review it carefully before you sign!$(tput sgr0)
 
@@ -549,15 +550,15 @@ check_gas_token_attack() {
     local warning_message=""
 
     if [[ "$gas_token" != "$ZERO_ADDRESS" && "$refund_receiver" != "$ZERO_ADDRESS" ]]; then
-        warning_message+="$(tput setaf 1)WARNING: This transaction uses a custom gas token and a custom refund receiver.
+        warning_message+="\n$(tput setaf 1)WARNING: This transaction uses a custom gas token and a custom refund receiver.
 This combination can be used to hide a rerouting of funds through gas refunds.$(tput sgr0)\n"
         if [[ "$gas_price" != "0" ]]; then
             warning_message+="$(tput setaf 1)Furthermore, the gas price is non-zero, which increases the potential for hidden value transfers.$(tput sgr0)\n"
         fi
     elif [[ "$gas_token" != "$ZERO_ADDRESS" ]]; then
-        warning_message+="$(tput setaf 3)WARNING: This transaction uses a custom gas token. Please verify that this is intended.$(tput sgr0)\n"
+        warning_message+="\n$(tput setaf 3)WARNING: This transaction uses a custom gas token. Please verify that this is intended.$(tput sgr0)\n"
     elif [[ "$refund_receiver" != "$ZERO_ADDRESS" ]]; then
-        warning_message+="$(tput setaf 3)WARNING: This transaction uses a custom refund receiver. Please verify that this is intended.$(tput sgr0)\n"
+        warning_message+="\n$(tput setaf 3)WARNING: This transaction uses a custom refund receiver. Please verify that this is intended.$(tput sgr0)\n"
     fi
 
     if [[ -n "$warning_message" ]]; then
@@ -679,6 +680,7 @@ calculate_safe_hashes() {
     # If --interactive mode is enabled, the version value will be overridden by the user's input.
     if [[ -n "$interactive" ]]; then
             cat <<EOF
+
 $(tput setaf 3)IMPORTANT: Leaving a parameter empty will use the value retrieved from the Safe transaction service API.
 The displayed "default" values are the values retrieved from the Safe transaction service API.$(tput sgr0)
 
@@ -756,15 +758,15 @@ EOF
         fi
     fi
 
-    local to=$(echo "$response" | jq -r ".results[$idx].to // \"0x0000000000000000000000000000000000000000\"")
+    local to=$(echo "$response" | jq -r ".results[$idx].to // \"$ZERO_ADDRESS\"")
     local value=$(echo "$response" | jq -r ".results[$idx].value // \"0\"")
     local data=$(echo "$response" | jq -r ".results[$idx].data // \"0x\"")
     local operation=$(echo "$response" | jq -r ".results[$idx].operation // \"0\"")
     local safe_tx_gas=$(echo "$response" | jq -r ".results[$idx].safeTxGas // \"0\"")
     local base_gas=$(echo "$response" | jq -r ".results[$idx].baseGas // \"0\"")
     local gas_price=$(echo "$response" | jq -r ".results[$idx].gasPrice // \"0\"")
-    local gas_token=$(echo "$response" | jq -r ".results[$idx].gasToken // \"0x0000000000000000000000000000000000000000\"")
-    local refund_receiver=$(echo "$response" | jq -r ".results[$idx].refundReceiver // \"0x0000000000000000000000000000000000000000\"")
+    local gas_token=$(echo "$response" | jq -r ".results[$idx].gasToken // \"$ZERO_ADDRESS\"")
+    local refund_receiver=$(echo "$response" | jq -r ".results[$idx].refundReceiver // \"$ZERO_ADDRESS\"")
     local nonce=$(echo "$response" | jq -r ".results[$idx].nonce // \"0\"")
     local data_decoded=$(echo "$response" | jq -r ".results[$idx].dataDecoded // \"0x\"")
 

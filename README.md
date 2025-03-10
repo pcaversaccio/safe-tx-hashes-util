@@ -20,7 +20,6 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
     - [Optional: Set the New Bash as Your Default Shell](#optional-set-the-new-bash-as-your-default-shell)
 - [Safe Transaction Hashes](#safe-transaction-hashes)
   - [Interactive Mode](#interactive-mode)
-  - [Interactive Mode](#interactive-mode-1)
     - [How It Works](#how-it-works)
 - [Safe Message Hashes](#safe-message-hashes)
 - [Trust Assumptions](#trust-assumptions)
@@ -211,11 +210,7 @@ To list all supported networks:
 
 ### Interactive Mode
 
-Here’s a refined version of your section:
-
-### Interactive Mode
-
-When using `--interactive` mode, you will be prompted to provide values for various parameters. If you leave any parameter empty, the default value displayed in the terminal will be used. These defaults are either retrieved from the [Safe transaction service API](https://docs.safe.global/core-api/transaction-service-overview) or, in case of failure, fall back to zero values. This allows you to customize the parameters or proceed with the API-sourced defaults.
+When using `--interactive` mode, you will be prompted to provide values for various parameters. If you leave any parameter empty, the default value displayed in the terminal will be used. These defaults are either retrieved from the [Safe transaction service API](https://docs.safe.global/core-api/transaction-service-overview) or, in case of failure, fall back to zero values. This allows you to customise the parameters or proceed with the API-sourced defaults.
 
 #### How It Works
 
@@ -227,8 +222,53 @@ When using `--interactive` mode, you will be prompted to provide values for vari
 ./safe_hashes.sh --network arbitrum --address 0x111CEEee040739fD91D29C34C33E6B3E112F2177 --nonce 234 --interactive
 ```
 
-```
+```console
+IMPORTANT: Leaving a parameter empty will use the value retrieved from the Safe transaction service API.
+The displayed "default" values are the values retrieved from the Safe transaction service API.
 
+Enter the Safe multisig version (default: 1.3.0+L2):
+Enter the `to` address (default: 0x091d52CacE1edc5527C99cDCFA6937C1635330E4):
+Enter the `value` (default: 0): 100
+Enter the `data` (default: 0xf2fde38b00000000000000000000000057ba8957ed2ff2e7ae38f4935451e81ce1eefbf5): 0x
+Enter the `operation` (default: 0; 0 = CALL, 1 = DELEGATECALL):
+Enter the `safeTxGas` (default: 0):
+Enter the `baseGas` (default: 0):
+Enter the `gasPrice` (default: 0):
+Enter the `gasToken` (default: 0x0000000000000000000000000000000000000000): 0x111CEEee040739fD91D29C34C33E6B3E112F2177
+Enter the `refundReceiver` (default: 0x0000000000000000000000000000000000000000):
+WARNING: This transaction uses a custom gas token. Please verify that this is intended.
+
+===================================
+= Selected Network Configurations =
+===================================
+
+Network: arbitrum
+Chain ID: 42161
+
+========================================
+= Transaction Data and Computed Hashes =
+========================================
+
+> Transaction Data:
+Multisig address: 0x111CEEee040739fD91D29C34C33E6B3E112F2177
+To: 0x091d52CacE1edc5527C99cDCFA6937C1635330E4
+Value: 100
+Data: 0x
+Operation: Call
+Safe Transaction Gas: 0
+Base Gas: 0
+Gas Price: 0
+Gas Token: 0x111CEEee040739fD91D29C34C33E6B3E112F2177
+Refund Receiver: 0x0000000000000000000000000000000000000000
+Nonce: 230
+Encoded message: 0xbb8310d486368db6bd6f849402fdd73ad53d316b5a4b2644ad6efe0f941286d8000000000000000000000000091d52cace1edc5527c99cdcfa6937c1635330e40000000000000000000000000000000000000000000000000000000000000064c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a4700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111ceeee040739fd91d29c34c33e6b3e112f2177000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000e6
+Method: Unavailable in interactive mode
+Parameters: Unavailable in interactive mode
+
+> Hashes:
+Domain hash: 0x1CF7F9B1EFE3BC47FE02FD27C649FEA19E79D66040683A1C86C7490C80BF7291
+Message hash: 0x24E15ABCE291A9F9D85FFA60501B0388F4329B66297DFCF570B92F9F4B3896EF
+Safe transaction hash: 0x436341f89fe069a92b169f36a2580cf0dfa444d3dbe86731cb1b53dd0343f7d8
 ```
 
 ## Safe Message Hashes
