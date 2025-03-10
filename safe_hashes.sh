@@ -259,13 +259,41 @@ print_transaction_data() {
     local to=$2
     local value=$3
     local data=$4
-    local message=$5
+    local operation=$5
+    local safe_tx_gas=$6
+    local base_gas=$7
+    local gas_price=$8
+    local gas_token=$9
+    local refund_receiver=${10}
+    local nonce=${11}
+    local message=${12}
 
     print_header "Transaction Data"
     print_field "Multisig address" "$address"
     print_field "To" "$to"
     print_field "Value" "$value"
     print_field "Data" "$data"
+    case "$operation" in
+        1) 
+            if [[ "$operation" -eq 1 && ! " ${TRUSTED_FOR_DELEGATE_CALL[@]} " =~ " ${to} " ]]; then
+                print_field "Operation" "Delegatecall $(tput setaf 1)(UNTRUSTED DELEGATECALL; PLEASE VERIFY!)$(tput sgr0)"
+            else
+                print_field "Operation" "Delegatecall $(tput setaf 3)(trusted delegatecall)$(tput sgr0)"
+            fi
+            ;;
+        0) 
+            print_field "Operation" "Call"
+            ;;
+        *) 
+            print_field "Operation" "Unknown"
+            ;;
+    esac
+    print_field "Safe Transaction Gas" "$safe_tx_gas"
+    print_field "Base Gas" "$base_gas"
+    print_field "Gas Price" "$gas_price"
+    print_field "Gas Token" "$gas_token"
+    print_field "Refund Receiver" "$refund_receiver"
+    print_field "Nonce" "$nonce"
     print_field "Encoded message" "$message"
 }
 
@@ -500,7 +528,7 @@ calculate_hashes() {
         awk '/Data:/ {gsub(/\x1b\[[0-9;]*m/, "", $3); print $3}')
 
     # Print the retrieved transaction data.
-    print_transaction_data "$address" "$to" "$value" "$data" "$message"
+    print_transaction_data "$address" "$to" "$value" "$data" "$operation" "$safe_tx_gas" "$base_gas" "$gas_price" "$gas_token" "$refund_receiver" "$nonce" "$message"
     # Print the ABI-decoded transaction data.
     print_decoded_data "$data" "$data_decoded"
     # Check for potential gas token attack
@@ -562,8 +590,7 @@ warn_if_delegate_call() {
         echo
         cat <<EOF
 $(tput setaf 1)WARNING: The transaction includes an untrusted delegate call to address $to!
-This may lead to unexpected behaviour or vulnerabilities.
-Please review it carefully before you sign!$(tput sgr0)
+This may lead to unexpected behaviour or vulnerabilities. Please review it carefully before you sign!$(tput sgr0)
 
 EOF
     fi
