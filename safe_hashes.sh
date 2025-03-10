@@ -560,7 +560,9 @@ This combination can be used to hide a rerouting of funds through gas refunds.$(
         warning_message+="$(tput setaf 3)WARNING: This transaction uses a custom refund receiver. Please verify that this is intended.$(tput sgr0)\n"
     fi
 
-    [[ -n "$warning_message" ]] && echo -e "$warning_message"
+    if [[ -n "$warning_message" ]]; then
+        echo -e "$warning_message"
+    fi
 }
 
 # Utility function to validate the message file.
