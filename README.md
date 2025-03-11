@@ -20,7 +20,6 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
     - [Optional: Set the New Bash as Your Default Shell](#optional-set-the-new-bash-as-your-default-shell)
 - [Safe Transaction Hashes](#safe-transaction-hashes)
   - [Interactive Mode](#interactive-mode)
-    - [How It Works](#how-it-works)
 - [Safe Message Hashes](#safe-message-hashes)
 - [Trust Assumptions](#trust-assumptions)
 - [Community-Maintained User Interface Implementations](#community-maintained-user-interface-implementations)
@@ -70,7 +69,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - `--address <address>`: Specify the Safe multisig address.
 - `--nonce <nonce>`: Specify the transaction nonce (required for transaction hashes).
 - `--message <file>`: Specify the message file (required for off-chain message hashes).
-- `--interactive`: Use interactive mode (optional for transaction hashes).
+- `--interactive`: Use the interactive mode (optional for transaction hashes).
 
 Before you invoke the [script](./safe_hashes.sh), make it executable:
 
@@ -210,33 +209,52 @@ To list all supported networks:
 
 ### Interactive Mode
 
-When using `--interactive` mode, you will be prompted to provide values for various parameters. If you leave any parameter empty, the default value displayed in the terminal will be used. These defaults are either retrieved from the [Safe transaction service API](https://docs.safe.global/core-api/transaction-service-overview) or, in case of failure, fall back to zero values. This allows you to customise the parameters or proceed with the API-sourced defaults.
+> [!WARNING]
+> If it's not already obvious: This is YOLO mode – BE VERY CAREFUL!
 
-#### How It Works
+When using `--interactive` mode, you will be prompted to provide values for various parameters such as `version`, `to`, `value`, and others. If you leave any parameter empty, the default value displayed in the terminal will be used. These defaults are either retrieved from the [Safe transaction service API](https://docs.safe.global/core-api/transaction-service-overview) or, in case of failure, fall back to zero values. This allows you to customise the parameters or proceed with the API-sourced defaults.
 
-- The script will prompt you to enter values for parameters like `to`, `value`, `data`, and others.
-- If you don't provide input, the default value fetched from the Safe API will be used. If there are multiple transactions for the same nonce, the first transaction with array value `0` is chosen.
-- Some parameters (e.g., `operation`) enforce valid options, but not all user input is sanity-checked. Please ensure you double-check your entries.
+**Read This Before Proceeding:**
+
+- Leaving a parameter empty will use the value retrieved from the Safe transaction service API, displayed as the "default value". If the value is unavailable (e.g. if the API endpoint is down), it will default to zero.
+- If multiple transactions share the same nonce, the first transaction in the array will be selected to provide the default values.
+- **No warnings will be shown if multiple transactions share the same nonce.** It's recommended to first run a validation without interactive mode enabled!
+- Some parameters (e.g., `version`, `to`, `operation`) enforce valid options, but not all inputs are strictly validated. **Please double-check your entries before proceeding.**
 
 ```console
 ./safe_hashes.sh --network arbitrum --address 0x111CEEee040739fD91D29C34C33E6B3E112F2177 --nonce 234 --interactive
 ```
 
 ```console
-IMPORTANT: Leaving a parameter empty will use the value retrieved from the Safe transaction service API.
-The displayed "default" values are the values retrieved from the Safe transaction service API.
+Interactive mode is enabled. You will be prompted to enter values for parameters such as `version`, `to`, `value`, and others.
+
+If it's not already obvious: This is YOLO mode – BE VERY CAREFUL!
+
+IMPORTANT:
+- Leaving a parameter empty will use the value retrieved from the Safe transaction service API, displayed as the "default value".
+  If the value is unavailable (e.g. if the API endpoint is down), it will default to zero.
+- If multiple transactions share the same nonce, the first transaction in the array will be selected to provide the default values.
+- No warnings will be shown if multiple transactions share the same nonce. It's recommended to first run a validation without interactive mode enabled!
+- Some parameters (e.g., `version`, `to`, `operation`) enforce valid options, but not all inputs are strictly validated.
+  Please double-check your entries before proceeding.
 
 Enter the Safe multisig version (default: 1.3.0+L2):
-Enter the `to` address (default: 0x091d52CacE1edc5527C99cDCFA6937C1635330E4):
-Enter the `value` (default: 0): 100
-Enter the `data` (default: 0xf2fde38b00000000000000000000000057ba8957ed2ff2e7ae38f4935451e81ce1eefbf5): 0x
-Enter the `operation` (default: 0; 0 = CALL, 1 = DELEGATECALL):
+Enter the `to` address (default: 0x111CEEee040739fD91D29C34C33E6B3E112F2177):
+Enter the `value` (default: 0): 1000
+Enter the `data` (default: 0x0d582f130000000000000000000000000c75fa5a5f1c0997e3eea425cfa13184ed0ec9e50000000000000000000000000000000000000000000000000000000000000003):
+Enter the `operation` (default: 0; 0 = CALL, 1 = DELEGATECALL): 1
 Enter the `safeTxGas` (default: 0):
 Enter the `baseGas` (default: 0):
-Enter the `gasPrice` (default: 0):
-Enter the `gasToken` (default: 0x0000000000000000000000000000000000000000): 0x111CEEee040739fD91D29C34C33E6B3E112F2177
-Enter the `refundReceiver` (default: 0x0000000000000000000000000000000000000000):
-WARNING: This transaction uses a custom gas token. Please verify that this is intended.
+Enter the `gasPrice` (default: 0): 50
+Enter the `gasToken` (default: 0x0000000000000000000000000000000000000000): 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
+Enter the `refundReceiver` (default: 0x0000000000000000000000000000000000000000): 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
+
+WARNING: The transaction includes an untrusted delegate call to address 0x111CEEee040739fD91D29C34C33E6B3E112F2177!
+This may lead to unexpected behaviour or vulnerabilities. Please review it carefully before you sign!
+
+WARNING: This transaction uses a custom gas token and a custom refund receiver.
+This combination can be used to hide a rerouting of funds through gas refunds.
+Furthermore, the gas price is non-zero, which increases the potential for hidden value transfers.
 
 ===================================
 = Selected Network Configurations =
@@ -251,24 +269,24 @@ Chain ID: 42161
 
 > Transaction Data:
 Multisig address: 0x111CEEee040739fD91D29C34C33E6B3E112F2177
-To: 0x091d52CacE1edc5527C99cDCFA6937C1635330E4
-Value: 100
-Data: 0x
-Operation: Call
+To: 0x111CEEee040739fD91D29C34C33E6B3E112F2177
+Value: 1000
+Data: 0x0d582f130000000000000000000000000c75fa5a5f1c0997e3eea425cfa13184ed0ec9e50000000000000000000000000000000000000000000000000000000000000003
+Operation: Delegatecall (UNTRUSTED delegatecall; carefully verify before proceeding!)
 Safe Transaction Gas: 0
 Base Gas: 0
-Gas Price: 0
-Gas Token: 0x111CEEee040739fD91D29C34C33E6B3E112F2177
-Refund Receiver: 0x0000000000000000000000000000000000000000
-Nonce: 230
-Encoded message: 0xbb8310d486368db6bd6f849402fdd73ad53d316b5a4b2644ad6efe0f941286d8000000000000000000000000091d52cace1edc5527c99cdcfa6937c1635330e40000000000000000000000000000000000000000000000000000000000000064c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a4700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111ceeee040739fd91d29c34c33e6b3e112f2177000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000e6
+Gas Price: 50
+Gas Token: 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
+Refund Receiver: 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
+Nonce: 234
+Encoded message: 0xbb8310d486368db6bd6f849402fdd73ad53d316b5a4b2644ad6efe0f941286d8000000000000000000000000111ceeee040739fd91d29c34c33e6b3e112f217700000000000000000000000000000000000000000000000000000000000003e8b34f85cea7c4d9f384d502fc86474cd71ff27a674d785ebd23a4387871b8cbfe0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000032000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2000000000000000000000000d8da6bf26964af9d7eed9e03e53415d37aa9604500000000000000000000000000000000000000000000000000000000000000ea
 Method: Unavailable in interactive mode
 Parameters: Unavailable in interactive mode
 
 > Hashes:
 Domain hash: 0x1CF7F9B1EFE3BC47FE02FD27C649FEA19E79D66040683A1C86C7490C80BF7291
-Message hash: 0x24E15ABCE291A9F9D85FFA60501B0388F4329B66297DFCF570B92F9F4B3896EF
-Safe transaction hash: 0x436341f89fe069a92b169f36a2580cf0dfa444d3dbe86731cb1b53dd0343f7d8
+Message hash: 0xC7E826933DA60E6AC3E2246ED0563A26A920A65BEAA9089D784AC96234141BB3
+Safe transaction hash: 0xc818fceb1cace51c1a4039c4c66fc73d95eccc298104c9c52debac604b9f4e04
 ```
 
 ## Safe Message Hashes
