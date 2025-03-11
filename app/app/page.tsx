@@ -35,7 +35,7 @@ function HomeContent() {
       setShowResult(false);
       setLastMethod(currentMethod);
     }
-    
+     
     setShowResult(calculationRequested && (currentMethod === "api" || step >= 4));
   }, [calculationRequested, step, form, lastMethod]);
 
