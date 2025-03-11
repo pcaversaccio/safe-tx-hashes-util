@@ -60,8 +60,12 @@ if [[ "${DEBUG:-false}" == "true" ]]; then
     set -x
 fi
 
-# Set the zero address as global constant.
+# Set the zero address as a global constant.
 readonly ZERO_ADDRESS="0x0000000000000000000000000000000000000000"
+
+# Set a global flag indicating whether a delegate call warning was already displayed
+# to the user. Used to determine proper spacing between multiple warnings.
+delegate_call_warning_shown=false
 
 # Set the type hash constants.
 # => `keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");`
@@ -205,10 +209,13 @@ Options:
   --address <address> Specify the Safe multisig address (required)
   --nonce <nonce>     Specify the transaction nonce (required for transaction hashes)
   --message <file>    Specify the message file (required for off-chain message hashes)
-  --interactive       Use interactive mode (optional for transaction hashes)
+  --interactive       Use the interactive mode (optional for transaction hashes)
 
 Example for transaction hashes:
   $0 --network ethereum --address 0x1234...5678 --nonce 42
+
+Example for transaction hashes (interactive mode):
+  $0 --network ethereum --address 0x1234...5678 --nonce 42 --interactive
 
 Example for off-chain message hashes:
   $0 --network ethereum --address 0x1234...5678 --message message.txt
@@ -280,7 +287,7 @@ print_transaction_data() {
     case "$operation" in
         1) 
             if [[ "$operation" -eq 1 && ! " ${TRUSTED_FOR_DELEGATE_CALL[@]} " =~ " ${to} " ]]; then
-                print_field "Operation" "Delegatecall $(tput setaf 1)(UNTRUSTED DELEGATECALL; PLEASE VERIFY!)$(tput sgr0)"
+                print_field "Operation" "Delegatecall $(tput setaf 1)(UNTRUSTED delegatecall; carefully verify before proceeding!)$(tput sgr0)"
             else
                 print_field "Operation" "Delegatecall $(tput setaf 3)(trusted delegatecall)$(tput sgr0)"
             fi
@@ -515,11 +522,12 @@ validate_address() {
     fi
 }
 
-# Utility function to validate the transaction nonce.
-validate_nonce() {
-    local nonce="$1"
-    if [[ -z "$nonce" || ! "$nonce" =~ ^[0-9]+$ ]]; then
-        echo -e "${BOLD}${RED}Invalid nonce value: \"${nonce}\". Must be a non-negative integer!${RESET}" >&2
+# Utility function to validate a value parameter.
+validate_value() {
+    local value="$1"
+    local name="$2"
+    if [[ -z "$value" || ! "$value" =~ ^[0-9]+$ ]]; then
+        echo -e "${BOLD}${RED}Invalid \`${name}\` value: \"${value}\". Must be a non-negative integer!${RESET}" >&2
         exit 1
     fi
 }
@@ -532,13 +540,14 @@ warn_if_delegate_call() {
     # Warn the user if `operation` equals `1`, implying a `delegatecall`, and if the `to` address is untrusted.
     # See: https://github.com/safe-global/safe-smart-account/blob/34359e8305d618b7d74e39ed370a6b59ab14f827/contracts/libraries/Enum.sol.
     if [[ "$operation" -eq 1 && ! " ${TRUSTED_FOR_DELEGATE_CALL[@]} " =~ " ${to} " ]]; then
-        echo
         cat <<EOF
 
 $(tput setaf 1)WARNING: The transaction includes an untrusted delegate call to address $to!
 This may lead to unexpected behaviour or vulnerabilities. Please review it carefully before you sign!$(tput sgr0)
 
 EOF
+        delegate_call_warning_shown=true
+        readonly delegate_call_warning_shown
     fi
 }
 
@@ -550,19 +559,23 @@ check_gas_token_attack() {
     local warning_message=""
 
     if [[ "$gas_token" != "$ZERO_ADDRESS" && "$refund_receiver" != "$ZERO_ADDRESS" ]]; then
-        warning_message+="\n$(tput setaf 1)WARNING: This transaction uses a custom gas token and a custom refund receiver.
+        warning_message+="$(tput setaf 1)WARNING: This transaction uses a custom gas token and a custom refund receiver.
 This combination can be used to hide a rerouting of funds through gas refunds.$(tput sgr0)\n"
         if [[ "$gas_price" != "0" ]]; then
             warning_message+="$(tput setaf 1)Furthermore, the gas price is non-zero, which increases the potential for hidden value transfers.$(tput sgr0)\n"
         fi
     elif [[ "$gas_token" != "$ZERO_ADDRESS" ]]; then
-        warning_message+="\n$(tput setaf 3)WARNING: This transaction uses a custom gas token. Please verify that this is intended.$(tput sgr0)\n"
+        warning_message+="$(tput setaf 3)WARNING: This transaction uses a custom gas token. Please verify that this is intended.$(tput sgr0)\n"
     elif [[ "$refund_receiver" != "$ZERO_ADDRESS" ]]; then
-        warning_message+="\n$(tput setaf 3)WARNING: This transaction uses a custom refund receiver. Please verify that this is intended.$(tput sgr0)\n"
+        warning_message+="$(tput setaf 3)WARNING: This transaction uses a custom refund receiver. Please verify that this is intended.$(tput sgr0)\n"
     fi
 
     if [[ -n "$warning_message" ]]; then
-        echo -e "$warning_message"
+        if [[ "$delegate_call_warning_shown" != "true" ]]; then
+            echo -e "\n$warning_message"
+        else
+            echo -e "$warning_message"
+        fi
     fi
 }
 
@@ -632,16 +645,20 @@ calculate_offchain_message_hashes() {
 
 # Safe Transaction/Message Hashes Calculator
 # This function orchestrates the entire process of calculating the Safe transaction/message hashes:
-# 1. Parses command-line arguments (`network`, `address`, `nonce`, `message`).
+# 1. Parses command-line arguments (`help`, `network`, `address`, `nonce`, `message`, `interactive`, `list-networks`).
 # 2. Validates that all required parameters are provided.
 # 3. Retrieves the API URL and chain ID for the specified network.
 # 4. Constructs the API endpoint URL.
 # 5. If a message file is provided:
+#    - Validates that no interactive mode is specified (as it's not applicable for off-chain message hashes).
 #    - Validates that no nonce is specified (as it's not applicable for off-chain message hashes).
 #    - Calls `calculate_offchain_message_hashes` to compute and display the message hashes.
 # 6. If a nonce is provided:
 #    - Fetches the transaction data from the Safe transaction service API.
 #    - Extracts the relevant transaction details from the API response.
+#    - If the interactive mode is specified, overrides the desired parameter values.
+#    - Warns the user if the transaction includes an untrusted delegate call.
+#    - Checks for a potential gas token attack.
 #    - Calls the `calculate_hashes` function to compute and display the results.
 calculate_safe_hashes() {
     # Display the help message if no arguments are provided.
@@ -677,12 +694,21 @@ calculate_safe_hashes() {
     # Get the Safe multisig version.
     local version=$(curl -sf "${api_url}/api/v1/safes/${address}/" | jq -r ".version // \"0.0.0\"")
 
-    # If --interactive mode is enabled, the version value will be overridden by the user's input.
+    # If --interactive mode is enabled, the version value can be overridden by the user's input.
     if [[ -n "$interactive" ]]; then
             cat <<EOF
 
-$(tput setaf 3)IMPORTANT: Leaving a parameter empty will use the value retrieved from the Safe transaction service API.
-The displayed "default" values are the values retrieved from the Safe transaction service API.$(tput sgr0)
+Interactive mode is enabled. You will be prompted to enter values for parameters such as \`version\`, \`to\`, \`value\`, and others.
+
+$(tput setaf 1)If it's not already obvious: This is YOLO mode – BE VERY CAREFUL!$(tput sgr0)
+
+$(tput setaf 3)IMPORTANT:
+- Leaving a parameter empty will use the value retrieved from the Safe transaction service API, displayed as the "default value".
+  If the value is unavailable (e.g. if the API endpoint is down), it will default to zero.
+- If multiple transactions share the same nonce, the first transaction in the array will be selected to provide the default values.
+- No warnings will be shown if multiple transactions share the same nonce. It's recommended to first run a validation without interactive mode enabled!
+- Some parameters (e.g., \`version\`, \`to\`, \`operation\`) enforce valid options, but not all inputs are strictly validated.
+  Please double-check your entries before proceeding.$(tput sgr0)
 
 EOF
         read -rp "Enter the Safe multisig version (default: $version): " user_version
@@ -707,12 +733,14 @@ EOF
     fi
 
     # Validate if the nonce parameter has the correct format.
-    validate_nonce "$nonce"
+    validate_value "$nonce" "nonce"
 
     # Fetch the transaction data from the API.
     local response=$(curl -sf "$endpoint")
 
+    # Set the default index value for the transaction array.
     local idx=0
+
     if [[ -z "$interactive" ]]; then
         local count=$(echo "$response" | jq -r ".count // \"0\"")
 
@@ -770,23 +798,24 @@ EOF
     local nonce=$(echo "$response" | jq -r ".results[$idx].nonce // \"0\"")
     local data_decoded=$(echo "$response" | jq -r ".results[$idx].dataDecoded // \"0x\"")
 
-    # If --interactive mode is enabled, the parameter values will be overridden by the user's input.
+    # If --interactive mode is enabled, the parameter values can be overridden by the user's input.
     if [[ -n "$interactive" ]]; then
-        read -rp "Enter the \`to\` address (default: $to): " user_input
-        to="${user_input:-$to}"
+        read -rp "Enter the \`to\` address (default: $to): " to_input
+        to="${to_input:-$to}"
         validate_address "$to"
 
-        read -rp "Enter the \`value\` (default: $value): " user_input
-        value="${user_input:-$value}"
+        read -rp "Enter the \`value\` (default: $value): " value_input
+        value="${value_input:-$value}"
+        validate_value $value "value"
 
-        read -rp "Enter the \`data\` (default: $data): " user_input
-        data="${user_input:-$data}"
+        read -rp "Enter the \`data\` (default: $data): " data_input
+        data="${data_input:-$data}"
 
         while true; do
-            read -rp "Enter the \`operation\` (default: $operation; 0 = CALL, 1 = DELEGATECALL): " user_input
-            user_input="${user_input:-$operation}"
-            if [[ "$user_input" == "0" || "$user_input" == "1" ]]; then
-                operation="$user_input"
+            read -rp "Enter the \`operation\` (default: $operation; 0 = CALL, 1 = DELEGATECALL): " operation_input
+            operation_input="${operation_input:-$operation}"
+            if [[ "$operation_input" == "0" || "$operation_input" == "1" ]]; then
+                operation="$operation_input"
                 break
             else
                 cat <<EOF
@@ -795,21 +824,24 @@ EOF
             fi
         done
 
-        read -rp "Enter the \`safeTxGas\` (default: $safe_tx_gas): " user_input
-        safe_tx_gas="${user_input:-$safe_tx_gas}"
+        read -rp "Enter the \`safeTxGas\` (default: $safe_tx_gas): " safe_tx_gas_input
+        safe_tx_gas="${safe_tx_gas_input:-$safe_tx_gas}"
+        validate_value $safe_tx_gas "safeTxGas"
 
-        read -rp "Enter the \`baseGas\` (default: $base_gas): " user_input
-        base_gas="${user_input:-$base_gas}"
+        read -rp "Enter the \`baseGas\` (default: $base_gas): " base_gas_input
+        base_gas="${base_gas_input:-$base_gas}"
+        validate_value $base_gas "baseGas"
 
-        read -rp "Enter the \`gasPrice\` (default: $gas_price): " user_input
-        gas_price="${user_input:-$gas_price}"
+        read -rp "Enter the \`gasPrice\` (default: $gas_price): " gas_price_input
+        gas_price="${gas_price_input:-$gas_price}"
+        validate_value $gas_price "gasPrice"
 
-        read -rp "Enter the \`gasToken\` (default: $gas_token): " user_input
-        gas_token="${user_input:-$gas_token}"
+        read -rp "Enter the \`gasToken\` (default: $gas_token): " gas_token_input
+        gas_token="${gas_token_input:-$gas_token}"
         validate_address "$gas_token"
 
-        read -rp "Enter the \`refundReceiver\` (default: $refund_receiver): " user_input
-        refund_receiver="${user_input:-$refund_receiver}"
+        read -rp "Enter the \`refundReceiver\` (default: $refund_receiver): " refund_receiver_input
+        refund_receiver="${refund_receiver_input:-$refund_receiver}"
         validate_address "$refund_receiver"
 
         data_decoded="interactive"
