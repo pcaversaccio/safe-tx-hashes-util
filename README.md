@@ -366,7 +366,7 @@ Safe message hash: 0x1866b559f56261ada63528391b93a1fe8e2e33baf7cace94fc6b42202d1
 5. You trust [Ledger's secure screen](https://www.ledger.com/academy/topics/ledgersolutions/ledger-wallets-secure-screen-security-model).
 
 > [!IMPORTANT]
-> You can remove the trust assumption "4. You trust the [Safe transaction service API](https://docs.safe.global/core-api/transaction-service-overview)." by enabling `--interactive` mode and verifying the calldata independently (this should always be done!).
+> You can remove the trust assumption _"4. You trust the [Safe transaction service API](https://docs.safe.global/core-api/transaction-service-overview)."_ by enabling `--interactive` mode and verifying the calldata independently (this should always be done!).
 
 ## Community-Maintained User Interface Implementations
 
