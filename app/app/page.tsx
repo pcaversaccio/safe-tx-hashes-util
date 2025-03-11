@@ -9,6 +9,7 @@ import { useSearchParams } from "next/navigation";
 import { useTransactionCalculation } from "@/hooks/use-transaction-calculation";
 import StepperTransactionForm from "@/components/transaction/StepperTransactionForm";
 import ResultCard from "@/components/ResultCard";
+import Link from "next/link";
 
 function HomeContent() {
   const searchParams = useSearchParams();
@@ -50,6 +51,15 @@ function HomeContent() {
         <h1 className="text-[48px] font-semibold text-center mb-8 dark:text-title-dark text-title-light">
           Safe Utils
         </h1>
+        <div className="text-center max-w-2xl mb-8">
+          <p className="text-muted-foreground">
+            Verify Safe transaction hashes before signing and executing. Calculate domain, message, and 
+            transaction hashes based on EIP-712 standard.{" "}
+            <Link href="/how-it-works" className="text-primary hover:underline">
+              Learn more.
+            </Link>
+          </p>
+        </div>
         <Card className="rounded-[24px] sm:p-12 p-5 dark:bg-card-dark bg-card-light w-full sm:w-[620px] mx-4">
           <CardHeader className="flex flex-col items-center">
           <div className="flex items-center gap-2 mb-4 justify-center">
