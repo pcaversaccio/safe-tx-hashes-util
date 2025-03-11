@@ -221,9 +221,13 @@ When using `--interactive` mode, you will be prompted to provide values for vari
 - **No warnings will be shown if multiple transactions share the same nonce.** It's recommended to first run a validation without interactive mode enabled!
 - Some parameters (e.g., `version`, `to`, `operation`) enforce valid options, but not all inputs are strictly validated. **Please double-check your entries before proceeding.**
 
+As an example, invoke the following command:
+
 ```console
 ./safe_hashes.sh --network arbitrum --address 0x111CEEee040739fD91D29C34C33E6B3E112F2177 --nonce 234 --interactive
 ```
+
+The final output will look like this:
 
 ```console
 Interactive mode is enabled. You will be prompted to enter values for parameters such as `version`, `to`, `value`, and others.
