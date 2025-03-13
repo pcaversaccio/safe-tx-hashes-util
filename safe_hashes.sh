@@ -786,7 +786,7 @@ EOF
         fi
     fi
 
-    local to=$(echo "$response" | jq -r ".results[$idx].to // \"$ZERO_ADDRESS\"")
+    local to=$(echo "$response" | jq -r ".results[$idx].to // \"$address\"")
     local value=$(echo "$response" | jq -r ".results[$idx].value // \"0\"")
     local data=$(echo "$response" | jq -r ".results[$idx].data // \"0x\"")
     local operation=$(echo "$response" | jq -r ".results[$idx].operation // \"0\"")
@@ -795,13 +795,17 @@ EOF
     local gas_price=$(echo "$response" | jq -r ".results[$idx].gasPrice // \"0\"")
     local gas_token=$(echo "$response" | jq -r ".results[$idx].gasToken // \"$ZERO_ADDRESS\"")
     local refund_receiver=$(echo "$response" | jq -r ".results[$idx].refundReceiver // \"$ZERO_ADDRESS\"")
-    local nonce=$(echo "$response" | jq -r ".results[$idx].nonce // \"0\"")
+    local nonce=$(echo "$response" | jq -r ".results[$idx].nonce // \"$nonce\"")
     local data_decoded=$(echo "$response" | jq -r ".results[$idx].dataDecoded // \"0x\"")
 
     # If --interactive mode is enabled, the parameter values can be overridden by the user's input.
     if [[ -n "$interactive" ]]; then
-        read -rp "Enter the \`to\` address (default: $to): " to_input
-        to="${to_input:-$to}"
+        read -rp "Enter the \`nonce\` (default: $nonce): " nonce_input
+        nonce="${nonce_input:-$nonce}"
+        validate_value "$nonce" "nonce"
+
+        read -rp "Enter the \`to\` address (default: $address): " to_input
+        to="${to_input:-$address}"
         validate_address "$to"
 
         read -rp "Enter the \`value\` (default: $value): " value_input
