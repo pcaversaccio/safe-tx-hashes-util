@@ -692,7 +692,7 @@ calculate_safe_hashes() {
     local endpoint="${api_url}/api/v1/safes/${address}/multisig-transactions/?nonce=${nonce}"
 
     # Get the Safe multisig version.
-    local version=$(curl -sf "${api_url}/api/v1/safes/${address}/" | jq -r ".version // \"0.0.0\"")
+    local version=$(curl -sf "${api_url}/api/v1/safes/${address}/" | jq -r ".version // \"0.0.0\"" || echo "0.0.0")
 
     # If --interactive mode is enabled, the version value can be overridden by the user's input.
     if [[ -n "$interactive" ]]; then
@@ -736,7 +736,7 @@ EOF
     validate_value "$nonce" "nonce"
 
     # Fetch the transaction data from the API.
-    local response=$(curl -sf "$endpoint")
+    local response=$(curl -sf "$endpoint" || echo "{}")
 
     # Set the default index value for the transaction array.
     local idx=0
@@ -795,7 +795,6 @@ EOF
     local gas_price=$(echo "$response" | jq -r ".results[$idx].gasPrice // \"0\"")
     local gas_token=$(echo "$response" | jq -r ".results[$idx].gasToken // \"$ZERO_ADDRESS\"")
     local refund_receiver=$(echo "$response" | jq -r ".results[$idx].refundReceiver // \"$ZERO_ADDRESS\"")
-    local nonce=$(echo "$response" | jq -r ".results[$idx].nonce // \"0\"")
     local data_decoded=$(echo "$response" | jq -r ".results[$idx].dataDecoded // \"0x\"")
 
     # If --interactive mode is enabled, the parameter values can be overridden by the user's input.
