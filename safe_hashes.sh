@@ -235,7 +235,7 @@ get_latest_git_commit_hash() {
             echo -e "Commit hash (=version) of the script: ${GREEN}$commit_hash${RESET}."
             exit 0
         else
-            echo -e "${BOLD}${RED}No commit hash information available!${RESET}"
+            echo -e "${BOLD}${RED}No commit hash information available. There may be an issue with your Git installation or repository configuration.${RESET}"
             exit 1
         fi
     else
