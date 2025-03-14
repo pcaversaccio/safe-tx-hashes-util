@@ -73,12 +73,16 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 **Options:**
 
 - `--help`: Display this help message.
+- `--version`: Display the latest commit hash (=version) of the script.
 - `--list-networks`: List all supported networks and their chain IDs.
 - `--network <network>`: Specify the network (e.g., `ethereum`, `polygon`).
 - `--address <address>`: Specify the Safe multisig address.
 - `--nonce <nonce>`: Specify the transaction nonce (required for transaction hashes).
 - `--message <file>`: Specify the message file (required for off-chain message hashes).
 - `--interactive`: Use the interactive mode (optional for transaction hashes).
+
+> [!NOTE]
+> Please note that `--help`, `--version`, and `--list-networks` can be used independently or alongside other options without causing the script to fail. They are special options that can be called without affecting the rest of the command processing.
 
 Before you invoke the [script](./safe_hashes.sh), make it executable:
 

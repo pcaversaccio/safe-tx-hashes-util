@@ -204,6 +204,7 @@ Usage: $0 [--help] [--list-networks]
 
 Options:
   --help              Display this help message
+  --version           Display the latest commit hash (=version) of the script
   --list-networks     List all supported networks and their chain IDs
   --network <network> Specify the network (required)
   --address <address> Specify the Safe multisig address (required)
@@ -221,6 +222,26 @@ Example for off-chain message hashes:
   $0 --network ethereum --address 0x1234...5678 --message message.txt
 EOF
     exit "${1:-1}"
+}
+
+# Utility function to retrieve the latest commit hash from the Git repository.
+# We don't include `git` in the `check_required_tools` function to avoid making
+# it a strict dependency for the script to run.
+get_latest_git_commit_hash() {
+    local commit_hash=""
+    if command -v git &>/dev/null; then
+        commit_hash=$(git rev-parse HEAD 2>/dev/null)
+        if [[ -n "$commit_hash" ]]; then
+            echo -e "Commit hash (=version) of the script: ${GREEN}$commit_hash${RESET}."
+            exit 0
+        else
+            echo -e "${BOLD}${RED}No commit hash information available!${RESET}"
+            exit 1
+        fi
+    else
+        echo -e "${BOLD}${RED}Git is not installed or not found. Unable to retrieve the commit hash information!${RESET}"
+        exit 1
+    fi
 }
 
 # Utility function to list all supported networks.
@@ -492,9 +513,18 @@ calculate_hashes() {
 # Utility function to validate the network name.
 validate_network() {
     local network="$1"
+
+    if [[ -z "$network" ]]; then
+        echo -e "${BOLD}${RED}Network name is empty!${RESET}" >&2
+        echo
+        calculate_safe_hashes --list-networks >&2
+        exit 1
+    fi
+
     if [[ -z "${API_URLS[$network]:-}" || -z "${CHAIN_IDS[$network]:-}" ]]; then
         echo -e "${BOLD}${RED}Invalid network name: \"${network}\"${RESET}\n" >&2
-        calculate_safe_tx_hashes --list-networks >&2
+        echo
+        calculate_safe_hashes --list-networks >&2
         exit 1
     fi
 }
@@ -645,7 +675,7 @@ calculate_offchain_message_hashes() {
 
 # Safe Transaction/Message Hashes Calculator
 # This function orchestrates the entire process of calculating the Safe transaction/message hashes:
-# 1. Parses command-line arguments (`help`, `network`, `address`, `nonce`, `message`, `interactive`, `list-networks`).
+# 1. Parses command-line arguments (`help`, `version`, `list-networks`, `network`, `address`, `nonce`, `message`, `interactive`).
 # 2. Validates that all required parameters are provided.
 # 3. Retrieves the API URL and chain ID for the specified network.
 # 4. Constructs the API endpoint URL.
@@ -669,15 +699,20 @@ calculate_safe_hashes() {
     local network="" address="" nonce="" message_file="" interactive=""
 
     # Parse the command line arguments.
+    # Please note that `--help`, `--version`, and `--list-networks` can be used
+    # independently or alongside other options without causing the script to fail.
+    # They are special options that can be called without affecting  the rest of
+    # the command processing.
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --help) usage 0 ;;
+            --version) get_latest_git_commit_hash ;;
+            --list-networks) list_networks ;;
             --network) network="$2"; shift 2 ;;
             --address) address="$2"; shift 2 ;;
             --nonce) nonce="$2"; shift 2 ;;
             --message) message_file="$2"; shift 2 ;;
             --interactive) interactive="1"; shift ;;
-            --list-networks) list_networks ;;
             *) echo "Unknown option: $1" >&2; usage ;;
         esac
     done
@@ -733,6 +768,9 @@ EOF
     fi
 
     # Validate if the nonce parameter has the correct format.
+    # Please note that the nonce validation is intentionally placed
+    # after the domain and message hash calculations for off-chain
+    # messages, where a nonce is not required.
     validate_value "$nonce" "nonce"
 
     # Fetch the transaction data from the API.
