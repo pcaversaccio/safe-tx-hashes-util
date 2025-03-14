@@ -201,16 +201,19 @@ usage() {
 Usage: $0 [--help] [--version] [--list-networks]
        --network <network> --address <address> [--nonce <nonce>]
        [--message <file>] [--interactive]
+       [--nested-safe-address <address> --nested-safe-nonce <nonce>]
 
 Options:
-  --help              Display this help message
-  --version           Display the latest local commit hash (=version) of the script
-  --list-networks     List all supported networks and their chain IDs
-  --network <network> Specify the network (required)
-  --address <address> Specify the Safe multisig address (required)
-  --nonce <nonce>     Specify the transaction nonce (required for transaction hashes)
-  --message <file>    Specify the message file (required for off-chain message hashes)
-  --interactive       Use the interactive mode (optional for transaction hashes)
+  --help                    Display this help message
+  --version                 Display the latest local commit hash (=version) of the script
+  --list-networks           List all supported networks and their chain IDs
+  --network <network>       Specify the network (required)
+  --address <address>       Specify the Safe multisig address (required)
+  --nonce <nonce>           Specify the transaction nonce (required for transaction hashes)
+  --message <file>          Specify the message file (required for off-chain message hashes)
+  --interactive             Use the interactive mode (optional for transaction hashes)
+  --nested-safe-address <address>  Specify the nested Safe address that will approve the transaction
+  --nested-safe-nonce <nonce>      Specify the nonce for the nested Safe transaction
 
 Example for transaction hashes:
   $0 --network ethereum --address 0x1234...5678 --nonce 42
@@ -220,6 +223,9 @@ Example for transaction hashes (interactive mode):
 
 Example for off-chain message hashes:
   $0 --network ethereum --address 0x1234...5678 --message message.txt
+
+Example for nested Safe approval:
+  $0 --network ethereum --address 0x1234...5678 --nonce 42 --nested-safe-address 0x8765...4321 --nested-safe-nonce 7
 EOF
     exit "${1:-1}"
 }
@@ -508,6 +514,9 @@ calculate_hashes() {
     print_decoded_data "$data" "$data_decoded"
     # Print the results with the same formatting for "Domain hash" and "Message hash" as a Ledger hardware device.
     print_hash_info "$domain_hash" "$message_hash" "$safe_tx_hash"
+    
+    # Set the global variable with the safe transaction hash
+    LAST_CALCULATED_HASH="$safe_tx_hash"
 }
 
 # Utility function to validate the network name.
@@ -673,6 +682,53 @@ calculate_offchain_message_hashes() {
     print_field "Safe message hash" "$safe_msg_hash"
 }
 
+# Utility function to calculate the nested safe approval transaction hash
+calculate_nested_safe_approval_hash() {
+    local network=$1
+    local chain_id=$2
+    local nested_safe_address=$3
+    local target_safe_address=$4
+    local safe_tx_hash=$5
+    local nested_safe_nonce=$6
+    local nested_safe_version=$7
+
+    # Encode the approveHash function call with the safe transaction hash
+    # Function signature: approveHash(bytes32)
+    local approve_hash_signature="0xd4d9bdcd"
+    local data="${approve_hash_signature}$(echo "$safe_tx_hash" | sed 's/^0x//')"
+
+    # Set fixed parameters for the approval transaction
+    local to="$target_safe_address"
+    local value="0"
+    local operation="0"
+    local safe_tx_gas="0"
+    local base_gas="0"
+    local gas_price="0"
+    local gas_token="$ZERO_ADDRESS"
+    local refund_receiver="$ZERO_ADDRESS"
+    local nonce="$nested_safe_nonce"
+    local data_decoded="{ \"method\": \"approveHash\", \"parameters\": [ { \"name\": \"hashToApprove\", \"type\": \"bytes32\", \"value\": \"$safe_tx_hash\" } ] }"
+
+    echo -e "\n${BOLD}${UNDERLINE}Nested Safe Approval Transaction${RESET}\n"
+    echo -e "The following transaction will be used by the nested Safe to approve the primary transaction.\n"
+
+    # Calculate and display the hashes for the nested safe approval transaction
+    calculate_hashes "$chain_id" \
+        "$nested_safe_address" \
+        "$to" \
+        "$value" \
+        "$data" \
+        "$operation" \
+        "$safe_tx_gas" \
+        "$base_gas" \
+        "$gas_price" \
+        "$gas_token" \
+        "$refund_receiver" \
+        "$nonce" \
+        "$data_decoded" \
+        "$nested_safe_version"
+}
+
 # Safe Transaction/Message Hashes Calculator
 # This function orchestrates the entire process of calculating the Safe transaction/message hashes:
 # 1. Parses command-line arguments (`help`, `version`, `list-networks`, `network`, `address`, `nonce`, `message`, `interactive`).
@@ -697,6 +753,10 @@ calculate_safe_hashes() {
     fi
 
     local network="" address="" nonce="" message_file="" interactive=""
+    local nested_safe_address="" nested_safe_nonce=""
+    
+    # Initialize the global variable for storing the hash
+    LAST_CALCULATED_HASH=""
 
     # Parse the command line arguments.
     # Please note that `--help`, `--version`, and `--list-networks` can be used
@@ -713,6 +773,8 @@ calculate_safe_hashes() {
             --nonce) nonce="$2"; shift 2 ;;
             --message) message_file="$2"; shift 2 ;;
             --interactive) interactive="1"; shift ;;
+            --nested-safe-address) nested_safe_address="$2"; shift 2 ;;
+            --nested-safe-nonce) nested_safe_nonce="$2"; shift 2 ;;
             *) echo "Unknown option: $1" >&2; usage ;;
         esac
     done
@@ -728,6 +790,25 @@ calculate_safe_hashes() {
 
     # Get the Safe multisig version.
     local version=$(curl -sf "${api_url}/api/v1/safes/${address}/" | jq -r ".version // \"0.0.0\"" || echo "0.0.0")
+
+    # Validate nested safe parameters if provided
+    local nested_safe_version=""
+    if [[ -n "$nested_safe_address" || -n "$nested_safe_nonce" ]]; then
+        # Both nested safe parameters must be provided together
+        if [[ -z "$nested_safe_address" || -z "$nested_safe_nonce" ]]; then
+            echo -e "${RED}Error: Both --nested-safe-address and --nested-safe-nonce must be provided together.${RESET}" >&2
+            exit 1
+        fi
+        
+        # Validate nested safe address
+        validate_address "$nested_safe_address"
+        
+        # Validate nested safe nonce
+        validate_value "$nested_safe_nonce" "nested-safe-nonce"
+        
+        # Get the nested Safe multisig version
+        nested_safe_version=$(curl -sf "${api_url}/api/v1/safes/${nested_safe_address}/" | jq -r ".version // \"0.0.0\"" || echo "0.0.0")
+    fi
 
     # If --interactive mode is enabled, the version value can be overridden by the user's input.
     if [[ -n "$interactive" ]]; then
@@ -751,6 +832,15 @@ EOF
             version="$user_version"
         fi
         validate_version $version
+        
+        # If nested safe is being used, also allow overriding its version
+        if [[ -n "$nested_safe_address" ]]; then
+            read -rp "Enter the nested Safe multisig version (default: $nested_safe_version): " user_nested_version
+            if [[ -n "$user_nested_version" ]]; then
+                nested_safe_version="$user_nested_version"
+            fi
+            validate_version $nested_safe_version
+        fi
     fi
 
     # Calculate the domain and message hashes for off-chain messages.
@@ -895,9 +985,17 @@ EOF
     echo -e "===================================\n"
     print_field "Network" "$network"
     print_field "Chain ID" "$chain_id" true
+    
+    # Add a header to indicate this is the primary transaction if nested safe is being used
+    if [[ -n "$nested_safe_address" ]]; then
+        echo -e "${BOLD}${UNDERLINE}Primary Transaction${RESET}\n"
+    fi
+    
     echo "========================================"
     echo "= Transaction Data and Computed Hashes ="
     echo "========================================"
+    
+    # Calculate the primary transaction hash and display the data
     calculate_hashes "$chain_id" \
         "$address" \
         "$to" \
@@ -912,6 +1010,11 @@ EOF
         "$nonce" \
         "$data_decoded" \
         "$version"
+    
+    # If nested safe parameters are provided, calculate the approval transaction hash
+    if [[ -n "$nested_safe_address" && -n "$nested_safe_nonce" ]]; then
+        calculate_nested_safe_approval_hash "$network" "$chain_id" "$nested_safe_address" "$address" "$LAST_CALCULATED_HASH" "$nested_safe_nonce" "$nested_safe_version"
+    fi
 }
 
 calculate_safe_hashes "$@"
