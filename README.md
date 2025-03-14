@@ -73,7 +73,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 **Options:**
 
 - `--help`: Display this help message.
-- `--version`: Display the latest commit hash (=version) of the script.
+- `--version`: Display the latest local commit hash (=version) of the script.
 - `--list-networks`: List all supported networks and their chain IDs.
 - `--network <network>`: Specify the network (e.g., `ethereum`, `polygon`).
 - `--address <address>`: Specify the Safe multisig address.

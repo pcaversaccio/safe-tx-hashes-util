@@ -204,7 +204,7 @@ Usage: $0 [--help] [--list-networks]
 
 Options:
   --help              Display this help message
-  --version           Display the latest commit hash (=version) of the script
+  --version           Display the latest local commit hash (=version) of the script
   --list-networks     List all supported networks and their chain IDs
   --network <network> Specify the network (required)
   --address <address> Specify the Safe multisig address (required)
@@ -224,7 +224,7 @@ EOF
     exit "${1:-1}"
 }
 
-# Utility function to retrieve the latest commit hash from the Git repository.
+# Utility function to retrieve the latest local commit hash from the Git repository.
 # We don't include `git` in the `check_required_tools` function to avoid making
 # it a strict dependency for the script to run.
 get_latest_git_commit_hash() {
@@ -232,7 +232,7 @@ get_latest_git_commit_hash() {
     if command -v git &>/dev/null; then
         commit_hash=$(git rev-parse HEAD 2>/dev/null)
         if [[ -n "$commit_hash" ]]; then
-            echo -e "Commit hash (=version) of the script: ${GREEN}$commit_hash${RESET}."
+            echo -e "Latest local commit hash (=version) of the script: ${GREEN}$commit_hash${RESET}."
             exit 0
         else
             echo -e "${BOLD}${RED}No commit hash information available. There may be an issue with your Git installation or repository configuration.${RESET}"
@@ -701,7 +701,7 @@ calculate_safe_hashes() {
     # Parse the command line arguments.
     # Please note that `--help`, `--version`, and `--list-networks` can be used
     # independently or alongside other options without causing the script to fail.
-    # They are special options that can be called without affecting  the rest of
+    # They are special options that can be called without affecting the rest of
     # the command processing.
     while [[ $# -gt 0 ]]; do
         case "$1" in
