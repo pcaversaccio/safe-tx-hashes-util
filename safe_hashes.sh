@@ -741,19 +741,21 @@ calculate_offchain_message_hashes() {
 	print_field "Multisig address" "$address"
 	print_field "Message" "$message_raw"
 	print_header "Hashes"
-	print_field "Raw message hash" "$hashed_message"
+	print_field "Safe message" "$hashed_message"
 	print_field "Domain hash" "$(format_hash "$domain_hash")"
 	print_field "Message hash" "$(format_hash "$message_hash")"
 	print_field "Safe message hash" "$safe_msg_hash"
 }
 
 # Utility function to calculate the domain and message hashes for off-chain messages,
-# using a nested Safe multisig address.
+# using a nested Safe multisig address. Please note that off-chain messages are hashed
+# and passed to a nested Safe via EIP-712 (https://eips.ethereum.org/EIPS/eip-712) objects.
 calculate_nested_safe_offchain_message_hashes() {
 	local chain_id=$1
-	local nested_safe_address=$2
-	local message_file=$3
-	local nested_safe_version=$4
+	local address=$2
+	local nested_safe_address=$3
+	local message_file=$4
+	local nested_safe_version=$5
 
 	validate_message_file "$message_file"
 
@@ -768,15 +770,30 @@ calculate_nested_safe_offchain_message_hashes() {
 	local domain_separator_typehash="$DOMAIN_SEPARATOR_TYPEHASH"
 	local domain_hash_args="$domain_separator_typehash, $chain_id, $nested_safe_address"
 
-	# Calculate the domain hash.
-	local domain_hash=$(calculate_domain_hash "$nested_safe_version" "$domain_separator_typehash" "$domain_hash_args")
+	# Calculate the Safe multisig domain hash.
+	local safe_domain_hash=$(calculate_domain_hash "$nested_safe_version" "$domain_separator_typehash" "$domain_hash_args")
+
+	# Calculate the EIP-712 message domain hash.
+	local message_domain_hash=$(chisel eval "keccak256(abi.encode(bytes32($domain_separator_typehash), uint256($chain_id), address($address)))" |
+		awk '/Data:/ {gsub(/\x1b\[[0-9;]*m/, "", $3); print $3}')
+
+	# Encode the message. Please note the value `hashed_message` is treated as a string and encoded
+	# as a `keccak256` hash of its content according to EIP-712 (https://eips.ethereum.org/EIPS/eip-712#definition-of-encodedata).
+	local message=$(cast abi-encode "SafeMessage(bytes32,bytes32)" "$SAFE_MSG_TYPEHASH" "$(cast keccak "$hashed_message")")
+
+	# Hash the message.
+	local hashed_encoded_message=$(cast keccak "$message")
+
+	# Calculate the Safe message.
+	local safe_msg=$(chisel eval "keccak256(abi.encodePacked(bytes1(0x19), bytes1(0x01), bytes32($message_domain_hash), bytes32($hashed_encoded_message)))" |
+		awk '/Data:/ {gsub(/\x1b\[[0-9;]*m/, "", $3); print $3}')
 
 	# Calculate the message hash.
-	local message_hash=$(chisel eval "keccak256(abi.encode(bytes32($SAFE_MSG_TYPEHASH), keccak256(abi.encode(bytes32($hashed_message)))))" |
+	local message_hash=$(chisel eval "keccak256(abi.encode(bytes32($SAFE_MSG_TYPEHASH), keccak256(abi.encode(bytes32($safe_msg)))))" |
 		awk '/Data:/ {gsub(/\x1b\[[0-9;]*m/, "", $3); print $3}')
 
 	# Calculate the Safe message hash.
-	local safe_msg_hash=$(chisel eval "keccak256(abi.encodePacked(bytes1(0x19), bytes1(0x01), bytes32($domain_hash), bytes32($message_hash)))" |
+	local safe_msg_hash=$(chisel eval "keccak256(abi.encodePacked(bytes1(0x19), bytes1(0x01), bytes32($safe_domain_hash), bytes32($message_hash)))" |
 		awk '/Data:/ {gsub(/\x1b\[[0-9;]*m/, "", $3); print $3}')
 
 	echo -e "\n${BOLD}${UNDERLINE}Nested Safe Computed Hashes${RESET}"
@@ -788,8 +805,8 @@ EOF
 
 	# Calculate and display the hashes.
 	print_header "Hashes"
-	print_field "Raw message hash" "$hashed_message"
-	print_field "Domain hash" "$(format_hash "$domain_hash")"
+	print_field "Safe message hash" "$safe_msg"
+	print_field "Domain hash" "$(format_hash "$safe_domain_hash")"
 	print_field "Message hash" "$(format_hash "$message_hash")"
 	print_field "Safe message hash" "$safe_msg_hash"
 }
@@ -950,7 +967,7 @@ EOF
 			echo -e "${RED}Error: When calculating off-chain message hashes using a nested Safe, do not specify a nonce for the nested Safe!${RESET}" >&2
 			exit 1
 		elif [[ -n "$nested_safe_address" ]]; then
-			calculate_nested_safe_offchain_message_hashes "$chain_id" "$nested_safe_address" "$message_file" "$nested_safe_version"
+			calculate_nested_safe_offchain_message_hashes "$chain_id" "$address" "$nested_safe_address" "$message_file" "$nested_safe_version"
 		fi
 		exit 0
 	fi
