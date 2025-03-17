@@ -1117,16 +1117,9 @@ EOF
 	# Calculate the `approveHash` transaction hash if nested Safe parameters are provided.
 	if [[ -n "$nested_safe_address" && -n "$nested_safe_nonce" ]]; then
 		calculate_nested_safe_hashes "$chain_id" "$address" "$nested_safe_address" "$nested_safe_nonce" "$global_safe_tx_hash" "$nested_safe_version"
-	else
-		if [[ -z "$nested_safe_address" && -z "$nested_safe_nonce" ]]; then
-			echo -e "${RED}Error: Both \`--nested-safe-address\` and \`--nested-safe-nonce\` must be provided for transaction hashes!${RESET}" >&2
-		elif [[ -z "$nested_safe_address" ]]; then
-			echo -e "${RED}Error: The \`--nested-safe-address\` parameter is missing.${RESET}" >&2
-			echo -e "${RED}Both \`--nested-safe-address\` and \`--nested-safe-nonce\` must be provided for transaction hashes!${RESET}" >&2
-		elif [[ -z "$nested_safe_nonce" ]]; then
-			echo -e "${RED}Error: The \`--nested-safe-nonce\` parameter is missing.${RESET}" >&2
-			echo -e "${RED}Both \`--nested-safe-address\` and \`--nested-safe-nonce\` must be provided for transaction hashes!${RESET}" >&2
-		fi
+	elif [[ -n "$nested_safe_nonce" && -z "$nested_safe_address" ]]; then
+		echo -e "${RED}Error: The \`--nested-safe-address\` parameter is missing.${RESET}" >&2
+		echo -e "${RED}Both \`--nested-safe-address\` and \`--nested-safe-nonce\` must be provided for transaction hashes!${RESET}" >&2
 		exit 1
 	fi
 }
