@@ -15,6 +15,8 @@ jobs:
           - ubuntu-latest
         node_version:
           - 22
+        go_version:
+          - 1.24
 
     steps:
       - name: Checkout
@@ -25,8 +27,20 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
 
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go_version }}
+          cache: False
+
+      - name: Install `shfmt`
+        run: go install mvdan.cc/sh/v3/cmd/shfmt@latest
+
       - name: Run Prettier
         run: npx prettier -c '**/*.{md,yml,yaml}'
+
+      - name: Run `shfmt`
+        run: shfmt -d safe_hashes.sh
 
   codespell:
     runs-on: ${{ matrix.os }}
