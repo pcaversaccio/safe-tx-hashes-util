@@ -233,7 +233,7 @@ Example for transaction hashes via a nested Safe multisig approval (interactive 
 Example for off-chain message hashes:
   $0 --network ethereum --address 0x1234...5678 --message message.txt
 
-Example for off-chain message hashes via a nested Safe multisig approval:
+Example for off-chain message hashes via a nested Safe multisig signer:
   $0 --network ethereum --address 0x1234...5678 --nested-safe-address 0x8765...4321 --message message.txt
 EOF
 	exit "${1:-1}"
