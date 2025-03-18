@@ -800,8 +800,7 @@ calculate_nested_safe_offchain_message_hashes() {
 
 	cat <<EOF
 
-$(tput setaf 3)The specified nested Safe at $nested_safe_address will sign the above displayed Safe message $hashed_message
-via an EIP-712 message object.$(tput sgr0)
+$(tput setaf 3)The specified nested Safe at $nested_safe_address will sign the above displayed Safe message $hashed_message via an EIP-712 message object.$(tput sgr0)
 EOF
 
 	# Calculate and display the hashes.
