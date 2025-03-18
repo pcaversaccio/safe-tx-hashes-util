@@ -68,7 +68,7 @@ readonly ZERO_ADDRESS="0x0000000000000000000000000000000000000000"
 delegate_call_warning_shown="false"
 
 # Set a global variable to store the Safe transaction hash for use across multiple functions.
-global_safe_tx_hash="$ZERO_ADDRESS"
+global_safe_tx_hash="0x0000000000000000000000000000000000000000000000000000000000000000"
 
 # Set the type hash constants.
 # => `keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");`
