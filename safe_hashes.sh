@@ -800,12 +800,13 @@ calculate_nested_safe_offchain_message_hashes() {
 
 	cat <<EOF
 
-$(tput setaf 3)The specified nested Safe at $nested_safe_address will sign the above displayed message data.$(tput sgr0)
+$(tput setaf 3)The specified nested Safe at $nested_safe_address will sign the above displayed Safe message $hashed_message
+via an EIP-712 message object.$(tput sgr0)
 EOF
 
 	# Calculate and display the hashes.
 	print_header "Hashes"
-	print_field "Safe message hash" "$safe_msg"
+	print_field "Safe message" "$safe_msg"
 	print_field "Domain hash" "$(format_hash "$safe_domain_hash")"
 	print_field "Message hash" "$(format_hash "$message_hash")"
 	print_field "Safe message hash" "$safe_msg_hash"
@@ -841,7 +842,7 @@ calculate_safe_hashes() {
 		usage
 	fi
 
-	# Initialise the CLI parameters
+	# Initialise the CLI parameters.
 	local network=""
 	local address=""
 	local nonce=""
@@ -975,7 +976,7 @@ EOF
 	# Validate if the nonce parameter has the correct format.
 	# Please note that the nonce validation is intentionally placed
 	# after the domain and message hash calculations for off-chain
-	# messages, where a nonce (and nested-safe-nonce) is not required.
+	# messages, where a `nonce` (and `nested-safe-nonce`) is not required.
 	validate_value "$nonce" "nonce"
 	if [[ -n "$nested_safe_address" ]]; then
 		validate_value "$nested_safe_nonce" "nested-safe-nonce"

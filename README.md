@@ -408,7 +408,7 @@ The nested Safe `approveHash` transaction is constructed with the following para
 - All other parameters are set to their default values (`0` or the zero address `0x0000000000000000000000000000000000000000`).
 
 > [!NOTE]
-> The `--interactive` mode is supported for nested Safe transactions, but overriding the nested Safe transaction values is not permitted.
+> The `--interactive` mode supports nested Safe transactions but only allows overriding the nested Safe version, not other transaction values in the `approveHash` transaction.
 
 ## Safe Message Hashes
 
