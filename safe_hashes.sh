@@ -902,7 +902,7 @@ calculate_safe_hashes() {
 	# Get the API URL and chain ID for the specified network.
 	local api_url=$(get_api_url "$network")
 	local chain_id=$(get_chain_id "$network")
-	local endpoint="${api_url}/api/v1/safes/${address}/multisig-transactions/?nonce=${nonce}"
+	local endpoint="${api_url}/api/v2/safes/${address}/multisig-transactions/?nonce=${nonce}"
 
 	# Get the Safe multisig version.
 	local version=$(curl -sf "${api_url}/api/v1/safes/${address}/" | jq -r ".version // \"0.0.0\"" || echo "0.0.0")
