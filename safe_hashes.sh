@@ -87,20 +87,6 @@ readonly SAFE_TX_TYPEHASH_OLD="0x14d461bc7412367e924637b363c7bf29b8f47e2f84869f4
 # See: https://github.com/safe-global/safe-smart-account/blob/febab5e4e859e6e65914f17efddee415e4992961/contracts/libraries/SignMessageLib.sol#L12-L13.
 readonly SAFE_MSG_TYPEHASH="0x60b3cbf8b4a223d68d641b3b6ddf9a298e7f33710cf3d3a9d1146b5a6150fbca"
 
-# Set the trusted (i.e. for delegate calls) `MultiSend` addresses:
-# MultiSend `v1.1.1` (canonical): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.1.1/multi_send.json#L7,
-# MultiSend `v1.3.0` (canonical): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.3.0/multi_send.json#L7,
-# MultiSend `v1.3.0` (eip155): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.3.0/multi_send.json#L11,
-# MultiSend `v1.3.0` (zksync): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.3.0/multi_send.json#L15,
-# Multisend `v1.4.1` (canonical): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.4.1/multi_send.json#L7.
-declare -a -r MultiSend=(
-	"0x8D29bE29923b68abfDD21e541b9374737B49cdAD" # MultiSend `v1.1.1` (canonical).
-	"0xA238CBeb142c10Ef7Ad8442C6D1f9E89e07e7761" # MultiSend `v1.3.0` (canonical).
-	"0x998739BFdAAdde7C933B942a68053933098f9EDa" # MultiSend `v1.3.0` (eip155).
-	"0x0dFcccB95225ffB03c6FBB2559B530C2B7C8A912" # MultiSend `v1.3.0` (zksync).
-	"0x38869bf66a61cF6bDB996A6aE40D5853Fd43B526" # MultiSend `v1.4.1` (canonical).
-)
-
 # Set the trusted (i.e. for delegate calls) `MultiSendCallOnly` addresses:
 # MultiSendCallOnly `v1.3.0` (canonical): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.3.0/multi_send_call_only.json#L7,
 # MultiSendCallOnly `v1.3.0` (eip155): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.3.0/multi_send_call_only.json#L11,
@@ -119,12 +105,6 @@ declare -a -r SafeMigration=(
 	"0x526643F69b81B008F46d95CD5ced5eC0edFFDaC6" # SafeMigration `v1.4.1` (canonical).
 )
 
-# Set the trusted (i.e. for delegate calls) `SafeToL2Migration` addresses:
-# SafeToL2Migration `v1.4.1` (canonical): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.4.1/safe_to_l2_migration.json#L7.
-declare -a -r SafeToL2Migration=(
-	"0xfF83F6335d8930cBad1c0D439A841f01888D9f69" # SafeToL2Migration `v1.4.1` (canonical).
-)
-
 # Set the trusted (i.e. for delegate calls) `SignMessageLib` addresses:
 # SignMessageLib `v1.3.0` (canonical): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.3.0/sign_message_lib.json#L7,
 # SignMessageLib `v1.3.0` (eip155): https://github.com/safe-global/safe-deployments/blob/4e25b09f62a4acec92b4ebe6b8ae496b3852d440/src/assets/v1.3.0/sign_message_lib.json#L11,
@@ -140,10 +120,8 @@ declare -a -r SignMessageLib=(
 # Set the trusted (i.e. for delegate calls) contract addresses.
 # See: https://github.com/safe-global/safe-transaction-service/blob/c3b42f0bebff74b99fcdd958aee54b149e27eca5/safe_transaction_service/contracts/management/commands/setup_safe_contracts.py#L10-L16.
 declare -A -r TRUSTED_FOR_DELEGATE_CALL=(
-	["MultiSend"]="${MultiSend[@]}"
 	["MultiSendCallOnly"]="${MultiSendCallOnly[@]}"
 	["SafeMigration"]="${SafeMigration[@]}"
-	["SafeToL2Migration"]="${SafeToL2Migration[@]}"
 	["SignMessageLib"]="${SignMessageLib[@]}"
 )
 
