@@ -14,6 +14,10 @@ readonly UNDERLINE="\e[4m"
 readonly BOLD="\e[1m"
 readonly RESET="\e[0m"
 
+use_formatting() {
+    [[ -t 1 ]] && tput sgr0 >/dev/null 2>&1
+}
+
 # Check the Bash version compatibility.
 if [[ "${BASH_VERSINFO[0]:-0}" -lt 4 ]]; then
 	echo -e "${BOLD}${RED}Error: This script requires Bash 4.0 or higher!${RESET}"
@@ -263,7 +267,7 @@ list_networks() {
 # Utility function to print a section header.
 print_header() {
 	local header=$1
-	if [[ -t 1 ]] && tput sgr0 >/dev/null 2>&1; then
+	if use_formatting; then
 		# Terminal supports formatting.
 		printf "\n${UNDERLINE}%s${RESET}\n" "$header"
 	else
@@ -278,7 +282,7 @@ print_field() {
 	local value=$2
 	local empty_line="${3:-false}"
 
-	if [[ -t 1 ]] && tput sgr0 >/dev/null 2>&1; then
+	if use_formatting; then
 		# Terminal supports formatting.
 		printf "%s: ${GREEN}%s${RESET}\n" "$label" "$value"
 	else
