@@ -14,8 +14,13 @@ readonly UNDERLINE="\e[4m"
 readonly BOLD="\e[1m"
 readonly RESET="\e[0m"
 
+colour="auto"
+
 use_formatting() {
-    [[ -t 1 ]] && tput sgr0 >/dev/null 2>&1
+    if [[ "${colour}" == "always" ]]; then
+        return 0
+    fi
+    [[ "${colour}" == "auto" ]] && [[ -t 1 ]] && tput sgr0 >/dev/null 2>&1
 }
 
 # Check the Bash version compatibility.
@@ -200,7 +205,7 @@ usage() {
 Usage: $0 [--help] [--version] [--list-networks]
        --network <network> --address <address> [--nonce <nonce>]
        [--nested-safe-address <address>] [--nested-safe-nonce <nonce>]
-       [--message <file>] [--interactive]
+       [--message <file>] [--interactive] [--colour <never|auto|always>]
 
 Options:
   --help                            Display this help message
@@ -213,6 +218,7 @@ Options:
   --nested-safe-nonce <nonce>       Specify the nonce for the nested Safe transaction (optional for transaction hashes)
   --message <file>                  Specify the message file (required for off-chain message hashes)
   --interactive                     Use the interactive mode (optional for transaction hashes)
+  --colour <never|auto|always>      Specify whether colour should be used in output
 
 Example for transaction hashes:
   $0 --network ethereum --address 0x1234...5678 --nonce 42
@@ -883,6 +889,18 @@ calculate_safe_hashes() {
 		--interactive)
 			interactive="1"
 			shift
+			;;
+		--colour)
+			case "$2" in
+				never|auto|always)
+					colour="$2"
+					shift 2
+					;;
+				*)
+					echo "Invalid --colour option: $2" >&2
+					usage
+					;;
+			esac
 			;;
 		*)
 			echo "Unknown option: $1" >&2
