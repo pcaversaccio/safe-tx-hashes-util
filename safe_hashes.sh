@@ -14,6 +14,15 @@ readonly UNDERLINE="\e[4m"
 readonly BOLD="\e[1m"
 readonly RESET="\e[0m"
 
+colour="auto"
+
+use_formatting() {
+    if [[ "${colour}" == "always" ]]; then
+        return 0
+    fi
+    [[ "${colour}" == "auto" ]] && [[ -t 1 ]] && tput sgr0 >/dev/null 2>&1
+}
+
 # Check the Bash version compatibility.
 if [[ "${BASH_VERSINFO[0]:-0}" -lt 4 ]]; then
 	echo -e "${BOLD}${RED}Error: This script requires Bash 4.0 or higher!${RESET}"
@@ -196,7 +205,7 @@ usage() {
 Usage: $0 [--help] [--version] [--list-networks]
        --network <network> --address <address> [--nonce <nonce>]
        [--nested-safe-address <address>] [--nested-safe-nonce <nonce>]
-       [--message <file>] [--interactive]
+       [--message <file>] [--interactive] [--colour <never|auto|always>]
 
 Options:
   --help                            Display this help message
@@ -209,6 +218,7 @@ Options:
   --nested-safe-nonce <nonce>       Specify the nonce for the nested Safe transaction (optional for transaction hashes)
   --message <file>                  Specify the message file (required for off-chain message hashes)
   --interactive                     Use the interactive mode (optional for transaction hashes)
+  --colour <never|auto|always>      Specify whether colour should be used in output
 
 Example for transaction hashes:
   $0 --network ethereum --address 0x1234...5678 --nonce 42
@@ -263,7 +273,7 @@ list_networks() {
 # Utility function to print a section header.
 print_header() {
 	local header=$1
-	if [[ -t 1 ]] && tput sgr0 >/dev/null 2>&1; then
+	if use_formatting; then
 		# Terminal supports formatting.
 		printf "\n${UNDERLINE}%s${RESET}\n" "$header"
 	else
@@ -278,7 +288,7 @@ print_field() {
 	local value=$2
 	local empty_line="${3:-false}"
 
-	if [[ -t 1 ]] && tput sgr0 >/dev/null 2>&1; then
+	if use_formatting; then
 		# Terminal supports formatting.
 		printf "%s: ${GREEN}%s${RESET}\n" "$label" "$value"
 	else
@@ -879,6 +889,18 @@ calculate_safe_hashes() {
 		--interactive)
 			interactive="1"
 			shift
+			;;
+		--colour)
+			case "$2" in
+				never|auto|always)
+					colour="$2"
+					shift 2
+					;;
+				*)
+					echo "Invalid --colour option: $2" >&2
+					usage
+					;;
+			esac
 			;;
 		*)
 			echo "Unknown option: $1" >&2
