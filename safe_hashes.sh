@@ -8,11 +8,27 @@
 # @author pcaversaccio
 
 # Set the terminal formatting constants.
-readonly GREEN="\e[32m"
-readonly RED="\e[31m"
-readonly UNDERLINE="\e[4m"
-readonly BOLD="\e[1m"
-readonly RESET="\e[0m"
+GREEN="\e[32m"
+RED="\e[31m"
+UNDERLINE="\e[4m"
+BOLD="\e[1m"
+RESET="\e[0m"
+
+# Function to check if color should be used
+use_color() {
+	if [[ -n "${FORCE_COLOR:-}" ]]; then
+		return 0
+	fi
+	if [[ -n "${NO_COLOR:-}" ]] || ! [[ -t 1 ]] || ! tput sgr0 >/dev/null 2>&1; then
+		GREEN=""
+		RED=""
+		UNDERLINE=""
+		BOLD=""
+		RESET=""
+		return 1
+	fi
+	return 0
+}
 
 # Check the Bash version compatibility.
 if [[ "${BASH_VERSINFO[0]:-0}" -lt 4 ]]; then
@@ -263,7 +279,7 @@ list_networks() {
 # Utility function to print a section header.
 print_header() {
 	local header=$1
-	if [[ -t 1 ]] && tput sgr0 >/dev/null 2>&1; then
+	if use_color; then
 		# Terminal supports formatting.
 		printf "\n${UNDERLINE}%s${RESET}\n" "$header"
 	else
@@ -278,7 +294,7 @@ print_field() {
 	local value=$2
 	local empty_line="${3:-false}"
 
-	if [[ -t 1 ]] && tput sgr0 >/dev/null 2>&1; then
+	if use_color; then
 		# Terminal supports formatting.
 		printf "%s: ${GREEN}%s${RESET}\n" "$label" "$value"
 	else
