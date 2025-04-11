@@ -7,12 +7,44 @@
 # @license GNU Affero General Public License v3.0 only
 # @author pcaversaccio
 
-# Set the terminal formatting constants.
-readonly GREEN="\e[32m"
-readonly RED="\e[31m"
-readonly UNDERLINE="\e[4m"
-readonly BOLD="\e[1m"
-readonly RESET="\e[0m"
+# Utility function to detect the terminal colour support.
+# Please note that we employ the environment flags:
+# - https://no-color.org for disabling colour output,
+# - https://force-color.org for forcing colour output.
+# Only the exact value `true` is accepted to avoid accidental activation.
+setup_colours() {
+	if [[ "${NO_COLOR:-false}" == "true" ]]; then
+		readonly COLOUR_ENABLED=0
+	elif [[ "${FORCE_COLOR:-false}" == "true" ]]; then
+		readonly COLOUR_ENABLED=1
+	# Enable colours only if:
+	# 1) output is a terminal (not piped or redirected),
+	# 2) the `tput` command is available,
+	# 3) and the terminal supports at least 8 colours (i.e. the standard ANSI colours).
+	elif [[ -t 1 && -n "$(command -v tput)" && "$(tput colors)" -ge 8 ]]; then
+		readonly COLOUR_ENABLED=1
+	else
+		readonly COLOUR_ENABLED=0
+	fi
+
+	if [[ "$COLOUR_ENABLED" -eq 1 ]]; then
+		readonly RED="$(tput setaf 1)"
+		readonly GREEN="$(tput setaf 2)"
+		readonly YELLOW="$(tput setaf 3)"
+		readonly BOLD="$(tput bold)"
+		readonly UNDERLINE="$(tput smul)"
+		readonly RESET="$(tput sgr0)"
+	else
+		readonly RED=""
+		readonly GREEN=""
+		readonly YELLOW=""
+		readonly BOLD=""
+		readonly UNDERLINE=""
+		readonly RESET=""
+	fi
+}
+
+setup_colours
 
 # Check the Bash version compatibility.
 if [[ "${BASH_VERSINFO[0]:-0}" -lt 4 ]]; then
@@ -263,7 +295,7 @@ list_networks() {
 # Utility function to print a section header.
 print_header() {
 	local header=$1
-	if [[ -t 1 ]] && tput sgr0 >/dev/null 2>&1; then
+	if [[ -n "$UNDERLINE" ]]; then
 		# Terminal supports formatting.
 		printf "\n${UNDERLINE}%s${RESET}\n" "$header"
 	else
@@ -278,7 +310,7 @@ print_field() {
 	local value=$2
 	local empty_line="${3:-false}"
 
-	if [[ -t 1 ]] && tput sgr0 >/dev/null 2>&1; then
+	if [[ "$COLOUR_ENABLED" -eq 1 ]]; then
 		# Terminal supports formatting.
 		printf "%s: ${GREEN}%s${RESET}\n" "$label" "$value"
 	else
@@ -315,9 +347,9 @@ print_transaction_data() {
 	case "$operation" in
 	1)
 		if [[ "$operation" -eq 1 && ! " ${TRUSTED_FOR_DELEGATE_CALL[@]} " =~ " ${to} " ]]; then
-			print_field "Operation" "Delegatecall $(tput setaf 1)(UNTRUSTED delegatecall; carefully verify before proceeding!)$(tput sgr0)"
+			print_field "Operation" "Delegatecall ${RED}(UNTRUSTED delegatecall; carefully verify before proceeding!)${RESET}"
 		else
-			print_field "Operation" "Delegatecall $(tput setaf 3)(trusted delegatecall)$(tput sgr0)"
+			print_field "Operation" "Delegatecall ${YELLOW}(trusted delegatecall)${RESET}"
 		fi
 		;;
 	0)
@@ -410,7 +442,7 @@ get_version() {
 validate_version() {
 	local version=$1
 	if [[ -z "$version" ]]; then
-		echo "$(tput setaf 3)No Safe multisig contract found for the specified network. Please ensure that you have selected the correct network.$(tput sgr0)"
+		echo "${YELLOW}No Safe multisig contract found for the specified network. Please ensure that you have selected the correct network.${RESET}"
 		exit 0
 	fi
 
@@ -418,7 +450,7 @@ validate_version() {
 
 	# Ensure that the Safe multisig version is `>= 0.1.0`.
 	if [[ "$(printf "%s\n%s" "$clean_version" "0.1.0" | sort -V | head -n1)" == "$clean_version" && "$clean_version" != "0.1.0" ]]; then
-		echo "$(tput setaf 3)Safe multisig version \"${clean_version}\" is not supported!$(tput sgr0)"
+		echo "${YELLOW}Safe multisig version \"${clean_version}\" is not supported!${RESET}"
 		exit 0
 	fi
 }
@@ -556,7 +588,7 @@ calculate_nested_safe_hashes() {
 	echo -e "\n${BOLD}${UNDERLINE}Nested Safe \`approveHash\` Transaction Data and Computed Hashes${RESET}"
 	cat <<EOF
 
-$(tput setaf 3)The specified nested Safe at $nested_safe_address will use the following transaction to approve the primary transaction.$(tput sgr0)
+${YELLOW}The specified nested Safe at $nested_safe_address will use the following transaction to approve the primary transaction.${RESET}
 EOF
 
 	# Calculate the domain and message hashes for the specified nested Safe multisig address.
@@ -638,8 +670,8 @@ warn_if_delegate_call() {
 	if [[ "$operation" -eq 1 && ! " ${TRUSTED_FOR_DELEGATE_CALL[@]} " =~ " ${to} " ]]; then
 		cat <<EOF
 
-$(tput setaf 1)WARNING: The transaction includes an untrusted delegate call to address $to!
-This may lead to unexpected behaviour or vulnerabilities. Please review it carefully before you sign!$(tput sgr0)
+${RED}WARNING: The transaction includes an untrusted delegate call to address $to!
+This may lead to unexpected behaviour or vulnerabilities. Please review it carefully before you sign!${RESET}
 
 EOF
 		delegate_call_warning_shown="true"
@@ -655,15 +687,15 @@ check_gas_token_attack() {
 	local warning_message=""
 
 	if [[ "$gas_token" != "$ZERO_ADDRESS" && "$refund_receiver" != "$ZERO_ADDRESS" ]]; then
-		warning_message+="$(tput setaf 1)WARNING: This transaction uses a custom gas token and a custom refund receiver.
-This combination can be used to hide a rerouting of funds through gas refunds.$(tput sgr0)\n"
+		warning_message+="${RED}WARNING: This transaction uses a custom gas token and a custom refund receiver.
+This combination can be used to hide a rerouting of funds through gas refunds.${RESET}\n"
 		if [[ "$gas_price" != "0" ]]; then
-			warning_message+="$(tput setaf 1)Furthermore, the gas price is non-zero, which increases the potential for hidden value transfers.$(tput sgr0)\n"
+			warning_message+="${RED}Furthermore, the gas price is non-zero, which increases the potential for hidden value transfers.${RESET}\n"
 		fi
 	elif [[ "$gas_token" != "$ZERO_ADDRESS" ]]; then
-		warning_message+="$(tput setaf 3)WARNING: This transaction uses a custom gas token. Please verify that this is intended.$(tput sgr0)\n"
+		warning_message+="${YELLOW}WARNING: This transaction uses a custom gas token. Please verify that this is intended.${RESET}\n"
 	elif [[ "$refund_receiver" != "$ZERO_ADDRESS" ]]; then
-		warning_message+="$(tput setaf 3)WARNING: This transaction uses a custom refund receiver. Please verify that this is intended.$(tput sgr0)\n"
+		warning_message+="${YELLOW}WARNING: This transaction uses a custom refund receiver. Please verify that this is intended.${RESET}\n"
 	fi
 
 	if [[ -n "$warning_message" ]]; then
@@ -792,7 +824,7 @@ calculate_nested_safe_offchain_message_hashes() {
 
 	cat <<EOF
 
-$(tput setaf 3)The specified nested Safe at $nested_safe_address will sign the above displayed Safe message $hashed_message via an EIP-712 message object.$(tput sgr0)
+${YELLOW}The specified nested Safe at $nested_safe_address will sign the above displayed Safe message $hashed_message via an EIP-712 message object.${RESET}
 EOF
 
 	# Calculate and display the hashes.
@@ -915,15 +947,15 @@ calculate_safe_hashes() {
 
 Interactive mode is enabled. You will be prompted to enter values for parameters such as \`version\`, \`to\`, \`value\`, and others.
 
-$(tput setaf 1)If it's not already obvious: This is YOLO mode – BE VERY CAREFUL!$(tput sgr0)
+${RED}If it's not already obvious: This is YOLO mode – BE VERY CAREFUL!${RESET}
 
-$(tput setaf 3)IMPORTANT:
+${YELLOW}IMPORTANT:
 - Leaving a parameter empty will use the value retrieved from the Safe transaction service API, displayed as the "default value".
   If the value is unavailable (e.g. if the API endpoint is down), it will default to zero.
 - If multiple transactions share the same nonce, the first transaction in the array will be selected to provide the default values.
 - No warnings will be shown if multiple transactions share the same nonce. It's recommended to first run a validation without interactive mode enabled!
 - Some parameters (e.g., \`version\`, \`to\`, \`operation\`) enforce valid options, but not all inputs are strictly validated.
-  Please double-check your entries before proceeding.$(tput sgr0)
+  Please double-check your entries before proceeding.${RESET}
 
 EOF
 		read -rp "Enter the Safe multisig version (default: $version): " user_version
@@ -984,19 +1016,19 @@ EOF
 
 		# Inform the user that no transactions are available for the specified nonce.
 		if [[ $count -eq 0 ]]; then
-			echo "$(tput setaf 3)No transaction is available for this nonce!$(tput sgr0)"
+			echo "${YELLOW}No transaction is available for this nonce!${RESET}"
 			exit 0
 		# Notify the user about multiple transactions with identical nonce values and prompt for user input.
 		elif [[ $count -gt 1 ]]; then
 			cat <<EOF
-$(tput setaf 3)Several transactions with identical nonce values have been detected.
+${YELLOW}Several transactions with identical nonce values have been detected.
 This occurrence is normal if you are deliberately replacing an existing transaction.
 However, if your Safe interface displays only a single transaction, this could indicate
-potential irregular activity requiring your attention.$(tput sgr0)
+potential irregular activity requiring your attention.${RESET}
 
 Kindly specify the transaction's array value (available range: 0-$((${count} - 1))).
 You can find the array values at the following endpoint:
-$(tput setaf 2)$endpoint$(tput sgr0)
+${GREEN}$endpoint${RESET}
 
 Please enter the index of the array:
 EOF
@@ -1006,14 +1038,14 @@ EOF
 
 				# Validate if user input is a number.
 				if ! [[ $idx =~ ^[0-9]+$ ]]; then
-					echo "$(tput setaf 1)Error: Please enter a valid number!$(tput sgr0)"
+					echo "${RED}Error: Please enter a valid number!${RESET}"
 					continue
 				fi
 
 				local array_value=$(echo "$response" | jq ".results[$idx]")
 
 				if [[ $array_value == null ]]; then
-					echo "$(tput setaf 1)Error: No transaction found at index $idx. Please try again.$(tput sgr0)"
+					echo "${RED}Error: No transaction found at index $idx. Please try again.${RESET}"
 					continue
 				fi
 
@@ -1057,7 +1089,7 @@ EOF
 				break
 			else
 				cat <<EOF
-$(tput setaf 3)Invalid input. Please enter either 0 (CALL) or 1 (DELEGATECALL).$(tput sgr0)
+${YELLOW}Invalid input. Please enter either 0 (CALL) or 1 (DELEGATECALL).${RESET}
 EOF
 			fi
 		done
