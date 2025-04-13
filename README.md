@@ -114,16 +114,18 @@ This will print each command before it is executed, which is helpful when troubl
 The colour output is auto-detected and can be controlled with:
 
 - [`NO_COLOR=true`](https://no-color.org) — disables all colours,
-- [`FORCE_COLOR=true`](https://force-color.org) — forces colour output.
-
-Only the exact value `true` is accepted to avoid accidental activation.
 
 ```console
-~$ NO_COLOR=true ./safe_hashes.sh ...
-~$ FORCE_COLOR=true ./safe_hashes.sh ...
+NO_COLOR=true ./safe_hashes.sh ...
 ```
 
-If both are set, `NO_COLOR` takes precedence and disables all formatting. Otherwise, colour is enabled only if output is to a terminal, [`tput`](https://linux.die.net/man/1/tput) is available, and the terminal supports at least the 8 standard ANSI colours.
+- [`FORCE_COLOR=true`](https://force-color.org) — forces colour output.
+
+```console
+FORCE_COLOR=true ./safe_hashes.sh ...
+```
+
+Only the exact value `true` is accepted to avoid accidental activation. If both are set, `NO_COLOR` takes precedence and disables all formatting. Otherwise, colour is enabled only if output is to a terminal, [`tput`](https://linux.die.net/man/1/tput) is available, and the terminal supports at least the 8 standard ANSI colours.
 
 ### macOS Users: Upgrading Bash
 
