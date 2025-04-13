@@ -111,6 +111,22 @@ DEBUG=true ./safe_hashes.sh ...
 
 This will print each command before it is executed, which is helpful when troubleshooting.
 
+The colour output is auto-detected and can be controlled with:
+
+- [`NO_COLOR=true`](https://no-color.org) — disables all colours,
+
+```console
+NO_COLOR=true ./safe_hashes.sh ...
+```
+
+- [`FORCE_COLOR=true`](https://force-color.org) — forces colour output.
+
+```console
+FORCE_COLOR=true ./safe_hashes.sh ...
+```
+
+Only the exact value `true` is accepted to avoid accidental activation. If both are set, `NO_COLOR` takes precedence and disables all formatting. Otherwise, colour is enabled only if output is to a terminal, [`tput`](https://linux.die.net/man/1/tput) is available, and the terminal supports at least the 8 standard ANSI colours.
+
 ### macOS Users: Upgrading Bash
 
 This [script](./safe_hashes.sh) requires Bash [`4.0`](https://tldp.org/LDP/abs/html/bashver4.html) or higher due to its use of associative arrays (introduced in Bash [`4.0`](https://tldp.org/LDP/abs/html/bashver4.html)). Unfortunately, macOS ships by default with Bash `3.2` due to licensing requirements. To use this [script](./safe_hashes.sh), install a newer version of Bash through [Homebrew](https://brew.sh):
