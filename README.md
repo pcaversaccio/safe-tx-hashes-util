@@ -104,6 +104,12 @@ chmod +x safe_hashes.sh
 > [!TIP]
 > The [script](./safe_hashes.sh) is already set as _executable_ in the repository, so you can run it immediately after cloning or pulling the repository without needing to change permissions.
 
+If you feel fancy, you can also try:
+
+```console
+curl -fsSL https://raw.githubusercontent.com/pcaversaccio/safe-tx-hashes/main/install.sh | bash
+```
+
 To enable _debug mode_, set the `DEBUG` environment variable to `true` before running the [script](./safe_hashes.sh):
 
 ```console
