@@ -40,7 +40,7 @@ jobs:
         run: npx prettier -c '**/*.{md,yml,yaml}'
 
       - name: Run `shfmt`
-        run: shfmt -d safe_hashes.sh
+        run: shfmt -d safe_hashes.sh install.sh
 
   codespell:
     runs-on: ${{ matrix.os }}
