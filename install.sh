@@ -49,7 +49,6 @@ echo -e "${BOLD}${RED}
 ╚══════╝░░░╚═╝░░░░╚═════╝░╚═╝░░░░░
 ${RESET}"
 
-echo -e "${RED}${BOLD}SHAME ON YOU!${RESET}"
-echo ""
-echo -e "${RED}${BOLD}You just piped a remote script directly into your shell without inspecting it!${RESET}"
-echo -e "${RED}${BOLD}Never blindly run code from the internet. Inspect it first!${RESET}"
+echo -e "${RED}${BOLD}SHAME ON YOU!${RESET}\n"
+echo -e "${RED}${BOLD}You just piped a remote script straight into your shell - on the same machine you use to verify multisig transactions!${RESET}"
+echo -e "${RED}${BOLD}That's absolutely brilliant... in the most idiotic way. Never blindly run code from the internet. Inspect it first!${RESET}"
