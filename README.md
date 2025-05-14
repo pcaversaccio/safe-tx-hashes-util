@@ -107,7 +107,7 @@ chmod +x safe_hashes.sh
 If you feel fancy, you can also try:
 
 ```console
-curl -fsSL https://raw.githubusercontent.com/pcaversaccio/safe-tx-hashes/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/pcaversaccio/safe-tx-hashes-util/main/install.sh | bash
 ```
 
 To enable _debug mode_, set the `DEBUG` environment variable to `true` before running the [script](./safe_hashes.sh):
