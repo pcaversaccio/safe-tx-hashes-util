@@ -49,6 +49,10 @@ echo -e "${BOLD}${RED}
 ╚══════╝░░░╚═╝░░░░╚═════╝░╚═╝░░░░░
 ${RESET}"
 
-echo -e "${RED}${BOLD}SHAME ON YOU!${RESET}\n"
+echo -e "${RED}${BOLD}SHAME ON YOU!\n${RESET}"
 echo -e "${RED}${BOLD}You just piped a remote script straight into your shell - on the same machine you use to verify multisig transactions!${RESET}"
-echo -e "${RED}${BOLD}That's absolutely brilliant... in the most idiotic way. Never blindly run code from the internet. Inspect it first!${RESET}"
+echo -e "${RED}${BOLD}That's absolutely brilliant... in the most idiotic way. Never blindly run code from the internet. Inspect it first!\n${RESET}"
+echo -e "${BOLD}Next time, try this instead:${RESET}"
+echo -e "  ~$ curl -fsSL https://raw.githubusercontent.com/pcaversaccio/safe-tx-hashes-util/main/install.sh | less"
+echo -e "  ~$ curl -fsSL -o install.sh https://raw.githubusercontent.com/pcaversaccio/safe-tx-hashes-util/main/install.sh && less install.sh\n"
+echo -e "${BOLD}Please also read:${RESET} https://web.archive.org/web/20250209133823/https://www.idontplaydarts.com/2016/04/detecting-curl-pipe-bash-server-side/"
