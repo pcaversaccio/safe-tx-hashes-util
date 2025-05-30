@@ -737,7 +737,7 @@ calculate_offchain_message_hashes() {
 
 	local message_raw=$(<"$message_file")
 	# Normalise line endings to `LF` (`\n`).
-	message_raw=$(echo "$message_raw" | tr -d "\r")
+	message_raw=$(printf "%s" "$message_raw" | tr -d "\r")
 	local hashed_message=$(printf "%s" "$message_raw" | cast hash-message)
 
 	local domain_separator_typehash="$DOMAIN_SEPARATOR_TYPEHASH"
@@ -790,7 +790,7 @@ calculate_nested_safe_offchain_message_hashes() {
 
 	local message_raw=$(<"$message_file")
 	# Normalise line endings to `LF` (`\n`).
-	message_raw=$(echo "$message_raw" | tr -d "\r")
+	message_raw=$(printf "%s" "$message_raw" | tr -d "\r")
 	local hashed_message=$(printf "%s" "$message_raw" | cast hash-message)
 
 	local domain_separator_typehash="$DOMAIN_SEPARATOR_TYPEHASH"
