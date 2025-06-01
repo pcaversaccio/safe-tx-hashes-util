@@ -68,7 +68,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 ## Usage
 
 > [!NOTE]
-> Ensure that [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast) and [`chisel`](https://github.com/foundry-rs/foundry/tree/master/crates/chisel) are installed locally. For installation instructions, refer to this [guide](https://book.getfoundry.sh/getting-started/installation). This [script](./safe_hashes.sh) is designed to work with the latest _stable_ versions of [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast) and [`chisel`](https://github.com/foundry-rs/foundry/tree/master/crates/chisel), starting from version [`1.2.2`](https://github.com/foundry-rs/foundry/releases/tag/v1.2.2).
+> Ensure that [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast) and [`chisel`](https://github.com/foundry-rs/foundry/tree/master/crates/chisel) are installed locally. For installation instructions, refer to this [guide](https://book.getfoundry.sh/introduction/installation). This [script](./safe_hashes.sh) is designed to work with the latest _stable_ versions of [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast) and [`chisel`](https://github.com/foundry-rs/foundry/tree/master/crates/chisel), starting from version [`1.2.2`](https://github.com/foundry-rs/foundry/releases/tag/v1.2.2).
 
 > [!TIP]
 > For macOS users, please refer to the [macOS Users: Upgrading Bash](#macos-users-upgrading-bash) section.
