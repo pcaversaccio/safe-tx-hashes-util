@@ -50,6 +50,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - Gnosis (identifier: `gnosis`, chain ID: `100`)
 - Gnosis Chiado (identifier: `gnosis-chiado`, chain ID: `10200`)
 - Hemi (identifier: `hemi`, chain ID: `43111`)
+- Hyperliquid (indefier: `hyperliquid`, chain ID: `999`)
 - Ink (identifier: `ink`, chain ID: `57073`)
 - Lens (identifier: `lens`, chain ID: `232`)
 - Linea (identifier: `linea`, chain ID: `59144`)
