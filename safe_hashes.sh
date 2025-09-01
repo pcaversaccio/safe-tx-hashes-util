@@ -230,7 +230,7 @@ usage() {
 Usage: $0 [--help] [--version] [--list-networks]
        --network <network> --address <address> [--nonce <nonce>]
        [--nested-safe-address <address>] [--nested-safe-nonce <nonce>]
-       [--message <file>] [--interactive]
+       [--message <file>] [--interactive] [--simulate <rpc_url>]
 
 Options:
   --help                            Display this help message
@@ -243,6 +243,7 @@ Options:
   --nested-safe-nonce <nonce>       Specify the nonce for the nested Safe transaction (optional for transaction hashes)
   --message <file>                  Specify the message file (required for off-chain message hashes)
   --interactive                     Use the interactive mode (optional for transaction hashes)
+  --simulate <rpc_url>              Also invoke 'cast call --trace' after outputting hashes using the specified RPC URL
 
 Example for transaction hashes:
   $0 --network ethereum --address 0x1234...5678 --nonce 42
@@ -261,6 +262,9 @@ Example for off-chain message hashes:
 
 Example for off-chain message hashes via a nested Safe multisig signer:
   $0 --network ethereum --address 0x1234...5678 --nested-safe-address 0x8765...4321 --message message.txt
+
+Example for transaction hashes with simulation:
+  $0 --network ethereum --address 0x1234...5678 --nonce 42 --simulate https://rpc.ankr.com/eth
 EOF
 	exit "${1:-1}"
 }
@@ -861,6 +865,23 @@ EOF
 #    - Calls the `calculate_hashes` function to compute and display the results.
 #    - If nested Safe parameters are provided, invokes the `calculate_nested_safe_hashes` function with the approval transaction
 #      data and displays the resulting hashes.
+
+# Utility function to simulate transaction execution with cast call.
+execute_cast_call() {
+	local rpc_url="$1"
+	local from="$2"
+	local to="$3"
+	local data="$4"
+
+	echo
+	print_header "Transaction Simulation"
+	echo -e "Executing: ${GREEN}cast call --trace -r $rpc_url --from $from $to --data $data${RESET}"
+	echo
+
+	# Execute the cast call command.
+	cast call --trace -r "$rpc_url" --from "$from" "$to" --data "$data"
+}
+
 calculate_safe_hashes() {
 	# Display the help message if no arguments are provided.
 	if [[ $# -eq 0 ]]; then
@@ -875,6 +896,7 @@ calculate_safe_hashes() {
 	local nested_safe_nonce=""
 	local message_file=""
 	local interactive=""
+	local simulate=""
 
 	# Parse the command line arguments.
 	# Please note that `--help`, `--version`, and `--list-networks` can be used
@@ -913,6 +935,10 @@ calculate_safe_hashes() {
 		--interactive)
 			interactive="1"
 			shift
+			;;
+		--simulate)
+			simulate="$2"
+			shift 2
 			;;
 		*)
 			echo "Unknown option: $1" >&2
@@ -1164,6 +1190,11 @@ EOF
 		echo -e "${RED}Error: The \`--nested-safe-address\` parameter is missing.${RESET}" >&2
 		echo -e "${RED}Both \`--nested-safe-address\` and \`--nested-safe-nonce\` must be provided for transaction hashes!${RESET}" >&2
 		exit 1
+	fi
+
+	# Execute simulation if requested.
+	if [[ -n "$simulate" ]]; then
+		execute_cast_call "$simulate" "$address" "$to" "$data"
 	fi
 
 	exit 0

@@ -21,6 +21,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
   - [macOS Users: Upgrading Bash](#macos-users-upgrading-bash)
     - [Optional: Set the New Bash as Your Default Shell](#optional-set-the-new-bash-as-your-default-shell)
 - [Safe Transaction Hashes](#safe-transaction-hashes)
+  - [Transaction Simulation](#transaction-simulation)
   - [Interactive Mode](#interactive-mode)
   - [Nested Safes](#nested-safes)
 - [Safe Message Hashes](#safe-message-hashes)
@@ -76,7 +77,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 ```console
 ./safe_hashes.sh [--help] [--version] [--list-networks] --network <network> --address <address>
                  [--nonce <nonce>] [--nested-safe-address <address>] [--nested-safe-nonce <nonce>]
-                 [--message <file>] [--interactive]
+                 [--message <file>] [--interactive] [--simulate <rpc_url>]
 ```
 
 **Options:**
@@ -91,6 +92,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - `--nested-safe-nonce <nonce>`: Specify the nonce for the nested Safe transaction (optional for transaction hashes).
 - `--message <file>`: Specify the message file (required for off-chain message hashes).
 - `--interactive`: Use the interactive mode (optional for transaction hashes).
+- `--simulate <rpc_url>`: Also invoke `cast call --trace` after outputting hashes using the specified RPC URL.
 
 > [!NOTE]
 > Please note that `--help`, `--version`, and `--list-networks` can be used independently or alongside other options without causing the script to fail. They are special options that can be called without affecting the rest of the command processing.
@@ -252,6 +254,16 @@ To list all supported networks:
 ```console
 ./safe_hashes.sh --list-networks
 ```
+
+### Transaction Simulation
+
+You can also simulate the transaction execution after calculating the hashes by using the `--simulate` option with an RPC URL. This will invoke `cast call --trace` to perform a traced simulation of the transaction:
+
+```console
+./safe_hashes.sh --network ethereum --address 0x8FA3b4570B4C96f8036C13b64971BA65867eEB48 --nonce 39 --simulate https://rpc.ankr.com/eth
+```
+
+This will first output all the hash information as usual, then execute the transaction simulation, showing you the trace output from `cast call`. This is useful for verifying exactly how the transaction will execute before signing it.
 
 ### Interactive Mode
 
