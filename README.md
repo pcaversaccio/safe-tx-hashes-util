@@ -407,7 +407,7 @@ This simulation depends on data provided by your RPC provider. Using your own no
 Executing the following command:
 ```bash
 cast call --trace \
-  --rpc-url https://1rpc.io/eth \
+  --rpc-url https://eth.llamarpc.com \
   --from 0x5EA1d9A6dDC3A0329378a327746D71A2019eC332 \
   0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 \
   --data 0xa9059cbb000000000000000000000000874516fcc0d5565ab82251cb27e947a5a8667329000000000000000000000000000000000000000000000000000000037e11d600
