@@ -21,8 +21,8 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
   - [macOS Users: Upgrading Bash](#macos-users-upgrading-bash)
     - [Optional: Set the New Bash as Your Default Shell](#optional-set-the-new-bash-as-your-default-shell)
 - [Safe Transaction Hashes](#safe-transaction-hashes)
-  - [Transaction Simulation](#transaction-simulation)
   - [Interactive Mode](#interactive-mode)
+  - [Transaction Simulation](#transaction-simulation)
   - [Nested Safes](#nested-safes)
 - [Safe Message Hashes](#safe-message-hashes)
 - [Trust Assumptions](#trust-assumptions)
@@ -92,7 +92,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - `--nested-safe-nonce <nonce>`: Specify the nonce for the nested Safe transaction (optional for transaction hashes).
 - `--message <file>`: Specify the message file (required for off-chain message hashes).
 - `--interactive`: Use the interactive mode (optional for transaction hashes).
-- `--simulate <rpc_url>`: Also invoke `cast call --trace` after outputting hashes using the specified RPC URL.
+- `--simulate <rpc_url>`: Output the \`cast call --trace\` result in addition to the transaction hashes using the specified RPC URL (optional for transaction hashes).
 
 > [!NOTE]
 > Please note that `--help`, `--version`, and `--list-networks` can be used independently or alongside other options without causing the script to fail. They are special options that can be called without affecting the rest of the command processing.
@@ -255,16 +255,6 @@ To list all supported networks:
 ./safe_hashes.sh --list-networks
 ```
 
-### Transaction Simulation
-
-You can also simulate the transaction execution after calculating the hashes by using the `--simulate` option with an RPC URL. This will invoke `cast call --trace` to perform a traced simulation of the transaction:
-
-```console
-./safe_hashes.sh --network ethereum --address 0x8FA3b4570B4C96f8036C13b64971BA65867eEB48 --nonce 39 --simulate https://rpc.ankr.com/eth
-```
-
-This will first output all the hash information as usual, then execute the transaction simulation, showing you the trace output from `cast call`. This is useful for verifying exactly how the transaction will execute before signing it.
-
 ### Interactive Mode
 
 > [!WARNING]
@@ -350,6 +340,91 @@ Domain hash: 0x1CF7F9B1EFE3BC47FE02FD27C649FEA19E79D66040683A1C86C7490C80BF7291
 Message hash: 0xC7E826933DA60E6AC3E2246ED0563A26A920A65BEAA9089D784AC96234141BB3
 Safe transaction hash: 0xc818fceb1cace51c1a4039c4c66fc73d95eccc298104c9c52debac604b9f4e04
 ```
+
+### Transaction Simulation
+
+> [!WARNING]
+> A simulation depends on data provided by your RPC provider. Using your own node is always recommended.
+
+You can simulate a transaction using the `--simulate` option with an RPC URL. This runs [`cast call --trace`](https://getfoundry.sh/cast/reference/call) to produce a detailed execution trace. Use this option to check exactly how the transaction will execute _before_ signing. As an example, invoke the following command:
+
+```console
+./safe_hashes.sh --network ethereum --address 0x5EA1d9A6dDC3A0329378a327746D71A2019eC332 --nonce 5 --simulate https://eth.llamarpc.com
+```
+
+The [script](./safe_hashes.sh) produces the following output:
+
+````console
+===================================
+= Selected Network Configurations =
+===================================
+
+Network: ethereum
+Chain ID: 1
+
+========================================
+= Transaction Data and Computed Hashes =
+========================================
+
+> Transaction Data:
+Multisig address: 0x5EA1d9A6dDC3A0329378a327746D71A2019eC332
+To: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
+Value: 0
+Data: 0xa9059cbb000000000000000000000000874516fcc0d5565ab82251cb27e947a5a8667329000000000000000000000000000000000000000000000000000000037e11d600
+Operation: Call
+Safe Transaction Gas: 0
+Base Gas: 0
+Gas Price: 0
+Gas Token: 0x0000000000000000000000000000000000000000
+Refund Receiver: 0x0000000000000000000000000000000000000000
+Nonce: 5
+Encoded message: 0xbb8310d486368db6bd6f849402fdd73ad53d316b5a4b2644ad6efe0f941286d8000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb4800000000000000000000000000000000000000000000000000000000000000006594cf06d65dc7ee1e919ea12f3eaef10b262cb7b661538b472964eb143b1a090000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005
+Method: transfer
+Parameters: [
+  {
+    "name": "to",
+    "type": "address",
+    "value": "0x874516FCc0D5565AB82251Cb27e947A5A8667329"
+  },
+  {
+    "name": "value",
+    "type": "uint256",
+    "value": "15000000000"
+  }
+]
+
+> Hashes:
+Domain hash: 0x58122EA8F001782FACC66EE5495A6B8B29730FADF352D8608CA86BD31569FCF5
+Message hash: 0x14DB764474CE3700F8CE6DB890151CFBB1583B9287C7DE34FC678ED0D826EE5F
+Safe transaction hash: 0xf7e82654b1d4e34c3e19daf42bf65dd016c752472e39a4e36839392550747a17
+
+==========================
+= Transaction Simulation =
+==========================
+
+This simulation depends on data provided by your RPC provider. Using your own node is always recommended.
+
+Executing the following command:
+```bash
+cast call --trace \
+  --rpc-url https://1rpc.io/eth \
+  --from 0x5EA1d9A6dDC3A0329378a327746D71A2019eC332 \
+  0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 \
+  --data 0xa9059cbb000000000000000000000000874516fcc0d5565ab82251cb27e947a5a8667329000000000000000000000000000000000000000000000000000000037e11d600
+```
+
+> Execution Traces:
+Traces:
+  [23552] 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48::transfer(0x874516FCc0D5565AB82251Cb27e947A5A8667329, 15000000000 [1.5e10])
+    ├─ [16263] 0x43506849D7C04F9138D1A2050bbF3A0c054402dd::transfer(0x874516FCc0D5565AB82251Cb27e947A5A8667329, 15000000000 [1.5e10]) [delegatecall]
+    │   ├─ emit Transfer(from: 0x5EA1d9A6dDC3A0329378a327746D71A2019eC332, to: 0x874516FCc0D5565AB82251Cb27e947A5A8667329, value: 15000000000 [1.5e10])
+    │   └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
+    └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
+
+
+Transaction successfully executed.
+Gas used: 45160
+````
 
 ### Nested Safes
 
@@ -447,7 +522,7 @@ The nested Safe `approveHash` transaction is constructed with the following para
 - All other parameters are set to their default values (`0` or the zero address `0x0000000000000000000000000000000000000000`).
 
 > [!NOTE]
-> The `--interactive` mode supports nested Safe transactions but only allows overriding the nested Safe version, not other transaction values in the `approveHash` transaction.
+> The `--interactive` mode supports nested Safe transactions but only allows overriding the nested Safe version, not other transaction values in the `approveHash` transaction. You can also use the `--simulate` mode with nested Safe transactions, but it simulates only the main transaction (the one you approve) and not the Safe `approveHash` transaction itself.
 
 ## Safe Message Hashes
 
@@ -523,9 +598,10 @@ Safe message hash: 0x1866b559f56261ada63528391b93a1fe8e2e33baf7cace94fc6b42202d1
 3. You trust [Foundry](https://github.com/foundry-rs/foundry).
 4. You trust the [Safe transaction service API](https://docs.safe.global/core-api/transaction-service-overview).
 5. You trust [Ledger's secure screen](https://www.ledger.com/academy/topics/ledgersolutions/ledger-wallets-secure-screen-security-model).
+6. You trust the data provided by your RPC provider when using `--simulate` mode.
 
 > [!IMPORTANT]
-> You can remove the trust assumption _"4. You trust the [Safe transaction service API](https://docs.safe.global/core-api/transaction-service-overview)."_ by enabling `--interactive` mode and verifying the calldata independently (this should always be done!).
+> You can remove the trust assumption _"4. You trust the [Safe transaction service API](https://docs.safe.global/core-api/transaction-service-overview)."_ by enabling `--interactive` mode and verifying the calldata independently (this should always be done!). You can also remove trust assumption _"6. You trust the data provided by your RPC provider when using `--simulate` mode."_ by running your own node.
 
 ## Community-Maintained User Interface Implementations
 
