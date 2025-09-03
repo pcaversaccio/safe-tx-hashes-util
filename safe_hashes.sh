@@ -420,10 +420,16 @@ print_decoded_data() {
 		esac
 
 		# Check for sensitive functions in nested transactions.
-		echo "$parameters" | jq -c ".[] | .valueDecoded[]? | select(.dataDecoded != null)" | while read -r nested_param; do
-			nested_method=$(echo "$nested_param" | jq -r ".dataDecoded.method")
+		echo "$parameters" | jq -c '
+			.[] | .valueDecoded? |
+			if type == "array" then .[]
+			elif type == "object" then .
+			else empty
+			end
+		' | while read -r nested_call; do
+			nested_method=$(echo "$nested_call" | jq -r ".dataDecoded.method? // .method? // empty")
 
-			if [[ "$nested_method" =~ ^(addOwnerWithThreshold|removeOwner|swapOwner|changeThreshold)$ ]]; then
+			if [[ -n "$nested_method" && "$nested_method" =~ ^(addOwnerWithThreshold|removeOwner|swapOwner|changeThreshold)$ ]]; then
 				echo
 				echo -e "${BOLD}${RED}WARNING: The \"$nested_method\" function modifies the owners or threshold of the Safe! Proceed with caution!${RESET}"
 			fi
