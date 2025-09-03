@@ -390,7 +390,7 @@ Transaction successfully executed.
 Gas used: 45160
 ````
 
-If the specified transaction is using a `delegatecall`, we fork the chain locally using [`anvil`](https://github.com/foundry-rs/foundry/tree/master/crates/anvil), override the code at the multisig address with the code from to-be-`delegatecall`ed address, and then execute [`cast call --trace`](https://getfoundry.sh/cast/reference/call/). This ensures the code of to-be-`delegatecall`ed address runs in the storage context of multisig address, replicating exactly how a `delegatecall` would behave on-chain.
+If the specified transaction is using a `delegatecall`, we fork the chain locally using [`anvil`](https://github.com/foundry-rs/foundry/tree/master/crates/anvil), override the code at the multisig address with the code from to-be-`delegatecall`ed address, and then execute [`cast call --trace`](https://getfoundry.sh/cast/reference/call/) with both the `--from` and target addresses set to the multisig address. This ensures the code of to-be-`delegatecall`ed address runs in the storage context of multisig address, replicating exactly how a `delegatecall` would behave on-chain.
 
 As an example, invoke the following command:
 
@@ -414,7 +414,7 @@ Safe transaction hash: 0x27a0c4abf624b15b776f544a4b31ed4d50dee2b677c6497fbadf4f7
 
 This simulation depends on data provided by your RPC provider. Using your own node is always recommended.
 
-The specified transaction is using a `delegatecall` from `0x5EA1d9A6dDC3A0329378a327746D71A2019eC332` to `0x9641d764fc13c8B624c04430C7356C1C7C8102e2`. In order to simulate this properly, we fork the chain locally using `anvil`, override the code at `0x5EA1d9A6dDC3A0329378a327746D71A2019eC332` with the code from `0x9641d764fc13c8B624c04430C7356C1C7C8102e2`, and then execute `cast call --trace`. This ensures the code of `0x9641d764fc13c8B624c04430C7356C1C7C8102e2` runs in the storage context of `0x5EA1d9A6dDC3A0329378a327746D71A2019eC332`, replicating exactly how a `delegatecall` would behave on-chain.
+The specified transaction is using a `delegatecall` from `0x5EA1d9A6dDC3A0329378a327746D71A2019eC332` to `0x9641d764fc13c8B624c04430C7356C1C7C8102e2`. In order to simulate this properly, we fork the chain locally using `anvil`, override the code at `0x5EA1d9A6dDC3A0329378a327746D71A2019eC332` with the code from `0x9641d764fc13c8B624c04430C7356C1C7C8102e2`, and then execute `cast call --trace` with both the `--from` and target addresses set to the multisig address `0x5EA1d9A6dDC3A0329378a327746D71A2019eC332`. This ensures the code of `0x9641d764fc13c8B624c04430C7356C1C7C8102e2` runs in the storage context of `0x5EA1d9A6dDC3A0329378a327746D71A2019eC332`, replicating exactly how a `delegatecall` would behave on-chain.
 
 Executing the following command:
 ```bash

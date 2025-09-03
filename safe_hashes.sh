@@ -749,7 +749,7 @@ simulate_transaction() {
 		cat <<EOF
 ${YELLOW}This simulation depends on data provided by your RPC provider. Using your own node is always recommended.
 
-The specified transaction is using a \`delegatecall\` from \`$address\` to \`$to\`. In order to simulate this properly, we fork the chain locally using \`anvil\`, override the code at \`$address\` with the code from \`$to\`, and then execute \`cast call --trace\`. This ensures the code of \`$to\` runs in the storage context of \`$address\`, replicating exactly how a \`delegatecall\` would behave on-chain.${RESET}
+The specified transaction is using a \`delegatecall\` from \`$address\` to \`$to\`. In order to simulate this properly, we fork the chain locally using \`anvil\`, override the code at \`$address\` with the code from \`$to\`, and then execute \`cast call --trace\` with both the \`--from\` and target addresses set to the multisig address \`$address\`. This ensures the code of \`$to\` runs in the storage context of \`$address\`, replicating exactly how a \`delegatecall\` would behave on-chain.${RESET}
 
 Executing the following command:
 \`\`\`bash
