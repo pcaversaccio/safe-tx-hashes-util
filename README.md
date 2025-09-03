@@ -390,7 +390,7 @@ Transaction successfully executed.
 Gas used: 45160
 ````
 
-If the specified transaction is using a \`delegatecall\`, we fork the chain locally using [`anvil`](https://github.com/foundry-rs/foundry/tree/master/crates/anvil), override the code at the multisig address with the code from to-be-`delegatecall`ed address, and then execute [`cast call --trace`](https://getfoundry.sh/cast/reference/call/). This ensures the code of to-be-`delegatecall`ed address runs in the storage context of multisig address, replicating exactly how a `delegatecall` would behave on-chain.
+If the specified transaction is using a `delegatecall`, we fork the chain locally using [`anvil`](https://github.com/foundry-rs/foundry/tree/master/crates/anvil), override the code at the multisig address with the code from to-be-`delegatecall`ed address, and then execute [`cast call --trace`](https://getfoundry.sh/cast/reference/call/). This ensures the code of to-be-`delegatecall`ed address runs in the storage context of multisig address, replicating exactly how a `delegatecall` would behave on-chain.
 
 As an example, invoke the following command:
 
