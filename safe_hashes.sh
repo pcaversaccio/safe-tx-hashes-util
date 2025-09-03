@@ -733,26 +733,60 @@ simulate_transaction() {
 	local address="$1"
 	local to="$2"
 	local data="$3"
-	local rpc_url="$4"
+	local operation="$4"
+	local rpc_url="$5"
 
 	echo -e "\n=========================="
 	echo "= Transaction Simulation ="
 	echo -e "==========================\n"
-	cat <<EOF
+
+	if [[ "$operation" -eq 1 ]]; then
+		anvil --fork-url "$rpc_url" --silent >/tmp/anvil.log 2>&1 &
+		local anvil_pid=$!
+		local local_rpc="http://127.0.0.1:8545"
+		trap "kill $anvil_pid 2>/dev/null" EXIT
+
+		cat <<EOF
+${YELLOW}This simulation depends on data provided by your RPC provider. Using your own node is always recommended.
+
+The specified transaction is using a \`delegatecall\` from \`$address\` to \`$to\`. In order to simulate this properly, we fork the chain locally using \`anvil\`, override the code at \`$address\` with the code from \`$to\`, and then execute \`cast call --trace\`. This ensures the code of \`$to\` runs in the storage context of \`$address\`, replicating exactly how a \`delegatecall\` would behave on-chain.${RESET}
+
+Executing the following command:
+\`\`\`bash
+${GREEN}cast call --trace \\
+  --from $address \\
+  $address \\
+  --data $data \\
+  --rpc-url $local_rpc
+${RESET}\`\`\`
+EOF
+
+		# Fetch the runtime bytecode of the target contract `$to` from the RPC provider.
+		code=$(cast code "$to" --rpc-url "$rpc_url")
+
+		# Override the code at the multisig address `$address` on the local `anvil` fork.
+		# This makes `$address` execute `$to`'s code while keeping `$address`' storage,
+		# effectively simulating a `delegatecall`.
+		cast rpc --rpc-url "$local_rpc" anvil_setCode "$address" "$code" >/dev/null
+		print_header "Execution Trace"
+		cast call --trace --from "$address" "$address" --data "$data" --rpc-url "$local_rpc"
+	else
+		cat <<EOF
 ${YELLOW}This simulation depends on data provided by your RPC provider. Using your own node is always recommended.${RESET}
 
 Executing the following command:
 \`\`\`bash
 ${GREEN}cast call --trace \\
-  --rpc-url $rpc_url \\
   --from $address \\
   $to \\
-  --data $data
+  --data $data \\
+  --rpc-url $rpc_url
 ${RESET}\`\`\`
 EOF
-	print_header "Execution Traces"
-	# Execute the `cast call --trace` command.
-	cast call --trace --from "$address" "$to" --data "$data" --rpc-url "$rpc_url"
+		print_header "Execution Traces"
+		# Execute the `cast call --trace` command.
+		cast call --trace --from "$address" "$to" --data "$data" --rpc-url "$rpc_url"
+	fi
 }
 
 # Utility function to validate the message file.
@@ -1226,7 +1260,7 @@ EOF
 
 	# Simulate the transaction locally with `cast call` and print its trace if an RPC URL is provided.
 	if [[ -n "$rpc_url" ]]; then
-		simulate_transaction "$address" "$to" "$data" "$rpc_url"
+		simulate_transaction "$address" "$to" "$data" "$operation" "$rpc_url"
 	fi
 
 	exit 0
