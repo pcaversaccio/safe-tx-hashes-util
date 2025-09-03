@@ -58,7 +58,7 @@ fi
 
 # Utility function to ensure all required tools are installed.
 check_required_tools() {
-	local tools=("curl" "jq" "chisel" "cast")
+	local tools=("curl" "jq" "chisel" "cast" "anvil")
 	local missing_tools=()
 
 	for tool in "${tools[@]}"; do
