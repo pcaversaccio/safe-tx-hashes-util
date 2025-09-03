@@ -392,11 +392,13 @@ print_hash_info() {
 
 # Utility function to print the ABI-decoded transaction data.
 print_decoded_data() {
-	local data=$1
-	local data_decoded=$2
+	local value=$1
+	local data=$2
+	local data_decoded=$3
 
 	if [[ "$data" == "0x" && "$data_decoded" == "0x" ]]; then
-		print_field "Method" "0x (ETH Transfer)"
+		local method_name=$([[ "$value" == "0" ]] && echo "On-Chain Rejection" || echo "0x (ETH Transfer)")
+		print_field "Method" "$method_name"
 		print_field "Parameters" "[]"
 	elif [[ "$data" != "0x" && "$data_decoded" == "0x" ]]; then
 		print_field "Method" "Unknown"
@@ -553,7 +555,7 @@ calculate_hashes() {
 	# Print the retrieved transaction data.
 	print_transaction_data "$address" "$to" "$value" "$data" "$operation" "$safe_tx_gas" "$base_gas" "$gas_price" "$gas_token" "$refund_receiver" "$nonce" "$message"
 	# Print the ABI-decoded transaction data.
-	print_decoded_data "$data" "$data_decoded"
+	print_decoded_data "$value" "$data" "$data_decoded"
 	# Print the results with the same formatting for "Domain hash" and "Message hash" as a Ledger hardware device.
 	print_hash_info "$domain_hash" "$message_hash" "$safe_tx_hash"
 
