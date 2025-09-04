@@ -450,8 +450,7 @@ print_decoded_data() {
 				[[ -z "$nested_method" ]] && continue
 
 				if [[ "$nested_method" =~ ^(addOwnerWithThreshold|removeOwner|swapOwner|changeThreshold)$ ]]; then
-					echo
-					echo -e "${BOLD}${RED}WARNING: The \"$nested_method\" function modifies the owners or threshold of the Safe! Proceed with caution!${RESET}"
+					echo -e "\n${BOLD}${RED}WARNING: The \"$nested_method\" function modifies the owners or threshold of the Safe! Proceed with caution!${RESET}"
 				fi
 			done
 		fi
