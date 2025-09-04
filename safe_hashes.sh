@@ -400,10 +400,10 @@ print_decoded_data() {
 
 	if [[ "$data" == "0x" && "$data_decoded" == "0x" ]]; then
 		# With no calldata, interpret intent based on `to` and `value`:
-		# - `to == address` and `value == 0` -> on-chain rejection,
-		# - `to == address` and `value != 0` -> ETH self-transfer,
-		# - `to != address` and `value == 0` -> zero-value ETH transfer,
-		# - `to != address` and `value != 0` -> standard ETH transfer.
+		# - `to == address` and `value == 0` => on-chain rejection,
+		# - `to == address` and `value != 0` => ETH self-transfer,
+		# - `to != address` and `value == 0` => zero-value ETH transfer,
+		# - `to != address` and `value != 0` => standard ETH transfer.
 		local method_name=""
 		if [[ "$address" == "$to" && "$value" == "0" ]]; then
 			method_name="0x (On-Chain Rejection)"
