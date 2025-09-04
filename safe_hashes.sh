@@ -432,8 +432,7 @@ print_decoded_data() {
 		# Check if the called function is sensitive and print a warning in bold.
 		case "$method" in
 		addOwnerWithThreshold | removeOwner | swapOwner | changeThreshold)
-			echo
-			echo -e "${BOLD}${RED}WARNING: The \"$method\" function modifies the owners or threshold of the Safe. Proceed with caution!${RESET}"
+			echo -e "\n${BOLD}${RED}WARNING: The \"$method\" function modifies the owners or threshold of the Safe. Proceed with caution!${RESET}"
 			;;
 		esac
 
@@ -641,15 +640,13 @@ validate_network() {
 	local network="$1"
 
 	if [[ -z "$network" ]]; then
-		echo -e "${BOLD}${RED}Network name is empty!${RESET}" >&2
-		echo
+		echo -e "${BOLD}${RED}Network name is empty!${RESET}\n" >&2
 		calculate_safe_hashes --list-networks >&2
 		exit 1
 	fi
 
 	if [[ -z "${API_URLS[$network]:-}" || -z "${CHAIN_IDS[$network]:-}" ]]; then
 		echo -e "${BOLD}${RED}Invalid network name: \"${network}\"${RESET}\n" >&2
-		echo
 		calculate_safe_hashes --list-networks >&2
 		exit 1
 	fi
