@@ -392,12 +392,28 @@ print_hash_info() {
 
 # Utility function to print the ABI-decoded transaction data.
 print_decoded_data() {
-	local value=$1
-	local data=$2
-	local data_decoded=$3
+	local address=$1
+	local to=$2
+	local value=$3
+	local data=$4
+	local data_decoded=$5
 
 	if [[ "$data" == "0x" && "$data_decoded" == "0x" ]]; then
-		local method_name=$([[ "$value" == "0" ]] && echo "On-Chain Rejection" || echo "0x (ETH Transfer)")
+		# With no calldata, interpret intent based on `to` and `value`:
+		# - `to == address` and `value == 0` -> on-chain rejection,
+		# - `to == address` and `value != 0` -> ETH self-transfer,
+		# - `to != address` and `value == 0` -> zero-value ETH transfer,
+		# - `to != address` and `value != 0` -> standard ETH transfer.
+		local method_name=""
+		if [[ "$address" == "$to" && "$value" == "0" ]]; then
+			method_name="0x (On-Chain Rejection)"
+		elif [[ "$address" == "$to" && "$value" != "0" ]]; then
+			method_name="0x (ETH Self-Transfer)"
+		elif [[ "$address" != "$to" && "$value" == "0" ]]; then
+			method_name="0x (Zero-Value ETH Transfer)"
+		else
+			method_name="0x (ETH Transfer)"
+		fi
 		print_field "Method" "$method_name"
 		print_field "Parameters" "[]"
 	elif [[ "$data" != "0x" && "$data_decoded" == "0x" ]]; then
@@ -555,7 +571,7 @@ calculate_hashes() {
 	# Print the retrieved transaction data.
 	print_transaction_data "$address" "$to" "$value" "$data" "$operation" "$safe_tx_gas" "$base_gas" "$gas_price" "$gas_token" "$refund_receiver" "$nonce" "$message"
 	# Print the ABI-decoded transaction data.
-	print_decoded_data "$value" "$data" "$data_decoded"
+	print_decoded_data "$address" "$to" "$value" "$data" "$data_decoded"
 	# Print the results with the same formatting for "Domain hash" and "Message hash" as a Ledger hardware device.
 	print_hash_info "$domain_hash" "$message_hash" "$safe_tx_hash"
 
