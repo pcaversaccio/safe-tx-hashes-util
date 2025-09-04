@@ -405,11 +405,11 @@ print_decoded_data() {
 		# - `to != address` and `value == 0` => zero-value ETH transfer,
 		# - `to != address` and `value != 0` => standard ETH transfer.
 		local method_name=""
-		if [[ "$address" == "$to" && "$value" == "0" ]]; then
+		if [[ "$to" == "$address" && "$value" == "0" ]]; then
 			method_name="0x (On-Chain Rejection)"
-		elif [[ "$address" == "$to" && "$value" != "0" ]]; then
+		elif [[ "$to" == "$address" && "$value" != "0" ]]; then
 			method_name="0x (ETH Self-Transfer)"
-		elif [[ "$address" != "$to" && "$value" == "0" ]]; then
+		elif [[ "$to" != "$address" && "$value" == "0" ]]; then
 			method_name="0x (Zero-Value ETH Transfer)"
 		else
 			method_name="0x (ETH Transfer)"
