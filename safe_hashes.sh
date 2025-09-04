@@ -392,11 +392,29 @@ print_hash_info() {
 
 # Utility function to print the ABI-decoded transaction data.
 print_decoded_data() {
-	local data=$1
-	local data_decoded=$2
+	local address=$1
+	local to=$2
+	local value=$3
+	local data=$4
+	local data_decoded=$5
 
 	if [[ "$data" == "0x" && "$data_decoded" == "0x" ]]; then
-		print_field "Method" "0x (ETH Transfer)"
+		# With no calldata, interpret intent based on `to` and `value`:
+		# - `to == address` and `value == 0` => on-chain rejection,
+		# - `to == address` and `value != 0` => ETH self-transfer,
+		# - `to != address` and `value == 0` => zero-value ETH transfer,
+		# - `to != address` and `value != 0` => standard ETH transfer.
+		local method_name=""
+		if [[ "$to" == "$address" && "$value" == "0" ]]; then
+			method_name="0x (On-Chain Rejection)"
+		elif [[ "$to" == "$address" && "$value" != "0" ]]; then
+			method_name="0x (ETH Self-Transfer)"
+		elif [[ "$to" != "$address" && "$value" == "0" ]]; then
+			method_name="0x (Zero-Value ETH Transfer)"
+		else
+			method_name="0x (ETH Transfer)"
+		fi
+		print_field "Method" "$method_name"
 		print_field "Parameters" "[]"
 	elif [[ "$data" != "0x" && "$data_decoded" == "0x" ]]; then
 		print_field "Method" "Unknown"
@@ -414,20 +432,27 @@ print_decoded_data() {
 		# Check if the called function is sensitive and print a warning in bold.
 		case "$method" in
 		addOwnerWithThreshold | removeOwner | swapOwner | changeThreshold)
-			echo
-			echo -e "${BOLD}${RED}WARNING: The \"$method\" function modifies the owners or threshold of the Safe. Proceed with caution!${RESET}"
+			echo -e "\n${BOLD}${RED}WARNING: The \"$method\" function modifies the owners or threshold of the Safe. Proceed with caution!${RESET}"
 			;;
 		esac
 
 		# Check for sensitive functions in nested transactions.
-		echo "$parameters" | jq -c ".[] | .valueDecoded[]? | select(.dataDecoded != null)" | while read -r nested_param; do
-			nested_method=$(echo "$nested_param" | jq -r ".dataDecoded.method")
+		if [[ -n "$parameters" && "$parameters" != "null" ]]; then
+			jq -r -c '
+				.[] | .valueDecoded? |
+				if type == "array" then .[]
+				elif type == "object" then .
+				else empty
+				end |
+				(.dataDecoded.method? // .method? // empty)
+			' <<<"$parameters" | while IFS= read -r nested_method; do
+				[[ -z "$nested_method" ]] && continue
 
-			if [[ "$nested_method" =~ ^(addOwnerWithThreshold|removeOwner|swapOwner|changeThreshold)$ ]]; then
-				echo
-				echo -e "${BOLD}${RED}WARNING: The \"$nested_method\" function modifies the owners or threshold of the Safe! Proceed with caution!${RESET}"
-			fi
-		done
+				if [[ "$nested_method" =~ ^(addOwnerWithThreshold|removeOwner|swapOwner|changeThreshold)$ ]]; then
+					echo -e "\n${BOLD}${RED}WARNING: The \"$nested_method\" function modifies the owners or threshold of the Safe! Proceed with caution!${RESET}"
+				fi
+			done
+		fi
 	fi
 }
 
@@ -547,7 +572,7 @@ calculate_hashes() {
 	# Print the retrieved transaction data.
 	print_transaction_data "$address" "$to" "$value" "$data" "$operation" "$safe_tx_gas" "$base_gas" "$gas_price" "$gas_token" "$refund_receiver" "$nonce" "$message"
 	# Print the ABI-decoded transaction data.
-	print_decoded_data "$data" "$data_decoded"
+	print_decoded_data "$address" "$to" "$value" "$data" "$data_decoded"
 	# Print the results with the same formatting for "Domain hash" and "Message hash" as a Ledger hardware device.
 	print_hash_info "$domain_hash" "$message_hash" "$safe_tx_hash"
 
@@ -615,15 +640,13 @@ validate_network() {
 	local network="$1"
 
 	if [[ -z "$network" ]]; then
-		echo -e "${BOLD}${RED}Network name is empty!${RESET}" >&2
-		echo
+		echo -e "${BOLD}${RED}Network name is empty!${RESET}\n" >&2
 		calculate_safe_hashes --list-networks >&2
 		exit 1
 	fi
 
 	if [[ -z "${API_URLS[$network]:-}" || -z "${CHAIN_IDS[$network]:-}" ]]; then
 		echo -e "${BOLD}${RED}Invalid network name: \"${network}\"${RESET}\n" >&2
-		echo
 		calculate_safe_hashes --list-networks >&2
 		exit 1
 	fi
