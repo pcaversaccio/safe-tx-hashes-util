@@ -794,7 +794,7 @@ simulate_transaction() {
 		nonce="$current_nonce"
 	fi
 
-	# Calculate the primary Safe transaction hash using the overriden `nonce`.
+	# Calculate the primary Safe transaction hash using the overridden `nonce`.
 	# Suppress normal output (`stdout`) while still allowing errors (`stderr`) to be printed.
 	calculate_hashes \
 		"$chain_id" \
