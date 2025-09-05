@@ -101,14 +101,8 @@ delegate_call_warning_shown="false"
 
 # Set a global variable to store the Safe transaction hash for use across multiple functions.
 global_safe_tx_hash="0x0000000000000000000000000000000000000000000000000000000000000000"
-
-# Set the storage slots for the configured transaction and module guards.
-# => `keccak256("guard_manager.guard.address");`
-# See: https://github.com/safe-global/safe-smart-account/blob/333f84083e58df8e70b03e7f7df1947c1d77b262/contracts/libraries/SafeStorage.sol#L63-L67.
-readonly GUARD_STORAGE_SLOT="0x4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c8"
-# => `keccak256("module_manager.module_guard.address");`
-# See: https://github.com/safe-global/safe-smart-account/blob/333f84083e58df8e70b03e7f7df1947c1d77b262/contracts/libraries/SafeStorage.sol#L69-L73.
-readonly MODULE_GUARD_STORAGE_SLOT="0xb104e0b93118902c651344349b610029d694cfdec91c589c91ebafbcd0289947"
+# Set a global variable to store the simulated Safe transaction hash for use across multiple functions.
+global_safe_tx_hash_simulated="0x0000000000000000000000000000000000000000000000000000000000000000"
 
 # Set the type hash constants.
 # => `keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");`
@@ -126,6 +120,14 @@ readonly SAFE_TX_TYPEHASH_OLD="0x14d461bc7412367e924637b363c7bf29b8f47e2f84869f4
 # => `keccak256("SafeMessage(bytes message)");`
 # See: https://github.com/safe-global/safe-smart-account/blob/febab5e4e859e6e65914f17efddee415e4992961/contracts/libraries/SignMessageLib.sol#L12-L13.
 readonly SAFE_MSG_TYPEHASH="0x60b3cbf8b4a223d68d641b3b6ddf9a298e7f33710cf3d3a9d1146b5a6150fbca"
+
+# Set the storage slots for the configured transaction and module guards.
+# => `keccak256("guard_manager.guard.address");`
+# See: https://github.com/safe-global/safe-smart-account/blob/333f84083e58df8e70b03e7f7df1947c1d77b262/contracts/libraries/SafeStorage.sol#L63-L67.
+readonly GUARD_STORAGE_SLOT="0x4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c8"
+# => `keccak256("module_manager.module_guard.address");`
+# See: https://github.com/safe-global/safe-smart-account/blob/333f84083e58df8e70b03e7f7df1947c1d77b262/contracts/libraries/SafeStorage.sol#L69-L73.
+readonly MODULE_GUARD_STORAGE_SLOT="0xb104e0b93118902c651344349b610029d694cfdec91c589c91ebafbcd0289947"
 
 # Set the trusted (i.e. for delegate calls) `MultiSendCallOnly` addresses:
 # MultiSendCallOnly `v1.3.0` (canonical): https://github.com/safe-global/safe-deployments/blob/5c2f9957939ee27ab55d179474c55ec4411a99d6/src/assets/v1.3.0/multi_send_call_only.json#L7,
@@ -550,6 +552,7 @@ calculate_hashes() {
 	local data_decoded="${13}"
 	local version="${14}"
 	local update_global_safe_tx_hash="${15:-}"
+	local update_global_safe_tx_hash_simulated="${16:-}"
 
 	local domain_separator_typehash="$DOMAIN_SEPARATOR_TYPEHASH"
 	local domain_hash_args="$domain_separator_typehash, $chain_id, $address"
@@ -607,6 +610,12 @@ calculate_hashes() {
 	if [[ -n "$update_global_safe_tx_hash" ]]; then
 		global_safe_tx_hash="$safe_tx_hash"
 		readonly global_safe_tx_hash
+	fi
+
+	# Store the simulated Safe transaction hash so it can be captured by a calling function.
+	if [[ -n "$update_global_safe_tx_hash_simulated" ]]; then
+		global_safe_tx_hash_simulated="$safe_tx_hash"
+		readonly global_safe_tx_hash_simulated
 	fi
 }
 
@@ -771,15 +780,43 @@ simulate_transaction() {
 	local gas_price="$8"
 	local gas_token="$9"
 	local refund_receiver="${10}"
-	local rpc_url="${11}"
+	local nonce="${11}"
+	local rpc_url="${12}"
 
 	# Generate a random signing wallet.
 	local signer_wallet=$(cast wallet new)
 	local signer_private_key=$(echo "$signer_wallet" | grep "Private key:" | awk '{print $3}')
 	local signer_address=$(echo "$signer_wallet" | grep "Address:" | awk '{print $2}')
 
+	# Set `nonce` equal to the current on-chain value `$current_nonce` of the configured multisig address `$address`.
+	local current_nonce=$(cast call "$address" "nonce()(uint256)" --rpc-url "$rpc_url")
+	if [[ "$nonce" != "$current_nonce" ]]; then
+		nonce="$current_nonce"
+	fi
+
+	# Calculate the primary Safe transaction hash using the overriden `nonce`.
+	# Suppress normal output (`stdout`) while still allowing errors (`stderr`) to be printed.
+	calculate_hashes \
+		"$chain_id" \
+		"$address" \
+		"$to" \
+		"$value" \
+		"$data" \
+		"$operation" \
+		"$safe_tx_gas" \
+		"$base_gas" \
+		"$gas_price" \
+		"$gas_token" \
+		"$refund_receiver" \
+		"$nonce" \
+		"$data_decoded" \
+		"$version" \
+		"" \
+		"true" \
+		>/dev/null
+
 	# Sign the Safe transaction hash with the random signer's private key.
-	local signature=$(cast wallet sign --private-key "$signer_private_key" --no-hash "$global_safe_tx_hash")
+	local signature=$(cast wallet sign --private-key "$signer_private_key" --no-hash "$global_safe_tx_hash_simulated")
 
 	# Generate the calldata for the `execTransaction` transaction.
 	local safe_tx_payload=$(cast calldata "execTransaction(address,uint256,bytes,uint8,uint256,uint256,uint256,address,address,bytes)" \
@@ -800,7 +837,8 @@ simulate_transaction() {
 	# - `modules`    (slot: 1, offset: 0, size: 32 bytes),
 	# - `owners`     (slot: 2, offset: 0, size: 32 bytes),
 	# - `ownerCount` (slot: 3, offset: 0, size: 32 bytes),
-	# - `threshold`  (slot: 4, offset: 0, size: 32 bytes).
+	# - `threshold`  (slot: 4, offset: 0, size: 32 bytes),
+	# - `nonce`      (slot: 5, offset: 0, size: 32 bytes).
 
 	# The Solidity `mapping` slots are computed as `keccak256(abi.encode(key, mappingS​lot))` for value types.
 	# See: https://docs.soliditylang.org/en/v0.8.30/internals/layout_in_storage.html#mappings-and-dynamic-arrays.
@@ -817,6 +855,7 @@ ${YELLOW}This simulation depends on data provided by your RPC provider. Using yo
 Please note that we override specific Safe contract storage slots for this call:
   - Set \`owners[signer_address] = address(0x1)\` to make a random \`signer_address\` address an \`owner\`,
   - Set \`threshold = 1\` to allow single-owner execution,
+  - Set \`nonce\` equal to the current on-chain value \`$current_nonce\` of the configured multisig address \`$address\`,
   - Disable the configured transaction and module guards.
 
 Then execute the \`cast call --trace\` command with the transaction payload from \`signer_address\` using the overridden state:${RESET}
@@ -833,13 +872,14 @@ EOF
 	# Override specific Safe contract storage slots for this call:
 	# - Set `owners[signer_address] = address(0x1)` to make `signer_address` an `owner`,
 	# - Set `threshold = 1` to allow single-owner execution,
+	# - Set `nonce` equal to the current on-chain value `$current_nonce` of the configured multisig address `$address`,
 	# - Disable the configured transaction and module guards.
 	# Then execute the `cast call --trace` command with the transaction payload from
 	# `signer_address` using the overridden state.
 	cast call --trace --from "$signer_address" \
 		"$address" \
 		--data "$safe_tx_payload" \
-		--override-state-diff "$address:$owner_slot:1,$address:4:1,$address:$GUARD_STORAGE_SLOT:0,$address:$MODULE_GUARD_STORAGE_SLOT:0" \
+		--override-state-diff "$address:$owner_slot:1,$address:4:1,$address:5:$nonce,$address:$GUARD_STORAGE_SLOT:0,$address:$MODULE_GUARD_STORAGE_SLOT:0" \
 		--rpc-url "$rpc_url"
 }
 
@@ -1324,6 +1364,7 @@ EOF
 			"$gas_price" \
 			"$gas_token" \
 			"$refund_receiver" \
+			"$nonce" \
 			"$rpc_url"
 	fi
 
