@@ -69,7 +69,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 ## Usage
 
 > [!NOTE]
-> Ensure that [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast), [`chisel`](https://github.com/foundry-rs/foundry/tree/master/crates/chisel), and [`anvil`](https://github.com/foundry-rs/foundry/tree/master/crates/anvil) (for simulations only; please refer to the [Transaction Simulation](#transaction-simulation) section) are installed locally. For installation instructions, refer to this [guide](https://getfoundry.sh/introduction/installation/). This [script](./safe_hashes.sh) is designed to work with the latest _stable_ versions of [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast), [`chisel`](https://github.com/foundry-rs/foundry/tree/master/crates/chisel), and [`anvil`](https://github.com/foundry-rs/foundry/tree/master/crates/anvil) starting from version [`1.2.2`](https://github.com/foundry-rs/foundry/releases/tag/v1.2.2).
+> Ensure that [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast) and [`chisel`](https://github.com/foundry-rs/foundry/tree/master/crates/chisel) are installed locally. For installation instructions, refer to this [guide](https://getfoundry.sh/introduction/installation/). This [script](./safe_hashes.sh) is designed to work with the latest _stable_ versions of [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast) and [`chisel`](https://github.com/foundry-rs/foundry/tree/master/crates/chisel), starting from version [`1.2.2`](https://github.com/foundry-rs/foundry/releases/tag/v1.2.2).
 
 > [!TIP]
 > For macOS users, please refer to the [macOS Users: Upgrading Bash](#macos-users-upgrading-bash) section.
@@ -357,95 +357,7 @@ The [script](./safe_hashes.sh) produces the following output:
 ````console
 ...
 
-> Hashes:
-Domain hash: 0x58122EA8F001782FACC66EE5495A6B8B29730FADF352D8608CA86BD31569FCF5
-Message hash: 0x14DB764474CE3700F8CE6DB890151CFBB1583B9287C7DE34FC678ED0D826EE5F
-Safe transaction hash: 0xf7e82654b1d4e34c3e19daf42bf65dd016c752472e39a4e36839392550747a17
 
-==========================
-= Transaction Simulation =
-==========================
-
-This simulation depends on data provided by your RPC provider. Using your own node is always recommended.
-
-Executing the following command:
-```bash
-cast call --trace \
-  --from 0x5EA1d9A6dDC3A0329378a327746D71A2019eC332 \
-  0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 \
-  --data 0xa9059cbb000000000000000000000000874516fcc0d5565ab82251cb27e947a5a8667329000000000000000000000000000000000000000000000000000000037e11d600 \
-  --rpc-url https://eth.llamarpc.com
-```
-
-> Execution Traces:
-Traces:
-  [23552] 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48::transfer(0x874516FCc0D5565AB82251Cb27e947A5A8667329, 15000000000 [1.5e10])
-    ├─ [16263] 0x43506849D7C04F9138D1A2050bbF3A0c054402dd::transfer(0x874516FCc0D5565AB82251Cb27e947A5A8667329, 15000000000 [1.5e10]) [delegatecall]
-    │   ├─ emit Transfer(from: 0x5EA1d9A6dDC3A0329378a327746D71A2019eC332, to: 0x874516FCc0D5565AB82251Cb27e947A5A8667329, value: 15000000000 [1.5e10])
-    │   └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
-    └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
-
-
-Transaction successfully executed.
-Gas used: 45160
-````
-
-If the specified transaction is using a `delegatecall`, we fork the chain locally using [`anvil`](https://github.com/foundry-rs/foundry/tree/master/crates/anvil), override the code at the multisig address with the code from to-be-`delegatecall`ed address, and then execute [`cast call --trace`](https://getfoundry.sh/cast/reference/call/) with both the `--from` and target addresses set to the multisig address. This ensures the code of to-be-`delegatecall`ed address runs in the storage context of multisig address, replicating exactly how a `delegatecall` would behave on-chain.
-
-As an example, invoke the following command:
-
-```console
-./safe_hashes.sh --network ethereum --address 0x5EA1d9A6dDC3A0329378a327746D71A2019eC332 --nonce 6 --simulate https://eth.llamarpc.com
-```
-
-The [script](./safe_hashes.sh) produces the following output:
-
-````console
-...
-
-> Hashes:
-Domain hash: 0x58122EA8F001782FACC66EE5495A6B8B29730FADF352D8608CA86BD31569FCF5
-Message hash: 0xE992E061576268328FAC9175D6AEA3DEFD4C3BEF83A0C6FE08F6AA5A222CBC45
-Safe transaction hash: 0x27a0c4abf624b15b776f544a4b31ed4d50dee2b677c6497fbadf4f7a73be705e
-
-==========================
-= Transaction Simulation =
-==========================
-
-This simulation depends on data provided by your RPC provider. Using your own node is always recommended.
-
-The specified transaction is using a `delegatecall` from `0x5EA1d9A6dDC3A0329378a327746D71A2019eC332` to `0x9641d764fc13c8B624c04430C7356C1C7C8102e2`. In order to simulate this properly, we fork the chain locally using `anvil`, override the code at `0x5EA1d9A6dDC3A0329378a327746D71A2019eC332` with the code from `0x9641d764fc13c8B624c04430C7356C1C7C8102e2`, and then execute `cast call --trace` with both the `--from` and target addresses set to the multisig address `0x5EA1d9A6dDC3A0329378a327746D71A2019eC332`. This ensures the code of `0x9641d764fc13c8B624c04430C7356C1C7C8102e2` runs in the storage context of `0x5EA1d9A6dDC3A0329378a327746D71A2019eC332`, replicating exactly how a `delegatecall` would behave on-chain.
-
-Executing the following command:
-```bash
-cast call --trace \
-  --from 0x5EA1d9A6dDC3A0329378a327746D71A2019eC332 \
-  0x5EA1d9A6dDC3A0329378a327746D71A2019eC332 \
-  --data 0x8d80ff0a0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000013200cfbfac74c26f8647cbdb8c5caf80bb5b32e4313400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044dd43a79f000000000000000000000000f46c6d6e62f59d9222f3812874211df07cf7b318000000000000000000000000000000000000000000000000000000000000000100a0b86991c6218b36c1d19d4a2e9eb0ce3606eb4800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044a9059cbb0000000000000000000000001fe27a73cd9f0b3c53b6e936d0b4f9b2f8ca3367000000000000000000000000000000000000000000000000000000002faf08000000000000000000000000000000 \
-  --rpc-url http://127.0.0.1:8545
-```
-
-> Execution Trace:
-Traces:
-  [76339] 0x5EA1d9A6dDC3A0329378a327746D71A2019eC332::multiSend(0x00cfbfac74c26f8647cbdb8c5caf80bb5b32e4313400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044dd43a79f000000000000000000000000f46c6d6e62f59d9222f3812874211df07cf7b318000000000000000000000000000000000000000000000000000000000000000100a0b86991c6218b36c1d19d4a2e9eb0ce3606eb4800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044a9059cbb0000000000000000000000001fe27a73cd9f0b3c53b6e936d0b4f9b2f8ca3367000000000000000000000000000000000000000000000000000000002faf0800)
-    ├─ [29368] 0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134::removeDelegate(0xf46c6d6e62f59D9222F3812874211dF07cF7b318, true)
-    │   ├─  emit topic 0: 0x9a9bc79dd7e42545ba12d5659704d73a9364d4a18e0a98ca1c992a3bc999d271
-    │   │        topic 1: 0x0000000000000000000000005ea1d9a6ddc3a0329378a327746d71a2019ec332
-    │   │           data: 0x000000000000000000000000f46c6d6e62f59d9222f3812874211df07cf7b318000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48
-    │   ├─  emit topic 0: 0xdccc2d936ded24d2153d2760581a7f0dcb23ec71190c9726b3584cdd700214d4
-    │   │        topic 1: 0x0000000000000000000000005ea1d9a6ddc3a0329378a327746d71a2019ec332
-    │   │           data: 0x000000000000000000000000f46c6d6e62f59d9222f3812874211df07cf7b318
-    │   └─ ← [Stop]
-    ├─ [40652] 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48::transfer(0x1FE27A73Cd9f0b3C53b6E936D0b4F9B2f8ca3367, 800000000 [8e8])
-    │   ├─ [33363] 0x43506849D7C04F9138D1A2050bbF3A0c054402dd::transfer(0x1FE27A73Cd9f0b3C53b6E936D0b4F9B2f8ca3367, 800000000 [8e8]) [delegatecall]
-    │   │   ├─ emit Transfer(from: 0x5EA1d9A6dDC3A0329378a327746D71A2019eC332, to: 0x1FE27A73Cd9f0b3C53b6E936D0b4F9B2f8ca3367, value: 800000000 [8e8])
-    │   │   └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
-    │   └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
-    └─ ← [Stop]
-
-
-Transaction successfully executed.
-Gas used: 95303
 ````
 
 ### Nested Safes

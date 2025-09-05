@@ -58,7 +58,7 @@ fi
 
 # Utility function to ensure all required tools are installed.
 check_required_tools() {
-	local tools=("curl" "jq" "chisel" "cast" "anvil")
+	local tools=("curl" "jq" "chisel" "cast")
 	local missing_tools=()
 
 	for tool in "${tools[@]}"; do
@@ -101,6 +101,14 @@ delegate_call_warning_shown="false"
 
 # Set a global variable to store the Safe transaction hash for use across multiple functions.
 global_safe_tx_hash="0x0000000000000000000000000000000000000000000000000000000000000000"
+
+# Set the storage slots for the configured transaction and module guards.
+# => `keccak256("guard_manager.guard.address");`
+# See: https://github.com/safe-global/safe-smart-account/blob/333f84083e58df8e70b03e7f7df1947c1d77b262/contracts/libraries/SafeStorage.sol#L63-L67.
+readonly GUARD_STORAGE_SLOT="0x4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c8"
+# => `keccak256("module_manager.module_guard.address");`
+# See: https://github.com/safe-global/safe-smart-account/blob/333f84083e58df8e70b03e7f7df1947c1d77b262/contracts/libraries/SafeStorage.sol#L69-L73.
+readonly MODULE_GUARD_STORAGE_SLOT="0xb104e0b93118902c651344349b610029d694cfdec91c589c91ebafbcd0289947"
 
 # Set the type hash constants.
 # => `keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");`
@@ -755,61 +763,84 @@ This combination can be used to hide a rerouting of funds through gas refunds.${
 simulate_transaction() {
 	local address="$1"
 	local to="$2"
-	local data="$3"
-	local operation="$4"
-	local rpc_url="$5"
+	local value="$3"
+	local data="$4"
+	local operation="$5"
+	local safe_tx_gas="$6"
+	local base_gas="$7"
+	local gas_price="$8"
+	local gas_token="$9"
+	local refund_receiver="${10}"
+	local rpc_url="${11}"
+
+	# Generate a random signing wallet.
+	local signer_wallet=$(cast wallet new)
+	local signer_private_key=$(echo "$signer_wallet" | grep "Private key:" | awk '{print $3}')
+	local signer_address=$(echo "$signer_wallet" | grep "Address:" | awk '{print $2}')
+
+	# Sign the Safe transaction hash with the random signer's private key.
+	local signature=$(cast wallet sign --private-key "$signer_private_key" --no-hash "$global_safe_tx_hash")
+
+	# Generate the calldata for the `execTransaction` transaction.
+	local safe_tx_payload=$(cast calldata "execTransaction(address,uint256,bytes,uint8,uint256,uint256,uint256,address,address,bytes)" \
+		"$to" \
+		"$value" \
+		"$data" \
+		"$operation" \
+		"$safe_tx_gas" \
+		"$base_gas" \
+		"$gas_price" \
+		"$gas_token" \
+		"$refund_receiver" \
+		"$signature")
+
+	# The (partial) storage layout of the Safe contracts (since `v0.1.0`):
+	# See: https://github.com/safe-global/safe-smart-account/blob/333f84083e58df8e70b03e7f7df1947c1d77b262/contracts/libraries/SafeStorage.sol.
+	# - `masterCopy` (slot: 0, offset: 0, size: 20 bytes),
+	# - `modules`    (slot: 1, offset: 0, size: 32 bytes),
+	# - `owners`     (slot: 2, offset: 0, size: 32 bytes),
+	# - `ownerCount` (slot: 3, offset: 0, size: 32 bytes),
+	# - `threshold`  (slot: 4, offset: 0, size: 32 bytes).
+
+	# The Solidity `mapping` slots are computed as `keccak256(abi.encode(key, mappingS​lot))` for value types.
+	# See: https://docs.soliditylang.org/en/v0.8.30/internals/layout_in_storage.html#mappings-and-dynamic-arrays.
+	# Calculate the storage slot for `signer_address` in the `owners` mapping.
+	local owner_slot=$(cast keccak $(cast abi-encode "mappingOwnerSlot(address,uint256)" "$signer_address" "2"))
 
 	echo -e "\n=========================="
 	echo "= Transaction Simulation ="
 	echo -e "==========================\n"
 
-	if [[ "$operation" -eq 1 ]]; then
-		anvil --fork-url "$rpc_url" --silent >/tmp/anvil.log 2>&1 &
-		local anvil_pid=$!
-		local local_rpc="http://127.0.0.1:8545"
-		trap "kill $anvil_pid 2>/dev/null" EXIT
-
-		cat <<EOF
+	cat <<EOF
 ${YELLOW}This simulation depends on data provided by your RPC provider. Using your own node is always recommended.
 
-The specified transaction is using a \`delegatecall\` from \`$address\` to \`$to\`. In order to simulate this properly, we fork the chain locally using \`anvil\`, override the code at \`$address\` with the code from \`$to\`, and then execute \`cast call --trace\` with both the \`--from\` and target addresses set to the multisig address \`$address\`. This ensures the code of \`$to\` runs in the storage context of \`$address\`, replicating exactly how a \`delegatecall\` would behave on-chain.${RESET}
+Please note that we override specific Safe contract storage slots for this call:
+  - Set \`owners[signer_address] = address(0x1)\` to make a random \`signer_address\` address an \`owner\`,
+  - Set \`threshold = 1\` to allow single-owner execution,
+  - Disable the configured transaction and module guards.
 
-Executing the following command:
+Then execute the \`cast call --trace\` command with the transaction payload from \`signer_address\` using the overridden state:${RESET}
 \`\`\`bash
-${GREEN}cast call --trace \\
-  --from $address \\
-  $address \\
-  --data $data \\
-  --rpc-url $local_rpc
+${GREEN}cast call --trace --from "$signer_address" \\
+  "$address" \\
+  --data "$safe_tx_payload" \\
+  --override-state-diff "$address:$owner_slot:1,$address:4:1,$address:$GUARD_STORAGE_SLOT:0,$address:$MODULE_GUARD_STORAGE_SLOT:0" \\
+  --rpc-url "$rpc_url"
 ${RESET}\`\`\`
 EOF
 
-		# Fetch the runtime bytecode of the target contract `$to` from the RPC provider.
-		code=$(cast code "$to" --rpc-url "$rpc_url")
-
-		# Override the code at the multisig address `$address` on the local `anvil` fork.
-		# This makes `$address` execute `$to`'s code while keeping `$address`' storage,
-		# effectively simulating a `delegatecall`.
-		cast rpc --rpc-url "$local_rpc" anvil_setCode "$address" "$code" >/dev/null
-		print_header "Execution Trace"
-		cast call --trace --from "$address" "$address" --data "$data" --rpc-url "$local_rpc"
-	else
-		cat <<EOF
-${YELLOW}This simulation depends on data provided by your RPC provider. Using your own node is always recommended.${RESET}
-
-Executing the following command:
-\`\`\`bash
-${GREEN}cast call --trace \\
-  --from $address \\
-  $to \\
-  --data $data \\
-  --rpc-url $rpc_url
-${RESET}\`\`\`
-EOF
-		print_header "Execution Traces"
-		# Execute the `cast call --trace` command.
-		cast call --trace --from "$address" "$to" --data "$data" --rpc-url "$rpc_url"
-	fi
+	print_header "Execution Traces"
+	# Override specific Safe contract storage slots for this call:
+	# - Set `owners[signer_address] = address(0x1)` to make `signer_address` an `owner`,
+	# - Set `threshold = 1` to allow single-owner execution,
+	# - Disable the configured transaction and module guards.
+	# Then execute the `cast call --trace` command with the transaction payload from
+	# `signer_address` using the overridden state.
+	cast call --trace --from "$signer_address" \
+		"$address" \
+		--data "$safe_tx_payload" \
+		--override-state-diff "$address:$owner_slot:1,$address:4:1,$address:$GUARD_STORAGE_SLOT:0,$address:$MODULE_GUARD_STORAGE_SLOT:0" \
+		--rpc-url "$rpc_url"
 }
 
 # Utility function to validate the message file.
@@ -1283,7 +1314,17 @@ EOF
 
 	# Simulate the transaction locally with `cast call` and print its trace if an RPC URL is provided.
 	if [[ -n "$rpc_url" ]]; then
-		simulate_transaction "$address" "$to" "$data" "$operation" "$rpc_url"
+		simulate_transaction "$address" \
+			"$to" \
+			"$value" \
+			"$data" \
+			"$operation" \
+			"$safe_tx_gas" \
+			"$base_gas" \
+			"$gas_price" \
+			"$gas_token" \
+			"$refund_receiver" \
+			"$rpc_url"
 	fi
 
 	exit 0
