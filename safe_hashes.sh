@@ -56,14 +56,52 @@ if [[ "${BASH_VERSINFO[0]:-0}" -lt 4 ]]; then
 	exit 1
 fi
 
+# Utility function to retrieve and parse the semantic version number (e.g. `1.3.5`)
+# from Foundry tools such as `cast` or `chisel`.
+parse_foundry_version() {
+	local tool="$1"
+	local output version=""
+
+	# Fail if the tool cannot run.
+	if ! output=$("$tool" --version 2>&1); then
+		echo -e "${BOLD}${RED}Error: Failed to run \`$tool --version\`!${RESET}" >&2
+		exit 1
+	fi
+
+	# Extract the tool's semantic version.
+	version=$(echo "$output" | awk '/Version:/ {print $3}' | cut -d"-" -f1)
+
+	# Fail if no version was found.
+	if [[ -z "$version" ]]; then
+		echo "${BOLD}${RED}Error: Could not determine the version of \`$tool\`!${RESET}" >&2
+		exit 1
+	fi
+
+	echo "$version"
+}
+
+# Utility function to compare two semantic versions and return `true` if `$1 >= $2`.
+semver_ge() {
+	[[ "$(printf "%s\n%s" "$2" "$1" | sort -V | head -n1)" = "$2" ]]
+}
+
 # Utility function to ensure all required tools are installed.
 check_required_tools() {
 	local tools=("curl" "jq" "chisel" "cast")
 	local missing_tools=()
+	local min_version="1.3.5"
 
 	for tool in "${tools[@]}"; do
 		if ! command -v "$tool" &>/dev/null; then
 			missing_tools+=("$tool")
+		fi
+
+		if [[ "$tool" == "cast" || "$tool" == "chisel" ]]; then
+			tool_version=$(parse_foundry_version "$tool")
+			if ! semver_ge "$tool_version" "$min_version"; then
+				echo -e "${BOLD}${RED}\`$tool\` version \`$tool_version\` is too old. Minimum required is \`$min_version\`.${RESET}"
+				exit 1
+			fi
 		fi
 	done
 
@@ -850,7 +888,7 @@ simulate_transaction() {
 	echo -e "==========================\n"
 
 	cat <<EOF
-${YELLOW}This simulation depends on data provided by your RPC provider. Using your own node is always recommended.
+${YELLOW}This simulation, run against the latest block, depends on data provided by your RPC provider. Using your own node is always recommended.
 
 Please note that we override specific Safe contract storage slots for this call:
   - Set \`owners[signer_address] = address(0x1)\` to make a random \`signer_address\` address an \`owner\`,
@@ -1233,7 +1271,7 @@ EOF
 				local array_value=$(echo "$response" | jq ".results[$idx]")
 
 				if [[ $array_value == null ]]; then
-					echo "${RED}Error: No transaction found at index $idx. Please try again.${RESET}"
+					echo "${RED}Error: No transaction found at index $idx! Please try again.${RESET}"
 					continue
 				fi
 
@@ -1347,7 +1385,7 @@ EOF
 	if [[ -n "$nested_safe_address" && -n "$nested_safe_nonce" ]]; then
 		calculate_nested_safe_hashes "$chain_id" "$address" "$nested_safe_address" "$nested_safe_nonce" "$global_safe_tx_hash" "$nested_safe_version"
 	elif [[ -n "$nested_safe_nonce" && -z "$nested_safe_address" ]]; then
-		echo -e "${RED}Error: The \`--nested-safe-address\` parameter is missing.${RESET}" >&2
+		echo -e "${RED}Error: The \`--nested-safe-address\` parameter is missing!${RESET}" >&2
 		echo -e "${RED}Both \`--nested-safe-address\` and \`--nested-safe-nonce\` must be provided for transaction hashes!${RESET}" >&2
 		exit 1
 	fi
