@@ -911,7 +911,7 @@ EOF
 	# Override specific Safe contract storage slots for this call:
 	# - Set `owners[signer_address] = address(0x1)` to make `signer_address` an `owner`,
 	# - Set `threshold = 1` to allow single-owner execution,
-	# - Set `nonce` equal to the current on-chain value `$current_nonce` of the configured multisig address `$address`,
+	# - Set `nonce` equal to the current on-chain value `current_nonce` of the configured multisig address `address`,
 	# - Disable the configured transaction and module guards.
 	# Then execute the `cast call --trace` command with the transaction payload from
 	# `signer_address` using the overridden state.
