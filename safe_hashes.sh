@@ -60,7 +60,8 @@ fi
 # from Foundry tools such as `cast` or `chisel`.
 parse_foundry_version() {
 	local tool="$1"
-	local output version=""
+	local output=""
+	local version=""
 
 	# Fail if the tool cannot run.
 	if ! output=$("$tool" --version 2>&1); then
