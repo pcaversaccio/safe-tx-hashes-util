@@ -891,12 +891,12 @@ simulate_transaction() {
 ${YELLOW}This simulation, run against the latest block, depends on data provided by your RPC provider. Using your own node is always recommended.
 
 Please note that we override specific Safe contract storage slots for this call:
-  - Set \`owners[signer_address] = address(0x1)\` to make a random \`signer_address\` address an \`owner\`,
+  - Set \`owners[signer_address] = address(0x1)\` to make a random \`signer_address\` address \`$signer_address\` an \`owner\`,
   - Set \`threshold = 1\` to allow single-owner execution,
   - Set \`nonce\` equal to the current on-chain value \`$current_nonce\` of the configured multisig address \`$address\`,
   - Disable the configured transaction and module guards.
 
-Then execute the \`cast call --trace\` command with the transaction payload from \`signer_address\` using the overridden state:${RESET}
+Then execute the \`cast call --trace\` command with the transaction payload from \`signer_address\` address \`$signer_address\` using the overridden states:${RESET}
 \`\`\`bash
 ${GREEN}cast call --trace --from "$signer_address" \\
   "$address" \\
