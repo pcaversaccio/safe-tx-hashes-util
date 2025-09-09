@@ -22,6 +22,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
     - [Optional: Set the New Bash as Your Default Shell](#optional-set-the-new-bash-as-your-default-shell)
 - [Safe Transaction Hashes](#safe-transaction-hashes)
   - [Interactive Mode](#interactive-mode)
+  - [Transaction Simulation](#transaction-simulation)
   - [Nested Safes](#nested-safes)
 - [Safe Message Hashes](#safe-message-hashes)
 - [Trust Assumptions](#trust-assumptions)
@@ -68,7 +69,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 ## Usage
 
 > [!NOTE]
-> Ensure that [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast) and [`chisel`](https://github.com/foundry-rs/foundry/tree/master/crates/chisel) are installed locally. For installation instructions, refer to this [guide](https://getfoundry.sh/introduction/installation/). This [script](./safe_hashes.sh) is designed to work with the latest _stable_ versions of [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast) and [`chisel`](https://github.com/foundry-rs/foundry/tree/master/crates/chisel), starting from version [`1.2.2`](https://github.com/foundry-rs/foundry/releases/tag/v1.2.2).
+> Ensure that [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast) and [`chisel`](https://github.com/foundry-rs/foundry/tree/master/crates/chisel) are installed locally. For installation instructions, refer to this [guide](https://getfoundry.sh/introduction/installation/). This [script](./safe_hashes.sh) is designed to work with the latest _stable_ versions of [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast) and [`chisel`](https://github.com/foundry-rs/foundry/tree/master/crates/chisel), starting from version [`1.3.5`](https://github.com/foundry-rs/foundry/releases/tag/v1.3.5).
 
 > [!TIP]
 > For macOS users, please refer to the [macOS Users: Upgrading Bash](#macos-users-upgrading-bash) section.
@@ -76,7 +77,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 ```console
 ./safe_hashes.sh [--help] [--version] [--list-networks] --network <network> --address <address>
                  [--nonce <nonce>] [--nested-safe-address <address>] [--nested-safe-nonce <nonce>]
-                 [--message <file>] [--interactive]
+                 [--message <file>] [--interactive] [--simulate <rpc_url>]
 ```
 
 **Options:**
@@ -91,6 +92,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - `--nested-safe-nonce <nonce>`: Specify the nonce for the nested Safe transaction (optional for transaction hashes).
 - `--message <file>`: Specify the message file (required for off-chain message hashes).
 - `--interactive`: Use the interactive mode (optional for transaction hashes).
+- `--simulate <rpc_url>`: Output the `cast call --trace` result in addition to the transaction hashes using the specified RPC URL (optional for transaction hashes).
 
 > [!NOTE]
 > Please note that `--help`, `--version`, and `--list-networks` can be used independently or alongside other options without causing the script to fail. They are special options that can be called without affecting the rest of the command processing.
@@ -339,6 +341,80 @@ Message hash: 0xC7E826933DA60E6AC3E2246ED0563A26A920A65BEAA9089D784AC96234141BB3
 Safe transaction hash: 0xc818fceb1cace51c1a4039c4c66fc73d95eccc298104c9c52debac604b9f4e04
 ```
 
+### Transaction Simulation
+
+> [!WARNING]
+> A simulation depends on data provided by your RPC provider. Using your own node is always recommended.
+
+You can simulate a transaction using the `--simulate` option with an RPC URL. This runs [`cast call --trace`](https://getfoundry.sh/cast/reference/call/) against the _latest_ block to produce a detailed execution trace. Use this option to check exactly how the transaction will execute _before_ signing. As an example, invoke the following command:
+
+```console
+./safe_hashes.sh --network ethereum --address 0x5EA1d9A6dDC3A0329378a327746D71A2019eC332 --nonce 6 --simulate https://eth.llamarpc.com
+```
+
+The [script](./safe_hashes.sh) produces the following output:
+
+````console
+...
+
+> Hashes:
+Domain hash: 0x58122EA8F001782FACC66EE5495A6B8B29730FADF352D8608CA86BD31569FCF5
+Message hash: 0xE992E061576268328FAC9175D6AEA3DEFD4C3BEF83A0C6FE08F6AA5A222CBC45
+Safe transaction hash: 0x27a0c4abf624b15b776f544a4b31ed4d50dee2b677c6497fbadf4f7a73be705e
+
+==========================
+= Transaction Simulation =
+==========================
+
+This simulation, run against the latest block, depends on data provided by your RPC provider. Using your own node is always recommended.
+
+Please note that we override specific Safe contract storage slots for this call:
+  - Set `owners[signer_address] = address(0x1)` to make a random `signer_address` address `0xD5AEB612f43919FCbfFd0eEa734D0E9130D14b2e` an `owner`,
+  - Set `threshold = 1` to allow single-owner execution,
+  - Set `nonce` equal to the current on-chain value `6` of the configured multisig address `0x5EA1d9A6dDC3A0329378a327746D71A2019eC332`,
+  - Disable the configured transaction and module guards.
+
+Then execute the `cast call --trace` command with the transaction payload from `signer_address` address `0xD5AEB612f43919FCbfFd0eEa734D0E9130D14b2e` using the overridden states:
+```bash
+cast call --trace --from "0xD5AEB612f43919FCbfFd0eEa734D0E9130D14b2e" \
+  "0x5EA1d9A6dDC3A0329378a327746D71A2019eC332" \
+  --data "0x6a7612020000000000000000000000009641d764fc13c8b624c04430c7356c1c7c8102e200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000140000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000001848d80ff0a0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000013200cfbfac74c26f8647cbdb8c5caf80bb5b32e4313400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044dd43a79f000000000000000000000000f46c6d6e62f59d9222f3812874211df07cf7b318000000000000000000000000000000000000000000000000000000000000000100a0b86991c6218b36c1d19d4a2e9eb0ce3606eb4800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044a9059cbb0000000000000000000000001fe27a73cd9f0b3c53b6e936d0b4f9b2f8ca3367000000000000000000000000000000000000000000000000000000002faf0800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004101427eae1606844b055aabb63778fc9e523e48b25dff5dbd1db76752c68f338a14ef6bb18733969e9db45e96d89fab546609f9404e1f779d15248203d7c7c5a91b00000000000000000000000000000000000000000000000000000000000000" \
+  --override-state-diff "0x5EA1d9A6dDC3A0329378a327746D71A2019eC332:0x269bb0dc23923a25a8c39074e6cb0c85f1f29fd13f8dfa05d81baf046ed3b9af:1,0x5EA1d9A6dDC3A0329378a327746D71A2019eC332:4:1,0x5EA1d9A6dDC3A0329378a327746D71A2019eC332:0x4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c8:0,0x5EA1d9A6dDC3A0329378a327746D71A2019eC332:0xb104e0b93118902c651344349b610029d694cfdec91c589c91ebafbcd0289947:0" \
+  --rpc-url "https://eth.llamarpc.com"
+```
+
+> Execution Traces:
+Traces:
+  [104531] 0x5EA1d9A6dDC3A0329378a327746D71A2019eC332::execTransaction(0x9641d764fc13c8B624c04430C7356C1C7C8102e2, 0, 0x8d80ff0a0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000013200cfbfac74c26f8647cbdb8c5caf80bb5b32e4313400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044dd43a79f000000000000000000000000f46c6d6e62f59d9222f3812874211df07cf7b318000000000000000000000000000000000000000000000000000000000000000100a0b86991c6218b36c1d19d4a2e9eb0ce3606eb4800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044a9059cbb0000000000000000000000001fe27a73cd9f0b3c53b6e936d0b4f9b2f8ca3367000000000000000000000000000000000000000000000000000000002faf08000000000000000000000000000000, 1, 0, 0, 0, 0x0000000000000000000000000000000000000000, 0x0000000000000000000000000000000000000000, 0x01427eae1606844b055aabb63778fc9e523e48b25dff5dbd1db76752c68f338a14ef6bb18733969e9db45e96d89fab546609f9404e1f779d15248203d7c7c5a91b)
+    ├─ [99537] 0x41675C099F32341bf84BFc5382aF534df5C7461a::execTransaction(0x9641d764fc13c8B624c04430C7356C1C7C8102e2, 0, 0x8d80ff0a0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000013200cfbfac74c26f8647cbdb8c5caf80bb5b32e4313400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044dd43a79f000000000000000000000000f46c6d6e62f59d9222f3812874211df07cf7b318000000000000000000000000000000000000000000000000000000000000000100a0b86991c6218b36c1d19d4a2e9eb0ce3606eb4800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044a9059cbb0000000000000000000000001fe27a73cd9f0b3c53b6e936d0b4f9b2f8ca3367000000000000000000000000000000000000000000000000000000002faf08000000000000000000000000000000, 1, 0, 0, 0, 0x0000000000000000000000000000000000000000, 0x0000000000000000000000000000000000000000, 0x01427eae1606844b055aabb63778fc9e523e48b25dff5dbd1db76752c68f338a14ef6bb18733969e9db45e96d89fab546609f9404e1f779d15248203d7c7c5a91b) [delegatecall]
+    │   ├─ [3000] PRECOMPILES::ecrecover(0x27a0c4abf624b15b776f544a4b31ed4d50dee2b677c6497fbadf4f7a73be705e, 27, 569799068248606709654359279365657811530712758201901254503339124358604862346, 9469276693155409892942073865840739087499944749595054468651068267378848023977) [staticcall]
+    │   │   └─ ← [Return] 0x000000000000000000000000d5aeb612f43919fcbffd0eea734d0e9130d14b2e
+    │   ├─ [76339] 0x9641d764fc13c8B624c04430C7356C1C7C8102e2::multiSend(0x00cfbfac74c26f8647cbdb8c5caf80bb5b32e4313400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044dd43a79f000000000000000000000000f46c6d6e62f59d9222f3812874211df07cf7b318000000000000000000000000000000000000000000000000000000000000000100a0b86991c6218b36c1d19d4a2e9eb0ce3606eb4800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044a9059cbb0000000000000000000000001fe27a73cd9f0b3c53b6e936d0b4f9b2f8ca3367000000000000000000000000000000000000000000000000000000002faf0800) [delegatecall]
+    │   │   ├─ [29368] 0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134::removeDelegate(0xf46c6d6e62f59D9222F3812874211dF07cF7b318, true)
+    │   │   │   ├─  emit topic 0: 0x9a9bc79dd7e42545ba12d5659704d73a9364d4a18e0a98ca1c992a3bc999d271
+    │   │   │   │        topic 1: 0x0000000000000000000000005ea1d9a6ddc3a0329378a327746d71a2019ec332
+    │   │   │   │           data: 0x000000000000000000000000f46c6d6e62f59d9222f3812874211df07cf7b318000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48
+    │   │   │   ├─  emit topic 0: 0xdccc2d936ded24d2153d2760581a7f0dcb23ec71190c9726b3584cdd700214d4
+    │   │   │   │        topic 1: 0x0000000000000000000000005ea1d9a6ddc3a0329378a327746d71a2019ec332
+    │   │   │   │           data: 0x000000000000000000000000f46c6d6e62f59d9222f3812874211df07cf7b318
+    │   │   │   └─ ← [Stop]
+    │   │   ├─ [40652] 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48::transfer(0x1FE27A73Cd9f0b3C53b6E936D0b4F9B2f8ca3367, 800000000 [8e8])
+    │   │   │   ├─ [33363] 0x43506849D7C04F9138D1A2050bbF3A0c054402dd::transfer(0x1FE27A73Cd9f0b3C53b6E936D0b4F9B2f8ca3367, 800000000 [8e8]) [delegatecall]
+    │   │   │   │   ├─ emit Transfer(from: 0x5EA1d9A6dDC3A0329378a327746D71A2019eC332, to: 0x1FE27A73Cd9f0b3C53b6E936D0b4F9B2f8ca3367, value: 800000000 [8e8])
+    │   │   │   │   └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
+    │   │   │   └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
+    │   │   └─ ← [Stop]
+    │   ├─  emit topic 0: 0x442e715f626346e8c54381002da614f62bee8d27386535b2521ec8540898556e
+    │   │        topic 1: 0x27a0c4abf624b15b776f544a4b31ed4d50dee2b677c6497fbadf4f7a73be705e
+    │   │           data: 0x0000000000000000000000000000000000000000000000000000000000000000
+    │   └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
+    └─ ← [Return] 0x0000000000000000000000000000000000000000000000000000000000000001
+
+
+Transaction successfully executed.
+Gas used: 126695
+````
+
 ### Nested Safes
 
 This [script](./safe_hashes.sh) supports calculating the Safe transaction hashes for nested Safe (i.e. use a Safe as a signatory to another Safe) approval transactions. When a nested Safe needs to approve a transaction on the primary Safe, it must call the [`approveHash(bytes32)`](https://github.com/safe-global/safe-smart-account/blob/bdcfce3a76c4d1dfb256ac2ca971be7cfd6e493a/contracts/Safe.sol#L372-L379) function on the target Safe with the Safe transaction hash to approve:
@@ -435,7 +511,7 @@ The nested Safe `approveHash` transaction is constructed with the following para
 - All other parameters are set to their default values (`0` or the zero address `0x0000000000000000000000000000000000000000`).
 
 > [!NOTE]
-> The `--interactive` mode supports nested Safe transactions but only allows overriding the nested Safe version, not other transaction values in the `approveHash` transaction.
+> The `--interactive` mode supports nested Safe transactions but only allows overriding the nested Safe version, not other transaction values in the `approveHash` transaction. You can also use the `--simulate` mode with nested Safe transactions, but it simulates only the main transaction (the one you approve) and not the Safe `approveHash` transaction itself.
 
 ## Safe Message Hashes
 
@@ -511,9 +587,10 @@ Safe message hash: 0x1866b559f56261ada63528391b93a1fe8e2e33baf7cace94fc6b42202d1
 3. You trust [Foundry](https://github.com/foundry-rs/foundry).
 4. You trust the [Safe transaction service API](https://docs.safe.global/core-api/transaction-service-overview).
 5. You trust [Ledger's secure screen](https://www.ledger.com/academy/topics/ledgersolutions/ledger-wallets-secure-screen-security-model).
+6. You trust the data provided by your RPC provider when using `--simulate` mode.
 
 > [!IMPORTANT]
-> You can remove the trust assumption _"4. You trust the [Safe transaction service API](https://docs.safe.global/core-api/transaction-service-overview)."_ by enabling `--interactive` mode and verifying the calldata independently (this should always be done!).
+> You can remove the trust assumption _"4. You trust the [Safe transaction service API](https://docs.safe.global/core-api/transaction-service-overview)."_ by enabling `--interactive` mode and verifying the calldata independently (this should always be done!). You can also remove the trust assumption _"6. You trust the data provided by your RPC provider when using `--simulate` mode."_ by running your own node.
 
 ## Community-Maintained User Interface Implementations
 

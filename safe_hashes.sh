@@ -56,14 +56,53 @@ if [[ "${BASH_VERSINFO[0]:-0}" -lt 4 ]]; then
 	exit 1
 fi
 
+# Utility function to retrieve and parse the semantic version number (e.g. `1.3.5`)
+# from Foundry tools such as `cast` or `chisel`.
+parse_foundry_version() {
+	local tool="$1"
+	local output=""
+	local version=""
+
+	# Fail if the tool cannot run.
+	if ! output=$("$tool" --version 2>&1); then
+		echo -e "${BOLD}${RED}Error: Failed to run \`$tool --version\`!${RESET}" >&2
+		exit 1
+	fi
+
+	# Extract the tool's semantic version.
+	version=$(echo "$output" | awk '/Version:/ {print $3}' | cut -d"-" -f1)
+
+	# Fail if no version was found.
+	if [[ -z "$version" ]]; then
+		echo "${BOLD}${RED}Error: Could not determine the version of \`$tool\`!${RESET}" >&2
+		exit 1
+	fi
+
+	echo "$version"
+}
+
+# Utility function to compare two semantic versions and return `true` if `$1 >= $2`.
+semver_ge() {
+	[[ "$(printf "%s\n%s" "$2" "$1" | sort -V | head -n1)" = "$2" ]]
+}
+
 # Utility function to ensure all required tools are installed.
 check_required_tools() {
 	local tools=("curl" "jq" "chisel" "cast")
 	local missing_tools=()
+	local min_version="1.3.5"
 
 	for tool in "${tools[@]}"; do
 		if ! command -v "$tool" &>/dev/null; then
 			missing_tools+=("$tool")
+		fi
+
+		if [[ "$tool" == "cast" || "$tool" == "chisel" ]]; then
+			tool_version=$(parse_foundry_version "$tool")
+			if ! semver_ge "$tool_version" "$min_version"; then
+				echo -e "${BOLD}${RED}\`$tool\` version \`$tool_version\` is too old. Minimum required is \`$min_version\`.${RESET}"
+				exit 1
+			fi
 		fi
 	done
 
@@ -101,6 +140,8 @@ delegate_call_warning_shown="false"
 
 # Set a global variable to store the Safe transaction hash for use across multiple functions.
 global_safe_tx_hash="0x0000000000000000000000000000000000000000000000000000000000000000"
+# Set a global variable to store the simulated Safe transaction hash for use across multiple functions.
+global_safe_tx_hash_simulated="0x0000000000000000000000000000000000000000000000000000000000000000"
 
 # Set the type hash constants.
 # => `keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");`
@@ -119,40 +160,54 @@ readonly SAFE_TX_TYPEHASH_OLD="0x14d461bc7412367e924637b363c7bf29b8f47e2f84869f4
 # See: https://github.com/safe-global/safe-smart-account/blob/febab5e4e859e6e65914f17efddee415e4992961/contracts/libraries/SignMessageLib.sol#L12-L13.
 readonly SAFE_MSG_TYPEHASH="0x60b3cbf8b4a223d68d641b3b6ddf9a298e7f33710cf3d3a9d1146b5a6150fbca"
 
+# Set the storage slots for the configured transaction and module guards.
+# => `keccak256("guard_manager.guard.address");`
+# See: https://github.com/safe-global/safe-smart-account/blob/333f84083e58df8e70b03e7f7df1947c1d77b262/contracts/libraries/SafeStorage.sol#L63-L67.
+readonly GUARD_STORAGE_SLOT="0x4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c8"
+# => `keccak256("module_manager.module_guard.address");`
+# See: https://github.com/safe-global/safe-smart-account/blob/333f84083e58df8e70b03e7f7df1947c1d77b262/contracts/libraries/SafeStorage.sol#L69-L73.
+readonly MODULE_GUARD_STORAGE_SLOT="0xb104e0b93118902c651344349b610029d694cfdec91c589c91ebafbcd0289947"
+
 # Set the trusted (i.e. for delegate calls) `MultiSendCallOnly` addresses:
-# MultiSendCallOnly `v1.3.0` (canonical): https://github.com/safe-global/safe-deployments/blob/cc1ac692a5fcc70696cb66bb94d1c2cad3ec68ee/src/assets/v1.3.0/multi_send_call_only.json#L7,
-# MultiSendCallOnly `v1.3.0` (eip155): https://github.com/safe-global/safe-deployments/blob/cc1ac692a5fcc70696cb66bb94d1c2cad3ec68ee/src/assets/v1.3.0/multi_send_call_only.json#L11,
-# MultiSendCallOnly `v1.3.0` (zksync): https://github.com/safe-global/safe-deployments/blob/cc1ac692a5fcc70696cb66bb94d1c2cad3ec68ee/src/assets/v1.3.0/multi_send_call_only.json#L15,
-# MultiSendCallOnly `v1.4.1` (canonical): https://github.com/safe-global/safe-deployments/blob/cc1ac692a5fcc70696cb66bb94d1c2cad3ec68ee/src/assets/v1.4.1/multi_send_call_only.json#L7,
-# MultiSendCallOnly `v1.4.1` (zksync): https://github.com/safe-global/safe-deployments/blob/cc1ac692a5fcc70696cb66bb94d1c2cad3ec68ee/src/assets/v1.4.1/multi_send_call_only.json#L11.
+# MultiSendCallOnly `v1.3.0` (canonical): https://github.com/safe-global/safe-deployments/blob/5c2f9957939ee27ab55d179474c55ec4411a99d6/src/assets/v1.3.0/multi_send_call_only.json#L7,
+# MultiSendCallOnly `v1.3.0` (eip155): https://github.com/safe-global/safe-deployments/blob/5c2f9957939ee27ab55d179474c55ec4411a99d6/src/assets/v1.3.0/multi_send_call_only.json#L11,
+# MultiSendCallOnly `v1.3.0` (zksync): https://github.com/safe-global/safe-deployments/blob/5c2f9957939ee27ab55d179474c55ec4411a99d6/src/assets/v1.3.0/multi_send_call_only.json#L15,
+# MultiSendCallOnly `v1.4.1` (canonical): https://github.com/safe-global/safe-deployments/blob/5c2f9957939ee27ab55d179474c55ec4411a99d6/src/assets/v1.4.1/multi_send_call_only.json#L7,
+# MultiSendCallOnly `v1.4.1` (zksync): https://github.com/safe-global/safe-deployments/blob/5c2f9957939ee27ab55d179474c55ec4411a99d6/src/assets/v1.4.1/multi_send_call_only.json#L11,
+# MultiSendCallOnly `v1.5.0` (canonical): https://github.com/safe-global/safe-deployments/blob/5c2f9957939ee27ab55d179474c55ec4411a99d6/src/assets/v1.5.0/multi_send_call_only.json#L7.
 declare -a -r MultiSendCallOnly=(
 	"0x40A2aCCbd92BCA938b02010E17A5b8929b49130D" # MultiSendCallOnly `v1.3.0` (canonical).
 	"0xA1dabEF33b3B82c7814B6D82A79e50F4AC44102B" # MultiSendCallOnly `v1.3.0` (eip155).
 	"0xf220D3b4DFb23C4ade8C88E526C1353AbAcbC38F" # MultiSendCallOnly `v1.3.0` (zksync).
 	"0x9641d764fc13c8B624c04430C7356C1C7C8102e2" # MultiSendCallOnly `v1.4.1` (canonical).
 	"0x0408EF011960d02349d50286D20531229BCef773" # MultiSendCallOnly `v1.4.1` (zksync).
+	"0xA83c336B20401Af773B6219BA5027174338D1836" # MultiSendCallOnly `v1.5.0` (canonical).
 )
 
 # Set the trusted (i.e. for delegate calls) `SafeMigration` addresses:
-# SafeMigration `v1.4.1` (canonical): https://github.com/safe-global/safe-deployments/blob/cc1ac692a5fcc70696cb66bb94d1c2cad3ec68ee/src/assets/v1.4.1/safe_migration.json#L7,
-# SafeMigration `v1.4.1` (zksync): https://github.com/safe-global/safe-deployments/blob/cc1ac692a5fcc70696cb66bb94d1c2cad3ec68ee/src/assets/v1.4.1/safe_migration.json#L11.
+# SafeMigration `v1.4.1` (canonical): https://github.com/safe-global/safe-deployments/blob/5c2f9957939ee27ab55d179474c55ec4411a99d6/src/assets/v1.4.1/safe_migration.json#L7,
+# SafeMigration `v1.4.1` (zksync): https://github.com/safe-global/safe-deployments/blob/5c2f9957939ee27ab55d179474c55ec4411a99d6/src/assets/v1.4.1/safe_migration.json#L11,
+# SafeMigration `v1.5.0` (canonical): https://github.com/safe-global/safe-deployments/blob/5c2f9957939ee27ab55d179474c55ec4411a99d6/src/assets/v1.5.0/safe_migration.json#L7.
 declare -a -r SafeMigration=(
 	"0x526643F69b81B008F46d95CD5ced5eC0edFFDaC6" # SafeMigration `v1.4.1` (canonical).
 	"0x817756C6c555A94BCEE39eB5a102AbC1678b09A7" # SafeMigration `v1.4.1` (zksync).
+	"0x6439e7ABD8Bb915A5263094784C5CF561c4172AC" # SafeMigration `v1.5.0` (canonical).
 )
 
 # Set the trusted (i.e. for delegate calls) `SignMessageLib` addresses:
-# SignMessageLib `v1.3.0` (canonical): https://github.com/safe-global/safe-deployments/blob/cc1ac692a5fcc70696cb66bb94d1c2cad3ec68ee/src/assets/v1.3.0/sign_message_lib.json#L7,
-# SignMessageLib `v1.3.0` (eip155): https://github.com/safe-global/safe-deployments/blob/cc1ac692a5fcc70696cb66bb94d1c2cad3ec68ee/src/assets/v1.3.0/sign_message_lib.json#L11,
-# SignMessageLib `v1.3.0` (zksync): https://github.com/safe-global/safe-deployments/blob/cc1ac692a5fcc70696cb66bb94d1c2cad3ec68ee/src/assets/v1.3.0/sign_message_lib.json#L15,
-# SignMessageLib `v1.4.1` (canonical): https://github.com/safe-global/safe-deployments/blob/cc1ac692a5fcc70696cb66bb94d1c2cad3ec68ee/src/assets/v1.4.1/sign_message_lib.json#L7,
-# SignMessageLib `v1.4.1` (zksync): https://github.com/safe-global/safe-deployments/blob/cc1ac692a5fcc70696cb66bb94d1c2cad3ec68ee/src/assets/v1.4.1/sign_message_lib.json#L11.
+# SignMessageLib `v1.3.0` (canonical): https://github.com/safe-global/safe-deployments/blob/5c2f9957939ee27ab55d179474c55ec4411a99d6/src/assets/v1.3.0/sign_message_lib.json#L7,
+# SignMessageLib `v1.3.0` (eip155): https://github.com/safe-global/safe-deployments/blob/5c2f9957939ee27ab55d179474c55ec4411a99d6/src/assets/v1.3.0/sign_message_lib.json#L11,
+# SignMessageLib `v1.3.0` (zksync): https://github.com/safe-global/safe-deployments/blob/5c2f9957939ee27ab55d179474c55ec4411a99d6/src/assets/v1.3.0/sign_message_lib.json#L15,
+# SignMessageLib `v1.4.1` (canonical): https://github.com/safe-global/safe-deployments/blob/5c2f9957939ee27ab55d179474c55ec4411a99d6/src/assets/v1.4.1/sign_message_lib.json#L7,
+# SignMessageLib `v1.4.1` (zksync): https://github.com/safe-global/safe-deployments/blob/5c2f9957939ee27ab55d179474c55ec4411a99d6/src/assets/v1.4.1/sign_message_lib.json#L11,
+# SignMessageLib `v1.5.0` (canonical): https://github.com/safe-global/safe-deployments/blob/5c2f9957939ee27ab55d179474c55ec4411a99d6/src/assets/v1.5.0/sign_message_lib.json#L7.
 declare -a -r SignMessageLib=(
 	"0xA65387F16B013cf2Af4605Ad8aA5ec25a2cbA3a2" # SignMessageLib `v1.3.0` (canonical).
 	"0x98FFBBF51bb33A056B08ddf711f289936AafF717" # SignMessageLib `v1.3.0` (eip155).
 	"0x357147caf9C0cCa67DfA0CF5369318d8193c8407" # SignMessageLib `v1.3.0` (zksync).
 	"0xd53cd0aB83D845Ac265BE939c57F53AD838012c9" # SignMessageLib `v1.4.1` (canonical).
 	"0xAca1ec0a1A575CDCCF1DC3d5d296202Eb6061888" # SignMessageLib `v1.4.1` (zksync).
+	"0x4FfeF8222648872B3dE295Ba1e49110E61f5b5aa" # SignMessageLib `v1.5.0` (canonical).
 )
 
 # Set the trusted (i.e. for delegate calls) contract addresses.
@@ -230,7 +285,7 @@ usage() {
 Usage: $0 [--help] [--version] [--list-networks]
        --network <network> --address <address> [--nonce <nonce>]
        [--nested-safe-address <address>] [--nested-safe-nonce <nonce>]
-       [--message <file>] [--interactive]
+       [--message <file>] [--interactive] [--simulate <rpc_url>]
 
 Options:
   --help                            Display this help message
@@ -243,18 +298,31 @@ Options:
   --nested-safe-nonce <nonce>       Specify the nonce for the nested Safe transaction (optional for transaction hashes)
   --message <file>                  Specify the message file (required for off-chain message hashes)
   --interactive                     Use the interactive mode (optional for transaction hashes)
+  --simulate <rpc_url>              Output the \`cast call --trace\` result in addition to the transaction hashes using the specified RPC URL (optional for transaction hashes)
 
 Example for transaction hashes:
   $0 --network ethereum --address 0x1234...5678 --nonce 42
 
+Example for transaction hashes including simulation:
+  $0 --network ethereum --address 0x1234...5678 --nonce 42 --simulate https://eth.llamarpc.com
+
 Example for transaction hashes (interactive mode):
   $0 --network ethereum --address 0x1234...5678 --nonce 42 --interactive
+
+Example for transaction hashes (interactive mode) including simulation:
+  $0 --network ethereum --address 0x1234...5678 --nonce 42 --interactive --simulate https://eth.llamarpc.com
 
 Example for transaction hashes via a nested Safe multisig approval:
   $0 --network ethereum --address 0x1234...5678 --nonce 42 --nested-safe-address 0x8765...4321 --nested-safe-nonce 10
 
+Example for transaction hashes via a nested Safe multisig approval including simulation:
+  $0 --network ethereum --address 0x1234...5678 --nonce 42 --nested-safe-address 0x8765...4321 --nested-safe-nonce 10 --simulate https://eth.llamarpc.com
+
 Example for transaction hashes via a nested Safe multisig approval (interactive mode):
   $0 --network ethereum --address 0x1234...5678 --nonce 42 --nested-safe-address 0x8765...4321 --nested-safe-nonce 10 --interactive
+
+Example for transaction hashes via a nested Safe multisig approval (interactive mode) including simulation:
+  $0 --network ethereum --address 0x1234...5678 --nonce 42 --nested-safe-address 0x8765...4321 --nested-safe-nonce 10 --interactive --simulate https://eth.llamarpc.com
 
 Example for off-chain message hashes:
   $0 --network ethereum --address 0x1234...5678 --message message.txt
@@ -296,7 +364,7 @@ list_networks() {
 
 # Utility function to print a section header.
 print_header() {
-	local header=$1
+	local header="$1"
 	if [[ -n "$UNDERLINE" ]]; then
 		# Terminal supports formatting.
 		printf "\n${UNDERLINE}%s${RESET}\n" "$header"
@@ -308,8 +376,8 @@ print_header() {
 
 # Utility function to print a labelled value.
 print_field() {
-	local label=$1
-	local value=$2
+	local label="$1"
+	local value="$2"
 	local empty_line="${3:-false}"
 
 	if [[ "$COLOUR_ENABLED" -eq 1 ]]; then
@@ -328,18 +396,18 @@ print_field() {
 
 # Utility function to print the transaction data.
 print_transaction_data() {
-	local address=$1
-	local to=$2
-	local value=$3
-	local data=$4
-	local operation=$5
-	local safe_tx_gas=$6
-	local base_gas=$7
-	local gas_price=$8
-	local gas_token=$9
-	local refund_receiver=${10}
-	local nonce=${11}
-	local message=${12}
+	local address="$1"
+	local to="$2"
+	local value="$3"
+	local data="$4"
+	local operation="$5"
+	local safe_tx_gas="$6"
+	local base_gas="$7"
+	local gas_price="$8"
+	local gas_token="$9"
+	local refund_receiver="${10}"
+	local nonce="${11}"
+	local message="${12}"
 
 	print_header "Transaction Data"
 	print_field "Multisig address" "$address"
@@ -372,7 +440,7 @@ print_transaction_data() {
 
 # Utility function to format the hash (keep `0x` lowercase, rest uppercase).
 format_hash() {
-	local hash=$1
+	local hash="$1"
 	local prefix="${hash:0:2}"
 	local rest="${hash:2}"
 	echo "${prefix,,}${rest^^}"
@@ -380,9 +448,9 @@ format_hash() {
 
 # Utility function to print the hash information.
 print_hash_info() {
-	local domain_hash=$1
-	local message_hash=$2
-	local safe_tx_hash=$3
+	local domain_hash="$1"
+	local message_hash="$2"
+	local safe_tx_hash="$3"
 
 	print_header "Hashes"
 	print_field "Domain hash" "$(format_hash "$domain_hash")"
@@ -392,11 +460,11 @@ print_hash_info() {
 
 # Utility function to print the ABI-decoded transaction data.
 print_decoded_data() {
-	local address=$1
-	local to=$2
-	local value=$3
-	local data=$4
-	local data_decoded=$5
+	local address="$1"
+	local to="$2"
+	local value="$3"
+	local data="$4"
+	local data_decoded="$5"
 
 	if [[ "$data" == "0x" && "$data_decoded" == "0x" ]]; then
 		# With no calldata, interpret intent based on `to` and `value`:
@@ -458,7 +526,7 @@ print_decoded_data() {
 
 # Utility function to extract the clean Safe multisig version.
 get_version() {
-	local version=$1
+	local version="$1"
 	# Safe multisig versions can have the format `X.Y.Z+L2`.
 	# Remove any suffix after and including the `+` in the version string for comparison.
 	local clean_version=$(echo "$version" | sed "s/+.*//")
@@ -467,7 +535,7 @@ get_version() {
 
 # Utility function to validate the Safe multisig version.
 validate_version() {
-	local version=$1
+	local version="$1"
 	if [[ -z "$version" ]]; then
 		echo "${YELLOW}No Safe multisig contract found for the specified network. Please ensure that you have selected the correct network.${RESET}"
 		exit 0
@@ -484,9 +552,9 @@ validate_version() {
 
 # Utility function to calculate the domain hash.
 calculate_domain_hash() {
-	local version=$1
-	local domain_separator_typehash=$2
-	local domain_hash_args=$3
+	local version="$1"
+	local domain_separator_typehash="$2"
+	local domain_hash_args="$3"
 
 	# Validate the Safe multisig version.
 	validate_version "$version"
@@ -508,21 +576,22 @@ calculate_domain_hash() {
 
 # Utility function to calculate the domain and message hashes.
 calculate_hashes() {
-	local chain_id=$1
-	local address=$2
-	local to=$3
-	local value=$4
-	local data=$5
-	local operation=$6
-	local safe_tx_gas=$7
-	local base_gas=$8
-	local gas_price=$9
-	local gas_token=${10}
-	local refund_receiver=${11}
-	local nonce=${12}
-	local data_decoded=${13}
-	local version=${14}
-	local update_global_safe_tx_hash=${15:-}
+	local chain_id="$1"
+	local address="$2"
+	local to="$3"
+	local value="$4"
+	local data="$5"
+	local operation="$6"
+	local safe_tx_gas="$7"
+	local base_gas="$8"
+	local gas_price="$9"
+	local gas_token="${10}"
+	local refund_receiver="${11}"
+	local nonce="${12}"
+	local data_decoded="${13}"
+	local version="${14}"
+	local update_global_safe_tx_hash="${15:-}"
+	local update_global_safe_tx_hash_simulated="${16:-}"
 
 	local domain_separator_typehash="$DOMAIN_SEPARATOR_TYPEHASH"
 	local domain_hash_args="$domain_separator_typehash, $chain_id, $address"
@@ -581,16 +650,22 @@ calculate_hashes() {
 		global_safe_tx_hash="$safe_tx_hash"
 		readonly global_safe_tx_hash
 	fi
+
+	# Store the simulated Safe transaction hash so it can be captured by a calling function.
+	if [[ -n "$update_global_safe_tx_hash_simulated" ]]; then
+		global_safe_tx_hash_simulated="$safe_tx_hash"
+		readonly global_safe_tx_hash_simulated
+	fi
 }
 
 # Utility function to calculate the domain and message hashes for a nested Safe multisig address.
 calculate_nested_safe_hashes() {
-	local chain_id=$1
-	local target_safe_address=$2
-	local nested_safe_address=$3
-	local nested_safe_nonce=$4
-	local safe_tx_hash=$5
-	local nested_safe_version=$6
+	local chain_id="$1"
+	local target_safe_address="$2"
+	local nested_safe_address="$3"
+	local nested_safe_nonce="$4"
+	local safe_tx_hash="$5"
+	local nested_safe_version="$6"
 
 	# Set the fixed parameters for the `approveHash` transaction.
 	local to="$target_safe_address"
@@ -706,9 +781,9 @@ EOF
 
 # Utility function to check for a potential gas token attack.
 check_gas_token_attack() {
-	local gas_price=$1
-	local gas_token=$2
-	local refund_receiver=$3
+	local gas_price="$1"
+	local gas_token="$2"
+	local refund_receiver="$3"
 	local warning_message=""
 
 	if [[ "$gas_token" != "$ZERO_ADDRESS" && "$refund_receiver" != "$ZERO_ADDRESS" ]]; then
@@ -732,6 +807,121 @@ This combination can be used to hide a rerouting of funds through gas refunds.${
 	fi
 }
 
+# Utility function to locally simulate a transaction using `cast call` and print its execution trace.
+simulate_transaction() {
+	local address="$1"
+	local to="$2"
+	local value="$3"
+	local data="$4"
+	local operation="$5"
+	local safe_tx_gas="$6"
+	local base_gas="$7"
+	local gas_price="$8"
+	local gas_token="$9"
+	local refund_receiver="${10}"
+	local nonce="${11}"
+	local rpc_url="${12}"
+
+	# Generate a random signing wallet.
+	local signer_wallet=$(cast wallet new)
+	local signer_private_key=$(echo "$signer_wallet" | grep "Private key:" | awk '{print $3}')
+	local signer_address=$(echo "$signer_wallet" | grep "Address:" | awk '{print $2}')
+
+	# Set `nonce` equal to the current on-chain value `$current_nonce` of the configured multisig address `$address`.
+	local current_nonce=$(cast call "$address" "nonce()(uint256)" --rpc-url "$rpc_url")
+	if [[ "$nonce" != "$current_nonce" ]]; then
+		nonce="$current_nonce"
+	fi
+
+	# Calculate the primary Safe transaction hash using the overridden `nonce`.
+	# Suppress normal output (`stdout`) while still allowing errors (`stderr`) to be printed.
+	calculate_hashes \
+		"$chain_id" \
+		"$address" \
+		"$to" \
+		"$value" \
+		"$data" \
+		"$operation" \
+		"$safe_tx_gas" \
+		"$base_gas" \
+		"$gas_price" \
+		"$gas_token" \
+		"$refund_receiver" \
+		"$nonce" \
+		"$data_decoded" \
+		"$version" \
+		"" \
+		"true" \
+		>/dev/null
+
+	# Sign the Safe transaction hash with the random signer's private key.
+	local signature=$(cast wallet sign --private-key "$signer_private_key" --no-hash "$global_safe_tx_hash_simulated")
+
+	# Generate the calldata for the `execTransaction` transaction.
+	local safe_tx_payload=$(cast calldata "execTransaction(address,uint256,bytes,uint8,uint256,uint256,uint256,address,address,bytes)" \
+		"$to" \
+		"$value" \
+		"$data" \
+		"$operation" \
+		"$safe_tx_gas" \
+		"$base_gas" \
+		"$gas_price" \
+		"$gas_token" \
+		"$refund_receiver" \
+		"$signature")
+
+	# The (partial) storage layout of the Safe contracts (since `v0.1.0`):
+	# See: https://github.com/safe-global/safe-smart-account/blob/333f84083e58df8e70b03e7f7df1947c1d77b262/contracts/libraries/SafeStorage.sol.
+	# - `masterCopy` (slot: 0, offset: 0, size: 20 bytes),
+	# - `modules`    (slot: 1, offset: 0, size: 32 bytes),
+	# - `owners`     (slot: 2, offset: 0, size: 32 bytes),
+	# - `ownerCount` (slot: 3, offset: 0, size: 32 bytes),
+	# - `threshold`  (slot: 4, offset: 0, size: 32 bytes),
+	# - `nonce`      (slot: 5, offset: 0, size: 32 bytes).
+
+	# The Solidity `mapping` slots are computed as `keccak256(abi.encode(key, mappingS​lot))` for value types.
+	# See: https://docs.soliditylang.org/en/v0.8.30/internals/layout_in_storage.html#mappings-and-dynamic-arrays.
+	# Calculate the storage slot for `signer_address` in the `owners` mapping.
+	local owner_slot=$(cast keccak $(cast abi-encode "mappingOwnerSlot(address,uint256)" "$signer_address" "2"))
+
+	echo -e "\n=========================="
+	echo "= Transaction Simulation ="
+	echo -e "==========================\n"
+
+	cat <<EOF
+${YELLOW}This simulation, run against the latest block, depends on data provided by your RPC provider. Using your own node is always recommended.
+
+Please note that we override specific Safe contract storage slots for this call:
+  - Set \`owners[signer_address] = address(0x1)\` to make a random \`signer_address\` address \`$signer_address\` an \`owner\`,
+  - Set \`threshold = 1\` to allow single-owner execution,
+  - Set \`nonce\` equal to the current on-chain value \`$current_nonce\` of the configured multisig address \`$address\`,
+  - Disable the configured transaction and module guards.
+
+Then execute the \`cast call --trace\` command with the transaction payload from \`signer_address\` address \`$signer_address\` using the overridden states:${RESET}
+\`\`\`bash
+${GREEN}cast call --trace --from "$signer_address" \\
+  "$address" \\
+  --data "$safe_tx_payload" \\
+  --override-state-diff "$address:$owner_slot:1,$address:4:1,$address:$GUARD_STORAGE_SLOT:0,$address:$MODULE_GUARD_STORAGE_SLOT:0" \\
+  --rpc-url "$rpc_url"
+${RESET}\`\`\`
+EOF
+
+	print_header "Execution Traces"
+	# Override specific Safe contract storage slots for this call:
+	# - Set `owners[signer_address] = address(0x1)` to make `signer_address` an `owner`,
+	# - Set `threshold = 1` to allow single-owner execution,
+	# - Set `nonce` equal to the current on-chain value `current_nonce` of the configured multisig address `address`,
+	# - Disable the configured transaction and module guards.
+	# Then execute the `cast call --trace` command with the transaction payload from
+	# `signer_address` using the overridden state.
+	cast call --trace --from "$signer_address" \
+		"$address" \
+		--data "$safe_tx_payload" \
+		--override-state-diff "$address:$owner_slot:1,$address:4:1,$address:5:$nonce,$address:$GUARD_STORAGE_SLOT:0,$address:$MODULE_GUARD_STORAGE_SLOT:0" \
+		--rpc-url "$rpc_url"
+}
+
 # Utility function to validate the message file.
 validate_message_file() {
 	local message_file="$1"
@@ -747,11 +937,11 @@ validate_message_file() {
 
 # Utility function to calculate the domain and message hashes for off-chain messages.
 calculate_offchain_message_hashes() {
-	local network=$1
-	local chain_id=$2
-	local address=$3
-	local message_file=$4
-	local version=$5
+	local network="$1"
+	local chain_id="$2"
+	local address="$3"
+	local message_file="$4"
+	local version="$5"
 
 	validate_message_file "$message_file"
 
@@ -800,11 +990,11 @@ calculate_offchain_message_hashes() {
 # using a nested Safe multisig address. Please note that off-chain messages are hashed
 # and passed to a nested Safe via EIP-712 (https://eips.ethereum.org/EIPS/eip-712) objects.
 calculate_nested_safe_offchain_message_hashes() {
-	local chain_id=$1
-	local address=$2
-	local nested_safe_address=$3
-	local message_file=$4
-	local nested_safe_version=$5
+	local chain_id="$1"
+	local address="$2"
+	local nested_safe_address="$3"
+	local message_file="$4"
+	local nested_safe_version="$5"
 
 	validate_message_file "$message_file"
 
@@ -865,12 +1055,13 @@ EOF
 ##############################################
 # This function orchestrates the entire process of calculating the Safe transaction/message hashes:
 # 1. Parses command-line arguments (`help`, `version`, `list-networks`, `network`, `address`, `nonce`,
-#    `nested-safe-address`, `nested-safe-nonce`, `message`, `interactive`).
+#    `nested-safe-address`, `nested-safe-nonce`, `message`, `interactive`, `simulate`).
 # 2. Validates that all required parameters are provided.
 # 3. Retrieves the API URL and chain ID for the specified network.
 # 4. Constructs the API endpoint URL.
 # 5. If a message file is provided:
 #    - Validates that no interactive mode is specified (as it's not applicable for off-chain message hashes).
+#    - Validates that no simulation mode is specified (as it's not applicable for off-chain message hashes).
 #    - Validates that no `nonce` or `nested-safe-nonce` is specified (as it's not applicable for off-chain message hashes).
 #    - Calls `calculate_offchain_message_hashes` to compute and display the message hashes.
 #    - If a nested Safe address is provided, invokes the `calculate_nested_safe_offchain_message_hashes` function with the nested
@@ -884,6 +1075,8 @@ EOF
 #    - Calls the `calculate_hashes` function to compute and display the results.
 #    - If nested Safe parameters are provided, invokes the `calculate_nested_safe_hashes` function with the approval transaction
 #      data and displays the resulting hashes.
+#    - If the simulation mode is specified, invokes the `simulate_transaction` function with the transaction data and displays the
+#      execution trace.
 calculate_safe_hashes() {
 	# Display the help message if no arguments are provided.
 	if [[ $# -eq 0 ]]; then
@@ -898,6 +1091,7 @@ calculate_safe_hashes() {
 	local nested_safe_nonce=""
 	local message_file=""
 	local interactive=""
+	local rpc_url=""
 
 	# Parse the command line arguments.
 	# Please note that `--help`, `--version`, and `--list-networks` can be used
@@ -936,6 +1130,10 @@ calculate_safe_hashes() {
 		--interactive)
 			interactive="1"
 			shift
+			;;
+		--simulate)
+			rpc_url="$2"
+			shift 2
 			;;
 		*)
 			echo "Unknown option: $1" >&2
@@ -1005,6 +1203,10 @@ EOF
 			echo -e "${RED}Error: When calculating off-chain message hashes, do not specify the \`--interactive\` mode!${RESET}" >&2
 			exit 1
 		fi
+		if [[ -n "$rpc_url" ]]; then
+			echo -e "${RED}Error: When calculating off-chain message hashes, do not specify the \`--simulate\` mode!${RESET}" >&2
+			exit 1
+		fi
 		if [[ -n "$nonce" ]]; then
 			echo -e "${RED}Error: When calculating off-chain message hashes, do not specify a nonce!${RESET}" >&2
 			exit 1
@@ -1070,7 +1272,7 @@ EOF
 				local array_value=$(echo "$response" | jq ".results[$idx]")
 
 				if [[ $array_value == null ]]; then
-					echo "${RED}Error: No transaction found at index $idx. Please try again.${RESET}"
+					echo "${RED}Error: No transaction found at index $idx! Please try again.${RESET}"
 					continue
 				fi
 
@@ -1184,9 +1386,25 @@ EOF
 	if [[ -n "$nested_safe_address" && -n "$nested_safe_nonce" ]]; then
 		calculate_nested_safe_hashes "$chain_id" "$address" "$nested_safe_address" "$nested_safe_nonce" "$global_safe_tx_hash" "$nested_safe_version"
 	elif [[ -n "$nested_safe_nonce" && -z "$nested_safe_address" ]]; then
-		echo -e "${RED}Error: The \`--nested-safe-address\` parameter is missing.${RESET}" >&2
+		echo -e "${RED}Error: The \`--nested-safe-address\` parameter is missing!${RESET}" >&2
 		echo -e "${RED}Both \`--nested-safe-address\` and \`--nested-safe-nonce\` must be provided for transaction hashes!${RESET}" >&2
 		exit 1
+	fi
+
+	# Simulate the transaction locally with `cast call` and print its trace if an RPC URL is provided.
+	if [[ -n "$rpc_url" ]]; then
+		simulate_transaction "$address" \
+			"$to" \
+			"$value" \
+			"$data" \
+			"$operation" \
+			"$safe_tx_gas" \
+			"$base_gas" \
+			"$gas_price" \
+			"$gas_token" \
+			"$refund_receiver" \
+			"$nonce" \
+			"$rpc_url"
 	fi
 
 	exit 0
