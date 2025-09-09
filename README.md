@@ -590,7 +590,7 @@ Safe message hash: 0x1866b559f56261ada63528391b93a1fe8e2e33baf7cace94fc6b42202d1
 6. You trust the data provided by your RPC provider when using `--simulate` mode.
 
 > [!IMPORTANT]
-> You can remove the trust assumption _"4. You trust the [Safe transaction service API](https://docs.safe.global/core-api/transaction-service-overview)."_ by enabling `--interactive` mode and verifying the calldata independently (this should always be done!). You can also remove trust assumption _"6. You trust the data provided by your RPC provider when using `--simulate` mode."_ by running your own node.
+> You can remove the trust assumption _"4. You trust the [Safe transaction service API](https://docs.safe.global/core-api/transaction-service-overview)."_ by enabling `--interactive` mode and verifying the calldata independently (this should always be done!). You can also remove the trust assumption _"6. You trust the data provided by your RPC provider when using `--simulate` mode."_ by running your own node.
 
 ## Community-Maintained User Interface Implementations
 
