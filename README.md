@@ -92,7 +92,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - `--nested-safe-nonce <nonce>`: Specify the nonce for the nested Safe transaction (optional for transaction hashes).
 - `--message <file>`: Specify the message file (required for off-chain message hashes).
 - `--interactive`: Use the interactive mode (optional for transaction hashes).
-- `--simulate <rpc_url>`: Output the \`cast call --trace\` result in addition to the transaction hashes using the specified RPC URL (optional for transaction hashes).
+- `--simulate <rpc_url>`: Output the `cast call --trace` result in addition to the transaction hashes using the specified RPC URL (optional for transaction hashes).
 
 > [!NOTE]
 > Please note that `--help`, `--version`, and `--list-networks` can be used independently or alongside other options without causing the script to fail. They are special options that can be called without affecting the rest of the command processing.
