@@ -250,8 +250,8 @@ declare -A -r API_URLS=(
 	["sonic"]="https://safe-transaction-sonic.safe.global"
 	["unichain"]="https://safe-transaction-unichain.safe.global"
 	["worldchain"]="https://safe-transaction-worldchain.safe.global"
-	["xlayer"]="https://safe-transaction-xlayer.safe.global"
 	["xdc"]="https://safe-transaction-xdc.safe.global"
+	["xlayer"]="https://safe-transaction-xlayer.safe.global"
 	["zksync"]="https://safe-transaction-zksync.safe.global"
 )
 
@@ -286,8 +286,8 @@ declare -A -r CHAIN_IDS=(
 	["sonic"]="146"
 	["unichain"]="130"
 	["worldchain"]="480"
-	["xlayer"]="196"
 	["xdc"]="50"
+	["xlayer"]="196"
 	["zksync"]="324"
 )
 
