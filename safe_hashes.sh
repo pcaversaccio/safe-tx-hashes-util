@@ -218,41 +218,44 @@ declare -A -r TRUSTED_FOR_DELEGATE_CALL=(
 	["SignMessageLib"]="${SignMessageLib[@]}"
 )
 
+# Define the canonical base URL for the Safe transaction service API.
+readonly BASE_URL="https://api.safe.global/tx-service"
+
 # Define the supported networks from the Safe transaction service.
 # See https://docs.safe.global/advanced/smart-account-supported-networks?service=Transaction+Service.
 declare -A -r API_URLS=(
-	["arbitrum"]="https://safe-transaction-arbitrum.safe.global"
-	["aurora"]="https://safe-transaction-aurora.safe.global"
-	["avalanche"]="https://safe-transaction-avalanche.safe.global"
-	["base"]="https://safe-transaction-base.safe.global"
-	["base-sepolia"]="https://safe-transaction-base-sepolia.safe.global"
-	["berachain"]="https://safe-transaction-berachain.safe.global"
-	["botanix"]="https://safe-transaction-botanix.safe.global"
-	["bsc"]="https://safe-transaction-bsc.safe.global"
-	["celo"]="https://safe-transaction-celo.safe.global"
-	["codex"]="https://safe-transaction-codex.safe.global"
-	["ethereum"]="https://safe-transaction-mainnet.safe.global"
-	["gnosis"]="https://safe-transaction-gnosis-chain.safe.global"
-	["gnosis-chiado"]="https://safe-transaction-chiado.safe.global"
-	["hemi"]="https://safe-transaction-hemi.safe.global"
-	["ink"]="https://safe-transaction-ink.safe.global"
-	["katana"]="https://safe-transaction-katana.safe.global"
-	["lens"]="https://safe-transaction-lens.safe.global"
-	["linea"]="https://safe-transaction-linea.safe.global"
-	["mantle"]="https://safe-transaction-mantle.safe.global"
-	["optimism"]="https://safe-transaction-optimism.safe.global"
-	["opbnb"]="https://safe-transaction-opbnb.safe.global"
-	["peaq"]="https://safe-transaction-peaq.safe.global"
-	["polygon"]="https://safe-transaction-polygon.safe.global"
-	["polygon-zkevm"]="https://safe-transaction-zkevm.safe.global"
-	["scroll"]="https://safe-transaction-scroll.safe.global"
-	["sepolia"]="https://safe-transaction-sepolia.safe.global"
-	["sonic"]="https://safe-transaction-sonic.safe.global"
-	["unichain"]="https://safe-transaction-unichain.safe.global"
-	["worldchain"]="https://safe-transaction-worldchain.safe.global"
-	["xdc"]="https://safe-transaction-xdc.safe.global"
-	["xlayer"]="https://safe-transaction-xlayer.safe.global"
-	["zksync"]="https://safe-transaction-zksync.safe.global"
+	["arbitrum"]="${BASE_URL}/arb1"
+	["aurora"]="${BASE_URL}/aurora"
+	["avalanche"]="${BASE_URL}/avax"
+	["base"]="${BASE_URL}/base"
+	["base-sepolia"]="${BASE_URL}/basesep"
+	["berachain"]="${BASE_URL}/berachain"
+	["botanix"]="${BASE_URL}/btc"
+	["bsc"]="${BASE_URL}/bnb"
+	["celo"]="${BASE_URL}/celo"
+	["codex"]="${BASE_URL}/codex"
+	["ethereum"]="${BASE_URL}/eth"
+	["gnosis"]="${BASE_URL}/gno"
+	["gnosis-chiado"]="${BASE_URL}/chi"
+	["hemi"]="${BASE_URL}/hemi"
+	["ink"]="${BASE_URL}/ink"
+	["katana"]="${BASE_URL}/katana"
+	["lens"]="${BASE_URL}/lens"
+	["linea"]="${BASE_URL}/linea"
+	["mantle"]="${BASE_URL}/mantle"
+	["optimism"]="${BASE_URL}/oeth"
+	["opbnb"]="${BASE_URL}/opbnb"
+	["peaq"]="${BASE_URL}/peaq"
+	["polygon"]="${BASE_URL}/pol"
+	["polygon-zkevm"]="${BASE_URL}/zkevm"
+	["scroll"]="${BASE_URL}/scr"
+	["sepolia"]="${BASE_URL}/sep"
+	["sonic"]="${BASE_URL}/sonic"
+	["unichain"]="${BASE_URL}/unichain"
+	["worldchain"]="${BASE_URL}/wc"
+	["xdc"]="${BASE_URL}/xdc"
+	["xlayer"]="${BASE_URL}/okb"
+	["zksync"]="${BASE_URL}/zksync"
 )
 
 # Define the chain IDs of the supported networks from the Safe transaction service.
@@ -1166,6 +1169,10 @@ calculate_safe_hashes() {
 	# Get the Safe multisig version.
 	local version=$(curl -sf "${api_url}/api/v1/safes/${address}/" | jq -r ".version // \"0.0.0\"" || echo "0.0.0")
 
+	# Safe's API allows 1 request per second without authentication.
+	# Wait slightly longer to allow for potential future requests without hitting rate limits.
+	sleep 1.2
+
 	# Validate the nested Safe address if provided.
 	local nested_safe_version=""
 	if [[ -n "$nested_safe_address" ]]; then
@@ -1174,6 +1181,10 @@ calculate_safe_hashes() {
 
 		# Get the nested Safe multisig version.
 		nested_safe_version=$(curl -sf "${api_url}/api/v1/safes/${nested_safe_address}/" | jq -r ".version // \"0.0.0\"" || echo "0.0.0")
+
+		# Safe's API allows 1 request per second without authentication.
+		# Wait slightly longer to allow for potential future requests without hitting rate limits.
+		sleep 1.2
 	fi
 
 	# If --interactive mode is enabled, the version value can be overridden by the user's input.
