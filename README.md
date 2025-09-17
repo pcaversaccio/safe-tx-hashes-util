@@ -310,7 +310,7 @@ Enter the `gasPrice` (default: 0): 50
 Enter the `gasToken` (default: 0x0000000000000000000000000000000000000000): 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
 Enter the `refundReceiver` (default: 0x0000000000000000000000000000000000000000): 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
 
-WARNING: The transaction includes an untrusted delegate call to address 0x111CEEee040739fD91D29C34C33E6B3E112F2177!
+WARNING: The transaction includes an untrusted delegate call to address `0x111CEEee040739fD91D29C34C33E6B3E112F2177`!
 This may lead to unexpected behaviour or vulnerabilities. Please review it carefully before you sign!
 
 WARNING: This transaction uses a custom gas token and a custom refund receiver.
@@ -481,7 +481,7 @@ Safe transaction hash: 0xcb8bbe7bf8f8a1f3f57658e450d07d4422356ac042d96a87ba425b1
 
 Nested Safe `approveHash` Transaction Data and Computed Hashes
 
-The specified nested Safe at 0x6bc56d6CE87C86CB0756c616bECFD3Cd32b09251 will use the following transaction to approve the primary transaction.
+The specified nested Safe at `0x6bc56d6CE87C86CB0756c616bECFD3Cd32b09251` will use the following transaction to approve the primary transaction.
 
 > Transaction Data:
 Multisig address: 0x6bc56d6CE87C86CB0756c616bECFD3Cd32b09251

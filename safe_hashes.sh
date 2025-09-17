@@ -716,7 +716,7 @@ calculate_nested_safe_hashes() {
 	echo -e "\n${BOLD}${UNDERLINE}Nested Safe \`approveHash\` Transaction Data and Computed Hashes${RESET}"
 	cat <<EOF
 
-${YELLOW}The specified nested Safe at $nested_safe_address will use the following transaction to approve the primary transaction.${RESET}
+${YELLOW}The specified nested Safe at \`$nested_safe_address\` will use the following transaction to approve the primary transaction.${RESET}
 EOF
 
 	# Calculate the domain and message hashes for the specified nested Safe multisig address.
@@ -796,7 +796,7 @@ warn_if_delegate_call() {
 	if [[ "$operation" -eq 1 && ! " ${TRUSTED_FOR_DELEGATE_CALL[@]} " =~ " ${to} " ]]; then
 		cat <<EOF
 
-${RED}WARNING: The transaction includes an untrusted delegate call to address $to!
+${RED}WARNING: The transaction includes an untrusted delegate call to address \`$to\`!
 This may lead to unexpected behaviour or vulnerabilities. Please review it carefully before you sign!${RESET}
 
 EOF
@@ -1065,7 +1065,7 @@ calculate_nested_safe_offchain_message_hashes() {
 
 	cat <<EOF
 
-${YELLOW}The specified nested Safe at $nested_safe_address will sign the above displayed Safe message $hashed_message via an EIP-712 message object.${RESET}
+${YELLOW}The specified nested Safe at \`$nested_safe_address\` will sign the above displayed Safe message \`$hashed_message\` via an EIP-712 message object.${RESET}
 EOF
 
 	# Calculate and display the hashes.
