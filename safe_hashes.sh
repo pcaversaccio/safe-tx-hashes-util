@@ -103,27 +103,38 @@ semver_ge() {
 check_required_tools() {
 	local tools=("curl" "jq" "chisel" "cast")
 	local missing_tools=()
+	local version_errors=()
 	local min_version="1.3.5"
 
 	for tool in "${tools[@]}"; do
 		if ! command -v "$tool" &>/dev/null; then
 			missing_tools+=("$tool")
-		fi
-
-		if [[ "$tool" == "cast" || "$tool" == "chisel" ]]; then
+		elif [[ "$tool" == "cast" || "$tool" == "chisel" ]]; then
 			tool_version=$(parse_foundry_version "$tool")
 			if ! semver_ge "$tool_version" "$min_version"; then
-				echo -e "${BOLD}${RED}\`$tool\` version \`$tool_version\` is too old. Minimum required is \`$min_version\`.${RESET}"
-				exit 1
+				version_errors+=("\`$tool\` version \`$tool_version\` is too old. Minimum required is \`$min_version\`.")
 			fi
 		fi
 	done
+
+	local has_errors="false"
 
 	if [[ ${#missing_tools[@]} -ne 0 ]]; then
 		echo -e "${BOLD}${RED}The following required tools are not installed:${RESET}"
 		for tool in "${missing_tools[@]}"; do
 			echo -e "${BOLD}${RED}  - $tool${RESET}"
 		done
+		has_errors="true"
+	fi
+
+	if [[ ${#version_errors[@]} -ne 0 ]]; then
+		for error in "${version_errors[@]}"; do
+			echo -e "${BOLD}${RED}$error${RESET}"
+		done
+		has_errors="true"
+	fi
+
+	if [[ "$has_errors" == "true" ]]; then
 		echo -e "${BOLD}${RED}Please install them to run the script properly.${RESET}"
 		exit 1
 	fi
