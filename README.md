@@ -40,7 +40,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 ## Supported Networks
 
 > [!NOTE]
-> Networks are ordered alphabetically by their identifier.
+> The supported networks are ordered alphabetically by their identifier.
 
 - Arbitrum (identifier: `arbitrum`, chain ID: `42161`)
 - Aurora (identifier: `aurora`, chain ID: `1313161554`)
