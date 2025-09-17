@@ -7,6 +7,19 @@
 # @license GNU Affero General Public License v3.0 only
 # @author pcaversaccio
 
+# Enable strict error handling:
+# -E: Inherit `ERR` traps in functions and subshells.
+# -e: Exit immediately if a command exits with a non-zero status.
+# -u: Treat unset variables as an error and exit.
+# -o pipefail: Return the exit status of the first failed command in a pipeline.
+set -Eeuo pipefail
+
+# Enable debug mode if the environment variable `DEBUG` is set to `true`.
+if [[ "${DEBUG:-false}" == "true" ]]; then
+	# Print each command before executing it.
+	set -x
+fi
+
 # Utility function to detect the terminal colour support.
 # Please note that we employ the environment flags:
 # - https://no-color.org for disabling colour output,
@@ -117,19 +130,6 @@ check_required_tools() {
 }
 
 check_required_tools
-
-# Enable strict error handling:
-# -E: Inherit `ERR` traps in functions and subshells.
-# -e: Exit immediately if a command exits with a non-zero status.
-# -u: Treat unset variables as an error and exit.
-# -o pipefail: Return the exit status of the first failed command in a pipeline.
-set -Eeuo pipefail
-
-# Enable debug mode if the environment variable `DEBUG` is set to `true`.
-if [[ "${DEBUG:-false}" == "true" ]]; then
-	# Print each command before executing it.
-	set -x
-fi
 
 # Set the zero address as a global constant.
 readonly ZERO_ADDRESS="0x0000000000000000000000000000000000000000"
