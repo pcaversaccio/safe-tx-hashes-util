@@ -7,6 +7,19 @@
 # @license GNU Affero General Public License v3.0 only
 # @author pcaversaccio
 
+# Enable strict error handling:
+# -E: Inherit `ERR` traps in functions and subshells.
+# -e: Exit immediately if a command exits with a non-zero status.
+# -u: Treat unset variables as an error and exit.
+# -o pipefail: Return the exit status of the first failed command in a pipeline.
+set -Eeuo pipefail
+
+# Enable debug mode if the environment variable `DEBUG` is set to `true`.
+if [[ "${DEBUG:-false}" == "true" ]]; then
+	# Print each command before executing it.
+	set -x
+fi
+
 # Utility function to detect the terminal colour support.
 # Please note that we employ the environment flags:
 # - https://no-color.org for disabling colour output,
@@ -90,46 +103,44 @@ semver_ge() {
 check_required_tools() {
 	local tools=("curl" "jq" "chisel" "cast")
 	local missing_tools=()
+	local version_errors=()
 	local min_version="1.3.5"
 
 	for tool in "${tools[@]}"; do
 		if ! command -v "$tool" &>/dev/null; then
 			missing_tools+=("$tool")
-		fi
-
-		if [[ "$tool" == "cast" || "$tool" == "chisel" ]]; then
+		elif [[ "$tool" == "cast" || "$tool" == "chisel" ]]; then
 			tool_version=$(parse_foundry_version "$tool")
 			if ! semver_ge "$tool_version" "$min_version"; then
-				echo -e "${BOLD}${RED}\`$tool\` version \`$tool_version\` is too old. Minimum required is \`$min_version\`.${RESET}"
-				exit 1
+				version_errors+=("\`$tool\` version \`$tool_version\` is too old. Minimum required is \`$min_version\`.")
 			fi
 		fi
 	done
+
+	local has_errors="false"
 
 	if [[ ${#missing_tools[@]} -ne 0 ]]; then
 		echo -e "${BOLD}${RED}The following required tools are not installed:${RESET}"
 		for tool in "${missing_tools[@]}"; do
 			echo -e "${BOLD}${RED}  - $tool${RESET}"
 		done
+		has_errors="true"
+	fi
+
+	if [[ ${#version_errors[@]} -ne 0 ]]; then
+		for error in "${version_errors[@]}"; do
+			echo -e "${BOLD}${RED}$error${RESET}"
+		done
+		has_errors="true"
+	fi
+
+	if [[ "$has_errors" == "true" ]]; then
 		echo -e "${BOLD}${RED}Please install them to run the script properly.${RESET}"
 		exit 1
 	fi
 }
 
 check_required_tools
-
-# Enable strict error handling:
-# -E: Inherit `ERR` traps in functions and subshells.
-# -e: Exit immediately if a command exits with a non-zero status.
-# -u: Treat unset variables as an error and exit.
-# -o pipefail: Return the exit status of the first failed command in a pipeline.
-set -Eeuo pipefail
-
-# Enable debug mode if the environment variable `DEBUG` is set to `true`.
-if [[ "${DEBUG:-false}" == "true" ]]; then
-	# Print each command before executing it.
-	set -x
-fi
 
 # Set the zero address as a global constant.
 readonly ZERO_ADDRESS="0x0000000000000000000000000000000000000000"
@@ -218,35 +229,44 @@ declare -A -r TRUSTED_FOR_DELEGATE_CALL=(
 	["SignMessageLib"]="${SignMessageLib[@]}"
 )
 
+# Define the canonical base URL for the Safe transaction service API.
+readonly BASE_URL="https://api.safe.global/tx-service"
+
 # Define the supported networks from the Safe transaction service.
 # See https://docs.safe.global/advanced/smart-account-supported-networks?service=Transaction+Service.
 declare -A -r API_URLS=(
-	["arbitrum"]="https://safe-transaction-arbitrum.safe.global"
-	["aurora"]="https://safe-transaction-aurora.safe.global"
-	["avalanche"]="https://safe-transaction-avalanche.safe.global"
-	["base"]="https://safe-transaction-base.safe.global"
-	["base-sepolia"]="https://safe-transaction-base-sepolia.safe.global"
-	["berachain"]="https://safe-transaction-berachain.safe.global"
-	["bsc"]="https://safe-transaction-bsc.safe.global"
-	["celo"]="https://safe-transaction-celo.safe.global"
-	["ethereum"]="https://safe-transaction-mainnet.safe.global"
-	["gnosis"]="https://safe-transaction-gnosis-chain.safe.global"
-	["gnosis-chiado"]="https://safe-transaction-chiado.safe.global"
-	["hemi"]="https://safe-transaction-hemi.safe.global"
-	["ink"]="https://safe-transaction-ink.safe.global"
-	["lens"]="https://safe-transaction-lens.safe.global"
-	["linea"]="https://safe-transaction-linea.safe.global"
-	["mantle"]="https://safe-transaction-mantle.safe.global"
-	["optimism"]="https://safe-transaction-optimism.safe.global"
-	["polygon"]="https://safe-transaction-polygon.safe.global"
-	["polygon-zkevm"]="https://safe-transaction-zkevm.safe.global"
-	["scroll"]="https://safe-transaction-scroll.safe.global"
-	["sepolia"]="https://safe-transaction-sepolia.safe.global"
-	["sonic"]="https://safe-transaction-sonic.safe.global"
-	["unichain"]="https://safe-transaction-unichain.safe.global"
-	["worldchain"]="https://safe-transaction-worldchain.safe.global"
-	["xlayer"]="https://safe-transaction-xlayer.safe.global"
-	["zksync"]="https://safe-transaction-zksync.safe.global"
+	["arbitrum"]="${BASE_URL}/arb1"
+	["aurora"]="${BASE_URL}/aurora"
+	["avalanche"]="${BASE_URL}/avax"
+	["base"]="${BASE_URL}/base"
+	["base-sepolia"]="${BASE_URL}/basesep"
+	["berachain"]="${BASE_URL}/berachain"
+	["botanix"]="${BASE_URL}/btc"
+	["bsc"]="${BASE_URL}/bnb"
+	["celo"]="${BASE_URL}/celo"
+	["codex"]="${BASE_URL}/codex"
+	["ethereum"]="${BASE_URL}/eth"
+	["gnosis"]="${BASE_URL}/gno"
+	["gnosis-chiado"]="${BASE_URL}/chi"
+	["hemi"]="${BASE_URL}/hemi"
+	["ink"]="${BASE_URL}/ink"
+	["katana"]="${BASE_URL}/katana"
+	["lens"]="${BASE_URL}/lens"
+	["linea"]="${BASE_URL}/linea"
+	["mantle"]="${BASE_URL}/mantle"
+	["opbnb"]="${BASE_URL}/opbnb"
+	["optimism"]="${BASE_URL}/oeth"
+	["peaq"]="${BASE_URL}/peaq"
+	["polygon"]="${BASE_URL}/pol"
+	["polygon-zkevm"]="${BASE_URL}/zkevm"
+	["scroll"]="${BASE_URL}/scr"
+	["sepolia"]="${BASE_URL}/sep"
+	["sonic"]="${BASE_URL}/sonic"
+	["unichain"]="${BASE_URL}/unichain"
+	["worldchain"]="${BASE_URL}/wc"
+	["xdc"]="${BASE_URL}/xdc"
+	["xlayer"]="${BASE_URL}/okb"
+	["zksync"]="${BASE_URL}/zksync"
 )
 
 # Define the chain IDs of the supported networks from the Safe transaction service.
@@ -257,17 +277,22 @@ declare -A -r CHAIN_IDS=(
 	["base"]="8453"
 	["base-sepolia"]="84532"
 	["berachain"]="80094"
+	["botanix"]="3637"
 	["bsc"]="56"
 	["celo"]="42220"
+	["codex"]="81224"
 	["ethereum"]="1"
 	["gnosis"]="100"
 	["gnosis-chiado"]="10200"
 	["hemi"]="43111"
 	["ink"]="57073"
+	["katana"]="747474"
 	["lens"]="232"
 	["linea"]="59144"
 	["mantle"]="5000"
+	["opbnb"]="204"
 	["optimism"]="10"
+	["peaq"]="3338"
 	["polygon"]="137"
 	["polygon-zkevm"]="1101"
 	["scroll"]="534352"
@@ -275,6 +300,7 @@ declare -A -r CHAIN_IDS=(
 	["sonic"]="146"
 	["unichain"]="130"
 	["worldchain"]="480"
+	["xdc"]="50"
 	["xlayer"]="196"
 	["zksync"]="324"
 )
@@ -690,7 +716,7 @@ calculate_nested_safe_hashes() {
 	echo -e "\n${BOLD}${UNDERLINE}Nested Safe \`approveHash\` Transaction Data and Computed Hashes${RESET}"
 	cat <<EOF
 
-${YELLOW}The specified nested Safe at $nested_safe_address will use the following transaction to approve the primary transaction.${RESET}
+${YELLOW}The specified nested Safe at \`$nested_safe_address\` will use the following transaction to approve the primary transaction.${RESET}
 EOF
 
 	# Calculate the domain and message hashes for the specified nested Safe multisig address.
@@ -770,7 +796,7 @@ warn_if_delegate_call() {
 	if [[ "$operation" -eq 1 && ! " ${TRUSTED_FOR_DELEGATE_CALL[@]} " =~ " ${to} " ]]; then
 		cat <<EOF
 
-${RED}WARNING: The transaction includes an untrusted delegate call to address $to!
+${RED}WARNING: The transaction includes an untrusted delegate call to address \`$to\`!
 This may lead to unexpected behaviour or vulnerabilities. Please review it carefully before you sign!${RESET}
 
 EOF
@@ -1039,7 +1065,7 @@ calculate_nested_safe_offchain_message_hashes() {
 
 	cat <<EOF
 
-${YELLOW}The specified nested Safe at $nested_safe_address will sign the above displayed Safe message $hashed_message via an EIP-712 message object.${RESET}
+${YELLOW}The specified nested Safe at \`$nested_safe_address\` will sign the above displayed Safe message \`$hashed_message\` via an EIP-712 message object.${RESET}
 EOF
 
 	# Calculate and display the hashes.
@@ -1154,6 +1180,10 @@ calculate_safe_hashes() {
 	# Get the Safe multisig version.
 	local version=$(curl -sf "${api_url}/api/v1/safes/${address}/" | jq -r ".version // \"0.0.0\"" || echo "0.0.0")
 
+	# Safe's API allows 1 request per second without authentication.
+	# Wait slightly longer to allow for potential future requests without hitting rate limits.
+	sleep 1.2
+
 	# Validate the nested Safe address if provided.
 	local nested_safe_version=""
 	if [[ -n "$nested_safe_address" ]]; then
@@ -1162,6 +1192,10 @@ calculate_safe_hashes() {
 
 		# Get the nested Safe multisig version.
 		nested_safe_version=$(curl -sf "${api_url}/api/v1/safes/${nested_safe_address}/" | jq -r ".version // \"0.0.0\"" || echo "0.0.0")
+
+		# Safe's API allows 1 request per second without authentication.
+		# Wait slightly longer to allow for potential future requests without hitting rate limits.
+		sleep 1.2
 	fi
 
 	# If --interactive mode is enabled, the version value can be overridden by the user's input.

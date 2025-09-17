@@ -39,23 +39,31 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 
 ## Supported Networks
 
+> [!NOTE]
+> The supported networks are ordered alphabetically by their identifier.
+
 - Arbitrum (identifier: `arbitrum`, chain ID: `42161`)
 - Aurora (identifier: `aurora`, chain ID: `1313161554`)
 - Avalanche (identifier: `avalanche`, chain ID: `43114`)
 - Base (identifier: `base`, chain ID: `8453`)
 - Base Sepolia (identifier: `base-sepolia`, chain ID: `84532`)
 - Berachain (identifier: `berachain`, chain ID: `80094`)
+- Botanix (identifier: `botanix`, chain ID: `3637`)
 - BSC (BNB Smart Chain) (identifier: `bsc`, chain ID: `56`)
 - Celo (identifier: `celo`, chain ID: `42220`)
+- Codex (identifier: `codex`, chain ID: `81224`)
 - Ethereum (identifier: `ethereum`, chain ID: `1`)
 - Gnosis (identifier: `gnosis`, chain ID: `100`)
 - Gnosis Chiado (identifier: `gnosis-chiado`, chain ID: `10200`)
 - Hemi (identifier: `hemi`, chain ID: `43111`)
 - Ink (identifier: `ink`, chain ID: `57073`)
+- Katana (identifier: `katana`, chain ID: `747474`)
 - Lens (identifier: `lens`, chain ID: `232`)
 - Linea (identifier: `linea`, chain ID: `59144`)
 - Mantle (identifier: `mantle`, chain ID: `5000`)
+- opBNB (identifier: `opbnb`, chain ID: `204`)
 - OP (Optimism) (identifier: `optimism`, chain ID: `10`)
+- peaq (identifier: `peaq`, chain ID: `3338`)
 - Polygon (identifier: `polygon`, chain ID: `137`)
 - Polygon zkEVM (identifier: `polygon-zkevm`, chain ID: `1101`)
 - Scroll (identifier: `scroll`, chain ID: `534352`)
@@ -63,6 +71,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - Sonic (identifier: `sonic`, chain ID: `146`)
 - Unichain (identifier: `unichain`, chain ID: `130`)
 - World Chain (identifier: `worldchain`, chain ID: `480`)
+- XDC Network (identifier: `xdc`, chain ID: `50`)
 - X Layer (identifier: `xlayer`, chain ID: `196`)
 - ZKsync Era (identifier: `zksync`, chain ID: `324`)
 
@@ -301,7 +310,7 @@ Enter the `gasPrice` (default: 0): 50
 Enter the `gasToken` (default: 0x0000000000000000000000000000000000000000): 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
 Enter the `refundReceiver` (default: 0x0000000000000000000000000000000000000000): 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
 
-WARNING: The transaction includes an untrusted delegate call to address 0x111CEEee040739fD91D29C34C33E6B3E112F2177!
+WARNING: The transaction includes an untrusted delegate call to address `0x111CEEee040739fD91D29C34C33E6B3E112F2177`!
 This may lead to unexpected behaviour or vulnerabilities. Please review it carefully before you sign!
 
 WARNING: This transaction uses a custom gas token and a custom refund receiver.
@@ -472,7 +481,7 @@ Safe transaction hash: 0xcb8bbe7bf8f8a1f3f57658e450d07d4422356ac042d96a87ba425b1
 
 Nested Safe `approveHash` Transaction Data and Computed Hashes
 
-The specified nested Safe at 0x6bc56d6CE87C86CB0756c616bECFD3Cd32b09251 will use the following transaction to approve the primary transaction.
+The specified nested Safe at `0x6bc56d6CE87C86CB0756c616bECFD3Cd32b09251` will use the following transaction to approve the primary transaction.
 
 > Transaction Data:
 Multisig address: 0x6bc56d6CE87C86CB0756c616bECFD3Cd32b09251
