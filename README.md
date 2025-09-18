@@ -82,6 +82,8 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 
 > [!TIP]
 > For macOS users, please refer to the [macOS Users: Upgrading Bash](#macos-users-upgrading-bash) section.
+> 
+> Alternatively, you can use the Docker container which includes all required dependencies. See the [Docker Usage](#docker-usage) section below.
 
 ```console
 ./safe_hashes.sh [--help] [--version] [--list-networks] --network <network> --address <address>
@@ -198,6 +200,58 @@ chsh -s BASH_PATH
 ```
 
 Make sure to replace `BASH_PATH` with the actual path you retrieved in step 1.
+
+## Docker Usage
+
+Using Docker, you can run `safe-tx-hashes-util` in a containerized environment with all dependencies pre-installed. This is useful if you don't want to install the required tools locally or if you're on a system where installation is challenging.
+
+### Building the Docker Image
+
+Build the Docker image using the provided Dockerfile:
+
+```console
+docker build -t safe-tx-hashes-util:latest .
+```
+
+### Basic Usage
+
+To run `safe-tx-hashes-util` within a docker container, simply prepend any flags you want to use `docker run --rm safe-tx-hashes-util:latest`.
+
+Example displaying help:
+```console
+docker run --rm safe-tx-hashes-util:latest --help
+```
+
+### Using Message Files
+
+When calculating message hashes, you need to mount a local directory containing your message file:
+
+```console
+# First, create a messages directory and add your message file
+mkdir -p messages
+echo "Your message content here" > messages/message.txt
+
+# Run the container with the mounted directory
+docker run --rm -v $(pwd)/messages:/messages:ro safe-tx-hashes-util:latest \
+  --network sepolia \
+  --address 0x657ff0D4eC65D82b2bC1247b0a558bcd2f80A0f1 \
+  --message /messages/message.txt
+```
+
+### With Environment Variables
+
+To use environmental variables, include the `-e` flag.
+
+```console
+# Force color output
+docker run --rm -e FORCE_COLOR=true safe-tx-hashes-util:latest \
+  --network ethereum \
+  --address 0x8FA3b4570B4C96f8036C13b64971BA65867eEB48 \
+  --nonce 39
+```
+
+> [!NOTE]
+> While the Docker container provides isolation, always follow the [Security Best Practices](#security-best-practices-for-using-this-script).
 
 ## Safe Transaction Hashes
 
