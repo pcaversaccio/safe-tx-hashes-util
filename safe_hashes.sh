@@ -61,11 +61,11 @@ setup_colours
 
 # Check the Bash version compatibility.
 if [[ "${BASH_VERSINFO[0]:-0}" -lt 4 ]]; then
-	echo -e "${BOLD}${RED}Error: This script requires Bash 4.0 or higher!${RESET}"
-	echo -e "${BOLD}${RED}Current version: $BASH_VERSION${RESET}"
-	echo -e "${BOLD}${RED}Please upgrade your Bash installation.${RESET}"
-	echo -e "${BOLD}${RED}If you've already upgraded via Homebrew, try running:${RESET}"
-	echo -e "${BOLD}${RED}/opt/homebrew/bin/bash $0 $@${RESET}"
+	echo -e "${BOLD}${RED}Error: This script requires Bash 4.0 or higher!${RESET}" >&2
+	echo -e "${BOLD}${RED}Current version: $BASH_VERSION${RESET}" >&2
+	echo -e "${BOLD}${RED}Please upgrade your Bash installation.${RESET}" >&2
+	echo -e "${BOLD}${RED}If you've already upgraded via Homebrew, try running:${RESET}" >&2
+	echo -e "${BOLD}${RED}/opt/homebrew/bin/bash $0 $@${RESET}" >&2
 	exit 1
 fi
 
@@ -120,22 +120,22 @@ check_required_tools() {
 	local has_errors="false"
 
 	if [[ ${#missing_tools[@]} -ne 0 ]]; then
-		echo -e "${BOLD}${RED}The following required tools are not installed:${RESET}"
+		echo -e "${BOLD}${RED}The following required tools are not installed:${RESET}" >&2
 		for tool in "${missing_tools[@]}"; do
-			echo -e "${BOLD}${RED}  - $tool${RESET}"
+			echo -e "${BOLD}${RED}  - $tool${RESET}" >&2
 		done
 		has_errors="true"
 	fi
 
 	if [[ ${#version_errors[@]} -ne 0 ]]; then
 		for error in "${version_errors[@]}"; do
-			echo -e "${BOLD}${RED}$error${RESET}"
+			echo -e "${BOLD}${RED}$error${RESET}" >&2
 		done
 		has_errors="true"
 	fi
 
 	if [[ "$has_errors" == "true" ]]; then
-		echo -e "${BOLD}${RED}Please install them to run the script properly.${RESET}"
+		echo -e "${BOLD}${RED}Please install them to run the script properly.${RESET}" >&2
 		exit 1
 	fi
 }
@@ -370,11 +370,11 @@ get_latest_git_commit_hash() {
 			echo -e "Latest local commit hash (=version) of the script: ${GREEN}$commit_hash${RESET}."
 			exit 0
 		else
-			echo -e "${BOLD}${RED}No commit hash information available. There may be an issue with your Git installation or repository configuration.${RESET}"
+			echo -e "${BOLD}${RED}No commit hash information available. There may be an issue with your Git installation or repository configuration.${RESET}" >&2
 			exit 1
 		fi
 	else
-		echo -e "${BOLD}${RED}Git is not installed or not found. Unable to retrieve the commit hash information!${RESET}"
+		echo -e "${BOLD}${RED}Git is not installed or not found. Unable to retrieve the commit hash information!${RESET}" >&2
 		exit 1
 	fi
 }
