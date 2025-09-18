@@ -774,6 +774,13 @@ validate_address() {
 		echo -e "${BOLD}${RED}Invalid Ethereum address format: \"${address}\"${RESET}" >&2
 		exit 1
 	fi
+
+	# The Safe Transaction Service API requires addresses in EIP-55 checksum format.
+	local checksum="$(cast --to-checksum-address "$address" 2>/dev/null)"
+	if [[ "$address" != "$checksum" ]]; then
+		echo -e "${BOLD}${RED}Invalid checksum: \"$address\" (expected \"${checksum}\")${RESET}" >&2
+		return 1
+	fi
 }
 
 # Utility function to validate a value parameter.
