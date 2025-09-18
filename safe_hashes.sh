@@ -775,7 +775,7 @@ validate_address() {
 		exit 1
 	fi
 
-	# The Safe Transaction Service API requires addresses in EIP-55 checksum format.
+	# The Safe transaction service API requires addresses in EIP-55 checksum format.
 	local checksum="$(cast --to-checksum-address "$address" 2>/dev/null)"
 	if [[ "$address" != "$checksum" ]]; then
 		echo -e "${BOLD}${RED}Invalid checksum: \"$address\" (expected \"${checksum}\")${RESET}" >&2
