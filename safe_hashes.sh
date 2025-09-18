@@ -779,7 +779,7 @@ validate_address() {
 	local checksum=$(cast to-check-sum-address "$address")
 	if [[ "$address" != "$checksum" ]]; then
 		echo -e "${BOLD}${RED}Invalid checksum: \"$address\" (expected \"${checksum}\")${RESET}" >&2
-		return 1
+		exit 1
 	fi
 }
 
