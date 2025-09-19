@@ -210,7 +210,7 @@ Using [Docker](https://www.docker.com), you can run the [script](./safe_hashes.s
 
 #### Building the Docker Image
 
-Build the [Docker](https://www.docker.com) image using [Docker Compose](https://docs.docker.com/compose):
+Build the [Docker](https://www.docker.com) image using [Docker Compose](https://docs.docker.com/compose/):
 
 ```console
 docker-compose build
@@ -218,7 +218,7 @@ docker-compose build
 
 #### Basic Usage
 
-To run the [script](./safe_hashes.sh) using [Docker Compose](https://docs.docker.com/compose), use the [`docker-compose.yml](./docker-compose.yml) file provided in the repository. The container is named `safe-tx-hashes-util`.
+To run the [script](./safe_hashes.sh) using [Docker Compose](https://docs.docker.com/compose/), use the [`docker-compose.yml](./docker-compose.yml) file provided in the repository. The container is named `safe-tx-hashes-util`.
 
 Example displaying help:
 
@@ -250,7 +250,7 @@ When calculating message hashes, you need to provide a local directory containin
 
 #### With Environment Variables
 
-You can pass environment variables directly via [Docker Compose](https://docs.docker.com/compose):
+You can pass environment variables directly via [Docker Compose](https://docs.docker.com/compose/):
 
 ```console
 # Disable all formatting.
