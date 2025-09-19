@@ -20,6 +20,11 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - [Usage](#usage)
   - [macOS Users: Upgrading Bash](#macos-users-upgrading-bash)
     - [Optional: Set the New Bash as Your Default Shell](#optional-set-the-new-bash-as-your-default-shell)
+  - [Docker Usage](#docker-usage)
+    - [Building the Docker Image](#building-the-docker-image)
+    - [Basic Usage](#basic-usage)
+    - [Using Message Files](#using-message-files)
+    - [With Environment Variables](#with-environment-variables)
 - [Safe Transaction Hashes](#safe-transaction-hashes)
   - [Interactive Mode](#interactive-mode)
   - [Transaction Simulation](#transaction-simulation)
@@ -81,9 +86,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 > Ensure that [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast) and [`chisel`](https://github.com/foundry-rs/foundry/tree/master/crates/chisel) are installed locally. For installation instructions, refer to this [guide](https://getfoundry.sh/introduction/installation/). This [script](./safe_hashes.sh) is designed to work with the latest _stable_ versions of [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast) and [`chisel`](https://github.com/foundry-rs/foundry/tree/master/crates/chisel), starting from version [`1.3.5`](https://github.com/foundry-rs/foundry/releases/tag/v1.3.5).
 
 > [!TIP]
-> For macOS users, please refer to the [macOS Users: Upgrading Bash](#macos-users-upgrading-bash) section.
-> 
-> Alternatively, you can use the Docker container which includes all required dependencies. See the [Docker Usage](#docker-usage) section below.
+> For macOS users, please refer to the [macOS Users: Upgrading Bash](#macos-users-upgrading-bash) section. Alternatively, you can use the Docker container, which comes pre-installed with all required dependencies. For details, see the [Docker Usage](#docker-usage) section below.
 
 ```console
 ./safe_hashes.sh [--help] [--version] [--list-networks] --network <network> --address <address>
@@ -201,57 +204,64 @@ chsh -s BASH_PATH
 
 Make sure to replace `BASH_PATH` with the actual path you retrieved in step 1.
 
-## Docker Usage
+### Docker Usage
 
-Using Docker, you can run `safe-tx-hashes-util` in a containerized environment with all dependencies pre-installed. This is useful if you don't want to install the required tools locally or if you're on a system where installation is challenging.
+Using [Docker](https://www.docker.com), you can run the [script](./safe_hashes.sh) in a containerised environment with all dependencies pre-installed. This is useful if you do not wish to install the required tools locally, or if you are on a system where installation is difficult.
 
-### Building the Docker Image
+#### Building the Docker Image
 
-Build the Docker image using the provided Dockerfile:
+Build the [Docker](https://www.docker.com) image using [Docker Compose](https://docs.docker.com/compose):
 
 ```console
-docker build -t safe-tx-hashes-util:latest .
+docker-compose build
 ```
 
-### Basic Usage
+#### Basic Usage
 
-To run `safe-tx-hashes-util` within a docker container, simply prepend any flags you want to use `docker run --rm safe-tx-hashes-util:latest`.
+To run the [script](./safe_hashes.sh) using [Docker Compose](https://docs.docker.com/compose), use the [`docker-compose.yml](./docker-compose.yml) file provided in the repository. The container is named `safe-tx-hashes-util`.
 
 Example displaying help:
+
 ```console
-docker run --rm safe-tx-hashes-util:latest --help
+docker-compose run --rm safe-tx-hashes-util --help
 ```
 
-### Using Message Files
-
-When calculating message hashes, you need to mount a local directory containing your message file:
+Example calculating the Safe transaction hashes:
 
 ```console
-# First, create a messages directory and add your message file
-mkdir -p messages
-echo "Your message content here" > messages/message.txt
+docker-compose run --rm safe-tx-hashes-util --network arbitrum --address 0x111CEEee040739fD91D29C34C33E6B3E112F2177 --nonce 234
+```
 
-# Run the container with the mounted directory
-docker run --rm -v $(pwd)/messages:/messages:ro safe-tx-hashes-util:latest \
+#### Using Message Files
+
+When calculating message hashes, you need to provide a local directory containing your message file. The included [`docker-compose.yml`](./docker-compose.yml) configuration mounts the `./data` directory by default.
+
+```console
+# First, create a `data` directory and add your message file.
+~$ mkdir -p data
+~$ echo "Your message content here" > data/message.txt
+
+# Run the container with the mounted directory.
+~$ docker-compose run --rm safe-tx-hashes-util \
   --network sepolia \
   --address 0x657ff0D4eC65D82b2bC1247b0a558bcd2f80A0f1 \
-  --message /messages/message.txt
+  --message /data/message.txt
 ```
 
-### With Environment Variables
+#### With Environment Variables
 
-To use environmental variables, include the `-e` flag.
+You can pass environment variables directly via [Docker Compose](https://docs.docker.com/compose):
 
 ```console
-# Force color output
-docker run --rm -e FORCE_COLOR=true safe-tx-hashes-util:latest \
-  --network ethereum \
-  --address 0x8FA3b4570B4C96f8036C13b64971BA65867eEB48 \
-  --nonce 39
+# Disable all formatting.
+docker-compose run --rm -e NO_COLOR=true safe-tx-hashes-util \
+  --network arbitrum \
+  --address 0x111CEEee040739fD91D29C34C33E6B3E112F2177 \
+  --nonce 234
 ```
 
-> [!NOTE]
-> While the Docker container provides isolation, always follow the [Security Best Practices](#security-best-practices-for-using-this-script).
+> [!IMPORTANT]
+> Running in a [Docker](https://www.docker.com) container offers isolation, but it is important to always follow the [Security Best Practices](#security-best-practices-for-using-this-script).
 
 ## Safe Transaction Hashes
 

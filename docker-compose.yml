@@ -1,0 +1,41 @@
+services:
+  safe-tx-hashes-util:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: safe-tx-hashes-util
+
+    security_opt:
+      - no-new-privileges:true # Prevent privilege escalation.
+    cap_drop:
+      - ALL # Drop all Linux kernel capabilities.
+    read_only: true # Make the container's root filesystem read-only.
+
+    working_dir: /app
+
+    volumes:
+      # Define a single volume mapping.
+      - type: bind
+        source: ./data
+        target: /data
+        read_only: true
+        bind:
+          create_host_path: true
+      # Mount the script into the container so it can be run.
+      - type: bind
+        source: ./safe_hashes.sh
+        target: /app/safe_hashes.sh
+        read_only: true
+
+    tmpfs:
+      - /tmp:noexec,nosuid,nodev,size=50m # Mount the `/tmp` directory in RAM with a 50MB size limit and strict security options.
+      - /home/foundry/.foundry # Mount a writable, in-memory directory for Foundry's general cache and config files.
+      - /home/foundry/.svm:exec # Mount a writable and executable directory for the Solidity Version Manager (svm).
+
+    environment:
+      - DEBUG=false # See https://github.com/pcaversaccio/safe-tx-hashes-util/tree/main#usage.
+      - NO_COLOR=false # See https://github.com/pcaversaccio/safe-tx-hashes-util/tree/main#usage.
+      - FOUNDRY_DISABLE_NIGHTLY_WARNING=false
+
+    # Override the image's default command to run the script.
+    entrypoint: ["/bin/bash", "/app/safe_hashes.sh"]

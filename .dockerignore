@@ -1,0 +1,23 @@
+# Ignore all files by default.
+**
+
+# Include only the main script.
+!safe_hashes.sh
+
+# Mount at runtime via volumes; do not copy into the image.
+!data/.dockerignore
+
+# Ignore unnecessary/sensitive files.
+.git
+.gitignore
+Dockerfile*
+docker-compose*.yml
+node_modules
+*.log
+*.env
+*.pem
+*.key
+.vscode
+.idea
+.DS_Store
+Thumbs.db
