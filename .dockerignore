@@ -1,0 +1,5 @@
+# Ignore all files by default.
+**
+
+# Include only the main script.
+!safe_hashes.sh

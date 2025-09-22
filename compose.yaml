@@ -1,0 +1,46 @@
+services:
+  safe-tx-hashes-util:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: safe-tx-hashes-util
+
+    security_opt:
+      - no-new-privileges:true # Prevent privilege escalation.
+      - apparmor=docker-default # Set the `AppArmor` profile for Ubuntu/Debian/openSUSE (restrict file/network access).
+      - label=type:container_t # Set the `SELinux` profile for RHEL/CentOS/Fedora (provide mandatory access control).
+
+    cap_drop:
+      - ALL # Drop all root Linux kernel capabilities.
+
+    read_only: true # Make the container's root filesystem read-only.
+
+    working_dir: /app
+
+    volumes:
+      # Mount the script from the host for live editing without rebuilding the image.
+      - type: bind
+        source: ./safe_hashes.sh
+        target: /app/safe_hashes.sh
+        read_only: true
+      # Mount the host `./data` directory as read-only for off-chain message files.
+      - type: bind
+        source: ./data
+        target: /data
+        read_only: true
+        bind:
+          create_host_path: true
+
+    tmpfs:
+      - /tmp:noexec,nosuid,nodev,size=50m # Store temporary files in memory only (limited to 50MB, not executable).
+      - /home/foundry/.foundry:noexec,nosuid,nodev,size=50m # Keep Foundry's cache and settings in memory (limited to 50MB, cannot run programs from here).
+      - /home/foundry/.svm:exec,nosuid,nodev,size=50m # Keep Solidity Version Manager (`svm`) files in memory (limited to 50MB, programs can run from here).
+
+    environment:
+      - DEBUG=false # See https://github.com/pcaversaccio/safe-tx-hashes-util/tree/main#usage.
+      - NO_COLOR=false # See https://github.com/pcaversaccio/safe-tx-hashes-util/tree/main#usage.
+      - FOUNDRY_DISABLE_NIGHTLY_WARNING=false
+
+    # Override the image's default command to run the script.
+    entrypoint: ["/bin/bash", "/app/safe_hashes.sh"]

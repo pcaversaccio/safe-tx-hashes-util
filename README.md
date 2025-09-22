@@ -20,6 +20,11 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - [Usage](#usage)
   - [macOS Users: Upgrading Bash](#macos-users-upgrading-bash)
     - [Optional: Set the New Bash as Your Default Shell](#optional-set-the-new-bash-as-your-default-shell)
+  - [Docker Usage](#docker-usage)
+    - [Building the Docker Image](#building-the-docker-image)
+    - [Basic Usage](#basic-usage)
+    - [Using Message Files](#using-message-files)
+    - [With Environment Variables](#with-environment-variables)
 - [Safe Transaction Hashes](#safe-transaction-hashes)
   - [Interactive Mode](#interactive-mode)
   - [Transaction Simulation](#transaction-simulation)
@@ -81,7 +86,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 > Ensure that [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast) and [`chisel`](https://github.com/foundry-rs/foundry/tree/master/crates/chisel) are installed locally. For installation instructions, refer to this [guide](https://getfoundry.sh/introduction/installation/). This [script](./safe_hashes.sh) is designed to work with the latest _stable_ versions of [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast) and [`chisel`](https://github.com/foundry-rs/foundry/tree/master/crates/chisel), starting from version [`1.3.5`](https://github.com/foundry-rs/foundry/releases/tag/v1.3.5).
 
 > [!TIP]
-> For macOS users, please refer to the [macOS Users: Upgrading Bash](#macos-users-upgrading-bash) section.
+> For macOS users, please refer to the [macOS Users: Upgrading Bash](#macos-users-upgrading-bash) section. Alternatively, you can use the Docker container, which comes pre-installed with all required dependencies. For details, see the [Docker Usage](#docker-usage) section below.
 
 ```console
 ./safe_hashes.sh [--help] [--version] [--list-networks] --network <network> --address <address>
@@ -198,6 +203,65 @@ chsh -s BASH_PATH
 ```
 
 Make sure to replace `BASH_PATH` with the actual path you retrieved in step 1.
+
+### Docker Usage
+
+Using [Docker](https://www.docker.com), you can run the [script](./safe_hashes.sh) in a containerised environment with all dependencies pre-installed. This is useful if you do not wish to install the required tools locally, or if you are on a system where installation is difficult.
+
+#### Building the Docker Image
+
+Build the [Docker](https://www.docker.com) image using [Docker Compose](https://docs.docker.com/compose/):
+
+```console
+docker-compose build
+```
+
+#### Basic Usage
+
+To run the [script](./safe_hashes.sh) using [Docker Compose](https://docs.docker.com/compose/), use the [`compose.yaml`](./compose.yaml) file provided in the repository. The container is named `safe-tx-hashes-util`.
+
+Example displaying help:
+
+```console
+docker-compose run --rm safe-tx-hashes-util --help
+```
+
+Example calculating the Safe transaction hashes:
+
+```console
+docker-compose run --rm safe-tx-hashes-util --network arbitrum --address 0x111CEEee040739fD91D29C34C33E6B3E112F2177 --nonce 234
+```
+
+#### Using Message Files
+
+When calculating off-chain message hashes, you need to provide a local directory containing your message file. The included [`compose.yaml`](./compose.yaml) configuration mounts the `./data` directory by default.
+
+```console
+# First, create a `data` directory and add your message file.
+~$ mkdir -p data
+~$ echo "Your message content here" > data/message.txt
+
+# Run the container with the mounted directory.
+~$ docker-compose run --rm safe-tx-hashes-util \
+  --network sepolia \
+  --address 0x657ff0D4eC65D82b2bC1247b0a558bcd2f80A0f1 \
+  --message /data/message.txt
+```
+
+#### With Environment Variables
+
+You can pass environment variables directly via [Docker Compose](https://docs.docker.com/compose/):
+
+```console
+# Disable all formatting.
+docker-compose run --rm -e NO_COLOR=true safe-tx-hashes-util \
+  --network arbitrum \
+  --address 0x111CEEee040739fD91D29C34C33E6B3E112F2177 \
+  --nonce 234
+```
+
+> [!IMPORTANT]
+> Running in a [Docker](https://www.docker.com) container offers isolation, but it is important to always follow the [Security Best Practices](#security-best-practices-for-using-this-script).
 
 ## Safe Transaction Hashes
 
