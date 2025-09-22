@@ -234,7 +234,7 @@ docker-compose run --rm safe-tx-hashes-util --network arbitrum --address 0x111CE
 
 #### Using Message Files
 
-When calculating message hashes, you need to provide a local directory containing your message file. The included [`docker-compose.yml`](./docker-compose.yml) configuration mounts the `./data` directory by default.
+When calculating off-chain message hashes, you need to provide a local directory containing your message file. The included [`docker-compose.yml`](./docker-compose.yml) configuration mounts the `./data` directory by default.
 
 ```console
 # First, create a `data` directory and add your message file.
