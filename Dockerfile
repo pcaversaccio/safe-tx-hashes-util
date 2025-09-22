@@ -1,4 +1,4 @@
-# For reproducible builds, consider pinning to a specific digest instead of `latest.
+# For reproducible builds, consider pinning to a specific digest instead of `latest`.
 # See https://github.com/foundry-rs/foundry/pkgs/container/foundry.
 FROM ghcr.io/foundry-rs/foundry:latest
 
@@ -16,5 +16,5 @@ RUN apt-get update && \
 COPY ./safe_hashes.sh /app/safe_hashes.sh
 RUN chmod +x /app/safe_hashes.sh
 
-# Switch back to the default, non-root foundry user for security.
+# Switch back to the default, non-root Foundry user for security.
 USER foundry
