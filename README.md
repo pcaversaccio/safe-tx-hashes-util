@@ -218,7 +218,7 @@ docker-compose build
 
 #### Basic Usage
 
-To run the [script](./safe_hashes.sh) using [Docker Compose](https://docs.docker.com/compose/), use the [`docker-compose.yml`](./docker-compose.yml) file provided in the repository. The container is named `safe-tx-hashes-util`.
+To run the [script](./safe_hashes.sh) using [Docker Compose](https://docs.docker.com/compose/), use the [`compose.yaml`](./compose.yaml) file provided in the repository. The container is named `safe-tx-hashes-util`.
 
 Example displaying help:
 
@@ -234,7 +234,7 @@ docker-compose run --rm safe-tx-hashes-util --network arbitrum --address 0x111CE
 
 #### Using Message Files
 
-When calculating off-chain message hashes, you need to provide a local directory containing your message file. The included [`docker-compose.yml`](./docker-compose.yml) configuration mounts the `./data` directory by default.
+When calculating off-chain message hashes, you need to provide a local directory containing your message file. The included [`compose.yaml`](./compose.yaml) configuration mounts the `./data` directory by default.
 
 ```console
 # First, create a `data` directory and add your message file.
