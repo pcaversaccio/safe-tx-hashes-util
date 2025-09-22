@@ -218,7 +218,7 @@ docker-compose build
 
 #### Basic Usage
 
-To run the [script](./safe_hashes.sh) using [Docker Compose](https://docs.docker.com/compose/), use the [`docker-compose.yml](./docker-compose.yml) file provided in the repository. The container is named `safe-tx-hashes-util`.
+To run the [script](./safe_hashes.sh) using [Docker Compose](https://docs.docker.com/compose/), use the [`docker-compose.yml`](./docker-compose.yml) file provided in the repository. The container is named `safe-tx-hashes-util`.
 
 Example displaying help:
 
