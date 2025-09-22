@@ -3,6 +3,3 @@
 
 # Include only the main script.
 !safe_hashes.sh
-
-# Mount at runtime via volumes; do not copy into the image.
-!data/.dockerignore
