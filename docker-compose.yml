@@ -35,7 +35,7 @@ services:
     tmpfs:
       - /tmp:noexec,nosuid,nodev,size=50m # Store temporary files in memory only (limited to 50MB, not executable).
       - /home/foundry/.foundry:noexec,nosuid,nodev,size=50m # Keep Foundry's cache and settings in memory (limited to 50MB, cannot run programs from here).
-      - /home/foundry/.svm:exec,nosuid,nodev,size=50m # Keep Solidity Version Manager (svm) files in memory (limited to 50MB, programs can run from here).
+      - /home/foundry/.svm:exec,nosuid,nodev,size=50m # Keep Solidity Version Manager (`svm`) files in memory (limited to 50MB, programs can run from here).
 
     environment:
       - DEBUG=false # See https://github.com/pcaversaccio/safe-tx-hashes-util/tree/main#usage.
