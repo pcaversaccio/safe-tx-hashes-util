@@ -209,7 +209,7 @@ Make sure to replace `BASH_PATH` with the actual path you retrieved in step 1.
 Using [Docker](https://www.docker.com), you can run the [script](./safe_hashes.sh) in a containerised environment with all dependencies pre-installed. This is useful if you do not wish to install the required tools locally, or if you are on a system where installation is difficult.
 
 > [!TIP]
-> The [Docker](https://www.docker.com) setup can also be used with [Podman](https://podman.io) by simply replacing `docker-compose` with [`podman-compose`](https://github.com/containers/podman-compose) in the commands. On Windows, you may need to disable or override the `AppArmor` security option in the [`compose.yaml`](./compose.yaml) file, as it is not supported outside Linux environments.
+> The [Docker](https://www.docker.com) setup can also be used with [Podman](https://podman.io) by simply replacing `docker-compose` with [`podman-compose`](https://github.com/containers/podman-compose) in the commands. On Windows and macOS, you may need to disable or override the [`AppArmor`](https://apparmor.net) security option in the [`compose.yaml`](./compose.yaml) file, as it is only supported on Linux environments. [Docker](https://www.docker.com) typically ignores unsupported security options like [`AppArmor`](https://apparmor.net) on non-Linux systems, but [Podman](https://podman.io) will fail when encountering them.
 
 #### Building the Docker Image
 
