@@ -40,7 +40,6 @@ services:
     environment:
       - DEBUG=false # See https://github.com/pcaversaccio/safe-tx-hashes-util/tree/main#usage.
       - NO_COLOR=false # See https://github.com/pcaversaccio/safe-tx-hashes-util/tree/main#usage.
-      - FOUNDRY_DISABLE_NIGHTLY_WARNING=false
 
     # Override the image's default command to run the script.
     entrypoint: ["/bin/bash", "/app/safe_hashes.sh"]

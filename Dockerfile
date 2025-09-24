@@ -1,6 +1,6 @@
-# For reproducible builds, consider pinning to a specific digest instead of `latest`.
+# For reproducible builds, consider pinning to a specific digest instead of `stable`.
 # See https://github.com/foundry-rs/foundry/pkgs/container/foundry.
-FROM ghcr.io/foundry-rs/foundry:latest
+FROM ghcr.io/foundry-rs/foundry:stable
 
 # Switch to the root user to install the necessary packages.
 USER root
