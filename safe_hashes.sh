@@ -257,6 +257,7 @@ declare -A -r API_URLS=(
 	["opbnb"]="${BASE_URL}/opbnb"
 	["optimism"]="${BASE_URL}/oeth"
 	["peaq"]="${BASE_URL}/peaq"
+	["plasma"="https://safe-transaction-plasma.safe.global/"
 	["polygon"]="${BASE_URL}/pol"
 	["polygon-zkevm"]="${BASE_URL}/zkevm"
 	["scroll"]="${BASE_URL}/scr"
