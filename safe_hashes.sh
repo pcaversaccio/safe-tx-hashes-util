@@ -294,6 +294,7 @@ declare -A -r CHAIN_IDS=(
 	["opbnb"]="204"
 	["optimism"]="10"
 	["peaq"]="3338"
+	["plasma"]="9745"
 	["polygon"]="137"
 	["polygon-zkevm"]="1101"
 	["scroll"]="534352"
