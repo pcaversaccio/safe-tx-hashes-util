@@ -235,6 +235,7 @@ readonly BASE_URL="https://api.safe.global/tx-service"
 # Define the supported networks from the Safe transaction service.
 # See https://docs.safe.global/advanced/smart-account-supported-networks?service=Transaction+Service.
 declare -A -r API_URLS=(
+	["0g"]="${BASE_URL}/0g"
 	["arbitrum"]="${BASE_URL}/arb1"
 	["aurora"]="${BASE_URL}/aurora"
 	["avalanche"]="${BASE_URL}/avax"
@@ -254,10 +255,11 @@ declare -A -r API_URLS=(
 	["lens"]="${BASE_URL}/lens"
 	["linea"]="${BASE_URL}/linea"
 	["mantle"]="${BASE_URL}/mantle"
+	["monad"]="${BASE_URL}/monad"
 	["opbnb"]="${BASE_URL}/opbnb"
 	["optimism"]="${BASE_URL}/oeth"
 	["peaq"]="${BASE_URL}/peaq"
-	["plasma"]="https://safe-transaction-plasma.safe.global/"
+	["plasma"]="${BASE_URL}/plasma"
 	["polygon"]="${BASE_URL}/pol"
 	["polygon-zkevm"]="${BASE_URL}/zkevm"
 	["scroll"]="${BASE_URL}/scr"
@@ -272,6 +274,7 @@ declare -A -r API_URLS=(
 
 # Define the chain IDs of the supported networks from the Safe transaction service.
 declare -A -r CHAIN_IDS=(
+	["0g"]="16661"
 	["arbitrum"]="42161"
 	["aurora"]="1313161554"
 	["avalanche"]="43114"
@@ -291,6 +294,7 @@ declare -A -r CHAIN_IDS=(
 	["lens"]="232"
 	["linea"]="59144"
 	["mantle"]="5000"
+	["monad"]="143"
 	["opbnb"]="204"
 	["optimism"]="10"
 	["peaq"]="3338"

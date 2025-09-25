@@ -47,6 +47,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 > [!NOTE]
 > The supported networks are ordered alphabetically by their identifier.
 
+- 0G (identifier: `0g`, chain ID: `16661`)
 - Arbitrum (identifier: `arbitrum`, chain ID: `42161`)
 - Aurora (identifier: `aurora`, chain ID: `1313161554`)
 - Avalanche (identifier: `avalanche`, chain ID: `43114`)
@@ -66,9 +67,11 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - Lens (identifier: `lens`, chain ID: `232`)
 - Linea (identifier: `linea`, chain ID: `59144`)
 - Mantle (identifier: `mantle`, chain ID: `5000`)
+- Monad (identifier: `monad`, chain ID: `143`)
 - opBNB (identifier: `opbnb`, chain ID: `204`)
 - OP (Optimism) (identifier: `optimism`, chain ID: `10`)
 - peaq (identifier: `peaq`, chain ID: `3338`)
+- plasma (identifier: `plasma`, chain ID: `9745`)
 - Polygon (identifier: `polygon`, chain ID: `137`)
 - Polygon zkEVM (identifier: `polygon-zkevm`, chain ID: `1101`)
 - Scroll (identifier: `scroll`, chain ID: `534352`)
