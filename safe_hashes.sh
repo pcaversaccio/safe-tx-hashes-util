@@ -1352,42 +1352,8 @@ EOF
 		value="${value_input:-$value}"
 		validate_value $value "value"
 
-		# Display data separately to avoid terminal buffer issues with large calldata
-		echo "Default \`data\` value:"
-		echo "How would you like to provide the \`data\`?"
-		echo "  1) Use default value shown above (press Enter)"
-		echo "  2) Enter/paste data directly"
-		echo "  3) Read from a file"
-		read -rp "Choose an option (1/2/3): " data_option
-		data_option="${data_option:-1}"
-		
-		case "$data_option" in
-		1)
-			# Use default
-			;;
-		2)
-			echo "Enter the \`data\` (for large data, consider using option 3):"
-			# Read without prompt to avoid buffer issues
-			IFS= read -r data_input
-			if [[ -n "$data_input" ]]; then
-				data="$data_input"
-			fi
-			;;
-		3)
-			read -rp "Enter the file path containing the data: " data_file
-			if [[ -f "$data_file" ]]; then
-				# Read the entire file content, removing any whitespace/newlines
-				data=$(tr -d '[:space:]' < "$data_file")
-				echo "Data loaded from file: ${data:0:66}..." # Show first 66 chars
-			else
-				echo "${RED}Error: File not found: $data_file${RESET}"
-				echo "Using default value instead."
-			fi
-			;;
-		*)
-			echo "${YELLOW}Invalid option. Using default value.${RESET}"
-			;;
-		esac
+		read -erp "Enter the \`data\` (default: $data): " data_input
+		data="${data_input:-$data}"
 
 		while true; do
 			read -rp "Enter the \`operation\` (default: $operation; 0 = CALL, 1 = DELEGATECALL): " operation_input
