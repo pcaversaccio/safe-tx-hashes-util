@@ -1352,7 +1352,7 @@ EOF
 		value="${value_input:-$value}"
 		validate_value $value "value"
 
-		read -rp "Enter the \`data\` (default: $data): " data_input
+		read -erp "Enter the \`data\` (default: $data): " data_input
 		data="${data_input:-$data}"
 
 		while true; do
