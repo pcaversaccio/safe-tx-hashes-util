@@ -25,23 +25,25 @@ fi
 # - https://no-color.org for disabling colour output,
 # - https://force-color.org for forcing colour output.
 # Only the exact value `true` is accepted to avoid accidental activation.
+# Also, we set the variable `CAST_COLOUR` used by `cast` (`auto`/`always`/`never`).
+# See: https://getfoundry.sh/cast/reference/cast/.
 setup_colours() {
 	if [[ "${NO_COLOR:-false}" == "true" ]]; then
 		readonly COLOUR_ENABLED=0
-		readonly CAST_COLOUR=never
+		readonly CAST_COLOUR="never"
 	elif [[ "${FORCE_COLOR:-false}" == "true" ]]; then
 		readonly COLOUR_ENABLED=1
-		readonly CAST_COLOUR=always
+		readonly CAST_COLOUR="always"
 	# Enable colours only if:
 	# 1) output is a terminal (not piped or redirected),
 	# 2) the `tput` command is available,
 	# 3) and the terminal supports at least 8 colours (i.e. the standard ANSI colours).
 	elif [[ -t 1 && -n "$(command -v tput)" && "$(tput colors)" -ge 8 ]]; then
 		readonly COLOUR_ENABLED=1
-		readonly CAST_COLOUR=always
+		readonly CAST_COLOUR="always"
 	else
 		readonly COLOUR_ENABLED=0
-		readonly CAST_COLOUR=never
+		readonly CAST_COLOUR="never"
 	fi
 
 	if [[ "$COLOUR_ENABLED" -eq 1 ]]; then
