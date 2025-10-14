@@ -28,16 +28,20 @@ fi
 setup_colours() {
 	if [[ "${NO_COLOR:-false}" == "true" ]]; then
 		readonly COLOUR_ENABLED=0
+		readonly CAST_COLOUR=never
 	elif [[ "${FORCE_COLOR:-false}" == "true" ]]; then
 		readonly COLOUR_ENABLED=1
+		readonly CAST_COLOUR=always
 	# Enable colours only if:
 	# 1) output is a terminal (not piped or redirected),
 	# 2) the `tput` command is available,
 	# 3) and the terminal supports at least 8 colours (i.e. the standard ANSI colours).
 	elif [[ -t 1 && -n "$(command -v tput)" && "$(tput colors)" -ge 8 ]]; then
 		readonly COLOUR_ENABLED=1
+		readonly CAST_COLOUR=always
 	else
 		readonly COLOUR_ENABLED=0
+		readonly CAST_COLOUR=never
 	fi
 
 	if [[ "$COLOUR_ENABLED" -eq 1 ]]; then
@@ -938,7 +942,7 @@ Please note that we override specific Safe contract storage slots for this call:
 
 Then execute the \`cast call --trace\` command with the transaction payload from \`signer_address\` address \`$signer_address\` using the overridden states:${RESET}
 \`\`\`bash
-${GREEN}cast call --trace --from "$signer_address" \\
+${GREEN}cast call --color $CAST_COLOUR --trace --from "$signer_address" \\
   "$address" \\
   --data "$safe_tx_payload" \\
   --override-state-diff "$address:$owner_slot:1,$address:4:1,$address:$GUARD_STORAGE_SLOT:0,$address:$MODULE_GUARD_STORAGE_SLOT:0" \\
@@ -954,7 +958,7 @@ EOF
 	# - Disable the configured transaction and module guards.
 	# Then execute the `cast call --trace` command with the transaction payload from
 	# `signer_address` using the overridden state.
-	cast call --trace --from "$signer_address" \
+	cast call --color $CAST_COLOUR --trace --from "$signer_address" \
 		"$address" \
 		--data "$safe_tx_payload" \
 		--override-state-diff "$address:$owner_slot:1,$address:4:1,$address:5:$nonce,$address:$GUARD_STORAGE_SLOT:0,$address:$MODULE_GUARD_STORAGE_SLOT:0" \
