@@ -212,14 +212,14 @@ Make sure to replace `BASH_PATH` with the actual path you retrieved in step 1.
 Using [Docker](https://www.docker.com), you can run the [script](./safe_hashes.sh) in a containerised environment with all dependencies pre-installed. This is useful if you do not wish to install the required tools locally, or if you are on a system where installation is difficult.
 
 > [!TIP]
-> The [Docker](https://www.docker.com) setup can also be used with [Podman](https://podman.io) by simply replacing `docker-compose` with [`podman-compose`](https://github.com/containers/podman-compose) in the commands. On Windows and macOS, you may need to disable or override the [`AppArmor`](https://apparmor.net) security option in the [`compose.yaml`](./compose.yaml) file, as it is only supported on Linux environments. [Docker](https://www.docker.com) typically ignores unsupported security options like [`AppArmor`](https://apparmor.net) on non-Linux systems, but [Podman](https://podman.io) will fail when encountering them.
+> The [Docker](https://www.docker.com) setup can also be used with [Podman](https://podman.io) by simply replacing `docker compose` with [`podman-compose`](https://github.com/containers/podman-compose) in the commands. On Windows and macOS, you may need to disable or override the [`AppArmor`](https://apparmor.net) security option in the [`compose.yaml`](./compose.yaml) file, as it is only supported on Linux environments. [Docker](https://www.docker.com) typically ignores unsupported security options like [`AppArmor`](https://apparmor.net) on non-Linux systems, but [Podman](https://podman.io) will fail when encountering them.
 
 #### Building the Docker Image
 
 Build the [Docker](https://www.docker.com) image using [Docker Compose](https://docs.docker.com/compose/):
 
 ```console
-docker-compose build
+docker compose build
 ```
 
 #### Basic Usage
@@ -229,13 +229,13 @@ To run the [script](./safe_hashes.sh) using [Docker Compose](https://docs.docker
 Example displaying help:
 
 ```console
-docker-compose run --rm safe-tx-hashes-util --help
+docker compose run --rm safe-tx-hashes-util --help
 ```
 
 Example calculating the Safe transaction hashes:
 
 ```console
-docker-compose run --rm safe-tx-hashes-util --network arbitrum --address 0x111CEEee040739fD91D29C34C33E6B3E112F2177 --nonce 234
+docker compose run --rm safe-tx-hashes-util --network arbitrum --address 0x111CEEee040739fD91D29C34C33E6B3E112F2177 --nonce 234
 ```
 
 #### Using Message Files
@@ -248,7 +248,7 @@ When calculating off-chain message hashes, you need to provide a local directory
 ~$ echo "Your message content here" > data/message.txt
 
 # Run the container with the mounted directory.
-~$ docker-compose run --rm safe-tx-hashes-util \
+~$ docker compose run --rm safe-tx-hashes-util \
   --network sepolia \
   --address 0x657ff0D4eC65D82b2bC1247b0a558bcd2f80A0f1 \
   --message /data/message.txt
@@ -260,7 +260,7 @@ You can pass environment variables directly via [Docker Compose](https://docs.do
 
 ```console
 # Disable all formatting.
-docker-compose run --rm -e NO_COLOR=true safe-tx-hashes-util \
+docker compose run --rm -e NO_COLOR=true safe-tx-hashes-util \
   --network arbitrum \
   --address 0x111CEEee040739fD91D29C34C33E6B3E112F2177 \
   --nonce 234
