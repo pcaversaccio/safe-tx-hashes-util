@@ -496,7 +496,7 @@ Gas used: 126695
 
 ### Nested Safes
 
-This [script](./safe_hashes.sh) supports calculating the Safe transaction hashes for nested Safe (i.e. use a Safe as a signatory to another Safe) approval transactions. When a nested Safe needs to approve a transaction on the primary Safe, it must call the [`approveHash(bytes32)`](https://github.com/safe-global/safe-smart-account/blob/bdcfce3a76c4d1dfb256ac2ca971be7cfd6e493a/contracts/Safe.sol#L372-L379) function on the target Safe with the Safe transaction hash to approve:
+This [script](./safe_hashes.sh) supports calculating the Safe transaction hashes for nested Safe (i.e. use a Safe as a signatory to another Safe) approval transactions. When a nested Safe needs to approve a transaction on the primary Safe, it must call the [`approveHash(bytes32)`](https://github.com/safe-fndn/safe-smart-account/blob/bdcfce3a76c4d1dfb256ac2ca971be7cfd6e493a/contracts/Safe.sol#L372-L379) function on the target Safe with the Safe transaction hash to approve:
 
 ```solidity
 function approveHash(bytes32 hashToApprove) external override {

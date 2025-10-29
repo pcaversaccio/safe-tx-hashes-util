@@ -162,27 +162,27 @@ global_safe_tx_hash_simulated="0x00000000000000000000000000000000000000000000000
 
 # Set the type hash constants.
 # => `keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");`
-# See: https://github.com/safe-global/safe-smart-account/blob/a0a1d4292006e26c4dbd52282f4c932e1ffca40f/contracts/Safe.sol#L54-L57.
+# See: https://github.com/safe-fndn/safe-smart-account/blob/a0a1d4292006e26c4dbd52282f4c932e1ffca40f/contracts/Safe.sol#L54-L57.
 readonly DOMAIN_SEPARATOR_TYPEHASH="0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218"
 # => `keccak256("EIP712Domain(address verifyingContract)");`
-# See: https://github.com/safe-global/safe-smart-account/blob/703dde2ea9882a35762146844d5cfbeeec73e36f/contracts/GnosisSafe.sol#L20-L23.
+# See: https://github.com/safe-fndn/safe-smart-account/blob/703dde2ea9882a35762146844d5cfbeeec73e36f/contracts/GnosisSafe.sol#L20-L23.
 readonly DOMAIN_SEPARATOR_TYPEHASH_OLD="0x035aff83d86937d35b32e04f0ddc6ff469290eef2f1b692d8a815c89404d4749"
 # => `keccak256("SafeTx(address to,uint256 value,bytes data,uint8 operation,uint256 safeTxGas,uint256 baseGas,uint256 gasPrice,address gasToken,address refundReceiver,uint256 nonce)");`
-# See: https://github.com/safe-global/safe-smart-account/blob/a0a1d4292006e26c4dbd52282f4c932e1ffca40f/contracts/Safe.sol#L59-L62.
+# See: https://github.com/safe-fndn/safe-smart-account/blob/a0a1d4292006e26c4dbd52282f4c932e1ffca40f/contracts/Safe.sol#L59-L62.
 readonly SAFE_TX_TYPEHASH="0xbb8310d486368db6bd6f849402fdd73ad53d316b5a4b2644ad6efe0f941286d8"
 # => `keccak256("SafeTx(address to,uint256 value,bytes data,uint8 operation,uint256 safeTxGas,uint256 dataGas,uint256 gasPrice,address gasToken,address refundReceiver,uint256 nonce)");`
-# See: https://github.com/safe-global/safe-smart-account/blob/427d6f7e779431333c54bcb4d4cde31e4d57ce96/contracts/GnosisSafe.sol#L25-L28.
+# See: https://github.com/safe-fndn/safe-smart-account/blob/427d6f7e779431333c54bcb4d4cde31e4d57ce96/contracts/GnosisSafe.sol#L25-L28.
 readonly SAFE_TX_TYPEHASH_OLD="0x14d461bc7412367e924637b363c7bf29b8f47e2f84869f4426e5633d8af47b20"
 # => `keccak256("SafeMessage(bytes message)");`
-# See: https://github.com/safe-global/safe-smart-account/blob/febab5e4e859e6e65914f17efddee415e4992961/contracts/libraries/SignMessageLib.sol#L12-L13.
+# See: https://github.com/safe-fndn/safe-smart-account/blob/febab5e4e859e6e65914f17efddee415e4992961/contracts/libraries/SignMessageLib.sol#L12-L13.
 readonly SAFE_MSG_TYPEHASH="0x60b3cbf8b4a223d68d641b3b6ddf9a298e7f33710cf3d3a9d1146b5a6150fbca"
 
 # Set the storage slots for the configured transaction and module guards.
 # => `keccak256("guard_manager.guard.address");`
-# See: https://github.com/safe-global/safe-smart-account/blob/333f84083e58df8e70b03e7f7df1947c1d77b262/contracts/libraries/SafeStorage.sol#L63-L67.
+# See: https://github.com/safe-fndn/safe-smart-account/blob/333f84083e58df8e70b03e7f7df1947c1d77b262/contracts/libraries/SafeStorage.sol#L63-L67.
 readonly GUARD_STORAGE_SLOT="0x4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c8"
 # => `keccak256("module_manager.module_guard.address");`
-# See: https://github.com/safe-global/safe-smart-account/blob/333f84083e58df8e70b03e7f7df1947c1d77b262/contracts/libraries/SafeStorage.sol#L69-L73.
+# See: https://github.com/safe-fndn/safe-smart-account/blob/333f84083e58df8e70b03e7f7df1947c1d77b262/contracts/libraries/SafeStorage.sol#L69-L73.
 readonly MODULE_GUARD_STORAGE_SLOT="0xb104e0b93118902c651344349b610029d694cfdec91c589c91ebafbcd0289947"
 
 # Set the trusted (i.e. for delegate calls) `MultiSendCallOnly` addresses:
@@ -600,7 +600,7 @@ calculate_domain_hash() {
 	local clean_version=$(get_version "$version")
 
 	# Safe multisig versions `<= 1.2.0` use a legacy (i.e. without `chainId`) `DOMAIN_SEPARATOR_TYPEHASH` value.
-	# Starting with version `1.3.0`, the `chainId` field was introduced: https://github.com/safe-global/safe-smart-account/pull/264.
+	# Starting with version `1.3.0`, the `chainId` field was introduced: https://github.com/safe-fndn/safe-smart-account/pull/264.
 	if [[ "$(printf "%s\n%s" "$clean_version" "1.2.0" | sort -V | head -n1)" == "$clean_version" ]]; then
 		domain_separator_typehash="$DOMAIN_SEPARATOR_TYPEHASH_OLD"
 		domain_hash_args="$domain_separator_typehash, $address"
@@ -650,7 +650,7 @@ calculate_hashes() {
 
 	# Safe multisig versions `< 1.0.0` use a legacy (i.e. the parameter value `baseGas` was
 	# called `dataGas` previously) `SAFE_TX_TYPEHASH` value. Starting with version `1.0.0`,
-	# `baseGas` was introduced: https://github.com/safe-global/safe-smart-account/pull/90.
+	# `baseGas` was introduced: https://github.com/safe-fndn/safe-smart-account/pull/90.
 	if [[ "$(printf "%s\n%s" "$clean_version" "1.0.0" | sort -V | head -n1)" == "$clean_version" && "$clean_version" != "1.0.0" ]]; then
 		safe_tx_typehash="$SAFE_TX_TYPEHASH_OLD"
 	fi
@@ -709,9 +709,9 @@ calculate_nested_safe_hashes() {
 	local to="$target_safe_address"
 	local value="0"
 	# Encode the `approveHash(bytes32)` function call with the Safe transaction hash.
-	# See (`approveHash` function): https://github.com/safe-global/safe-smart-account/blob/bdcfce3a76c4d1dfb256ac2ca971be7cfd6e493a/contracts/Safe.sol#L372-L379.
-	# See (`execTransaction` function part): https://github.com/safe-global/safe-smart-account/blob/bdcfce3a76c4d1dfb256ac2ca971be7cfd6e493a/contracts/Safe.sol#L108-L143.
-	# See (`checkNSignatures` function part): https://github.com/safe-global/safe-smart-account/blob/bdcfce3a76c4d1dfb256ac2ca971be7cfd6e493a/contracts/Safe.sol#L318-L323.
+	# See (`approveHash` function): https://github.com/safe-fndn/safe-smart-account/blob/bdcfce3a76c4d1dfb256ac2ca971be7cfd6e493a/contracts/Safe.sol#L372-L379.
+	# See (`execTransaction` function part): https://github.com/safe-fndn/safe-smart-account/blob/bdcfce3a76c4d1dfb256ac2ca971be7cfd6e493a/contracts/Safe.sol#L108-L143.
+	# See (`checkNSignatures` function part): https://github.com/safe-fndn/safe-smart-account/blob/bdcfce3a76c4d1dfb256ac2ca971be7cfd6e493a/contracts/Safe.sol#L318-L323.
 	# => `bytes4(keccak256("approveHash(bytes32)"));`
 	local approve_hash_signature="0xd4d9bdcd"
 	# => `abi.encodePacked(bytes4(keccak256("approveHash(bytes32)")), bytes32(safeTxHash));`
@@ -811,7 +811,7 @@ warn_if_delegate_call() {
 	local to="$2"
 
 	# Warn the user if `operation` equals `1`, implying a `delegatecall`, and if the `to` address is untrusted.
-	# See: https://github.com/safe-global/safe-smart-account/blob/34359e8305d618b7d74e39ed370a6b59ab14f827/contracts/libraries/Enum.sol.
+	# See: https://github.com/safe-fndn/safe-smart-account/blob/34359e8305d618b7d74e39ed370a6b59ab14f827/contracts/libraries/Enum.sol.
 	if [[ "$operation" -eq 1 && ! " ${TRUSTED_FOR_DELEGATE_CALL[@]} " =~ " ${to} " ]]; then
 		cat <<EOF
 
@@ -916,7 +916,7 @@ simulate_transaction() {
 		"$signature")
 
 	# The (partial) storage layout of the Safe contracts (since `v0.1.0`):
-	# See: https://github.com/safe-global/safe-smart-account/blob/333f84083e58df8e70b03e7f7df1947c1d77b262/contracts/libraries/SafeStorage.sol.
+	# See: https://github.com/safe-fndn/safe-smart-account/blob/333f84083e58df8e70b03e7f7df1947c1d77b262/contracts/libraries/SafeStorage.sol.
 	# - `masterCopy` (slot: 0, offset: 0, size: 20 bytes),
 	# - `modules`    (slot: 1, offset: 0, size: 32 bytes),
 	# - `owners`     (slot: 2, offset: 0, size: 32 bytes),
