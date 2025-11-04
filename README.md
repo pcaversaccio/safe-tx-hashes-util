@@ -53,6 +53,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - Avalanche (identifier: `avalanche`, chain ID: `43114`)
 - Base (identifier: `base`, chain ID: `8453`)
 - Base Sepolia (identifier: `base-sepolia`, chain ID: `84532`)
+- Bepolia (identifier: `bepolia`, chain ID: `80069`)
 - Berachain (identifier: `berachain`, chain ID: `80094`)
 - Botanix (identifier: `botanix`, chain ID: `3637`)
 - BSC (BNB Smart Chain) (identifier: `bsc`, chain ID: `56`)
