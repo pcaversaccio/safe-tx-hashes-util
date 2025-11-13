@@ -1097,6 +1097,19 @@ EOF
 	print_field "Safe message hash" "$safe_msg_hash"
 }
 
+# Utility function to validate that the next CLI argument has a value.
+validate_cli_argument() {
+	local arg_name="$1"
+	local remaining_args="$2"
+	local next_value="${3:-}"
+
+	# Ensure the next CLI argument exists and is not another flag (i.e. does not start with `--`).
+	if [[ "$remaining_args" -lt 2 || "$next_value" =~ ^-- ]]; then
+		echo -e "${BOLD}${RED}Error: The argument \`$arg_name\` requires a value, but none was provided. Please specify a valid value after the flag!${RESET}\n" >&2
+		usage
+	fi
+}
+
 ##############################################
 # Safe Transaction/Message Hashes Calculator #
 ##############################################
@@ -1151,26 +1164,32 @@ calculate_safe_hashes() {
 		--version) get_latest_git_commit_hash ;;
 		--list-networks) list_networks ;;
 		--network)
+			validate_cli_argument "$1" "$#" "${2:-}"
 			network="$2"
 			shift 2
 			;;
 		--address)
+			validate_cli_argument "$1" "$#" "${2:-}"
 			address="$2"
 			shift 2
 			;;
 		--nonce)
+			validate_cli_argument "$1" "$#" "${2:-}"
 			nonce="$2"
 			shift 2
 			;;
 		--nested-safe-address)
+			validate_cli_argument "$1" "$#" "${2:-}"
 			nested_safe_address="$2"
 			shift 2
 			;;
 		--nested-safe-nonce)
+			validate_cli_argument "$1" "$#" "${2:-}"
 			nested_safe_nonce="$2"
 			shift 2
 			;;
 		--message)
+			validate_cli_argument "$1" "$#" "${2:-}"
 			message_file="$2"
 			shift 2
 			;;
@@ -1179,6 +1198,7 @@ calculate_safe_hashes() {
 			shift
 			;;
 		--simulate)
+			validate_cli_argument "$1" "$#" "${2:-}"
 			rpc_url="$2"
 			shift 2
 			;;
