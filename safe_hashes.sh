@@ -1151,26 +1151,50 @@ calculate_safe_hashes() {
 		--version) get_latest_git_commit_hash ;;
 		--list-networks) list_networks ;;
 		--network)
+			if [[ $# -lt 2 || "${2:-}" =~ ^-- ]]; then
+				echo -e "${BOLD}${RED}Error: \`--network\` requires a value!${RESET}" >&2
+				usage
+			fi
 			network="$2"
 			shift 2
 			;;
 		--address)
+			if [[ $# -lt 2 || "${2:-}" =~ ^-- ]]; then
+				echo -e "${BOLD}${RED}Error: \`--address\` requires a value!${RESET}" >&2
+				usage
+			fi
 			address="$2"
 			shift 2
 			;;
 		--nonce)
+			if [[ $# -lt 2 || "${2:-}" =~ ^-- ]]; then
+				echo -e "${BOLD}${RED}Error: \`--nonce\` requires a value!${RESET}" >&2
+				usage
+			fi
 			nonce="$2"
 			shift 2
 			;;
 		--nested-safe-address)
+			if [[ $# -lt 2 || "${2:-}" =~ ^-- ]]; then
+				echo -e "${BOLD}${RED}Error: \`--nested-safe-address\` requires a value!${RESET}" >&2
+				usage
+			fi
 			nested_safe_address="$2"
 			shift 2
 			;;
 		--nested-safe-nonce)
+			if [[ $# -lt 2 || "${2:-}" =~ ^-- ]]; then
+				echo -e "${BOLD}${RED}Error: \`--nested-safe-nonce\` requires a value!${RESET}" >&2
+				usage
+			fi
 			nested_safe_nonce="$2"
 			shift 2
 			;;
 		--message)
+			if [[ $# -lt 2 || "${2:-}" =~ ^-- ]]; then
+				echo -e "${BOLD}${RED}Error: \`--message\` requires a value!${RESET}" >&2
+				usage
+			fi
 			message_file="$2"
 			shift 2
 			;;
@@ -1179,6 +1203,10 @@ calculate_safe_hashes() {
 			shift
 			;;
 		--simulate)
+			if [[ $# -lt 2 || "${2:-}" =~ ^-- ]]; then
+				echo -e "${BOLD}${RED}Error: \`--simulate\` requires a value!${RESET}" >&2
+				usage
+			fi
 			rpc_url="$2"
 			shift 2
 			;;
