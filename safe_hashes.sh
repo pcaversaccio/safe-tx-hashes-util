@@ -1152,7 +1152,7 @@ calculate_safe_hashes() {
 		--list-networks) list_networks ;;
 		--network)
 			if [[ $# -lt 2 || "${2:-}" =~ ^-- ]]; then
-				echo -e "${BOLD}${RED}Error: \`--network\` requires a value!${RESET}\n" >&2
+				echo -e "${BOLD}${RED}Error: The argument \`--network\` requires a value, but none was provided. Please specify a valid value after the flag!${RESET}\n" >&2
 				usage
 			fi
 			network="$2"
@@ -1160,7 +1160,7 @@ calculate_safe_hashes() {
 			;;
 		--address)
 			if [[ $# -lt 2 || "${2:-}" =~ ^-- ]]; then
-				echo -e "${BOLD}${RED}Error: \`--address\` requires a value!${RESET}\n" >&2
+				echo -e "${BOLD}${RED}Error: The argument \`--address\` requires a value, but none was provided. Please specify a valid value after the flag!${RESET}\n" >&2
 				usage
 			fi
 			address="$2"
@@ -1168,7 +1168,7 @@ calculate_safe_hashes() {
 			;;
 		--nonce)
 			if [[ $# -lt 2 || "${2:-}" =~ ^-- ]]; then
-				echo -e "${BOLD}${RED}Error: \`--nonce\` requires a value!${RESET}\n" >&2
+				echo -e "${BOLD}${RED}Error: The argument \`--nonce\` requires a value, but none was provided. Please specify a valid value after the flag!${RESET}\n" >&2
 				usage
 			fi
 			nonce="$2"
@@ -1176,7 +1176,7 @@ calculate_safe_hashes() {
 			;;
 		--nested-safe-address)
 			if [[ $# -lt 2 || "${2:-}" =~ ^-- ]]; then
-				echo -e "${BOLD}${RED}Error: \`--nested-safe-address\` requires a value!${RESET}\n" >&2
+				echo -e "${BOLD}${RED}Error: The argument \`--nested-safe-address\` requires a value, but none was provided. Please specify a valid value after the flag!${RESET}\n" >&2
 				usage
 			fi
 			nested_safe_address="$2"
@@ -1184,7 +1184,7 @@ calculate_safe_hashes() {
 			;;
 		--nested-safe-nonce)
 			if [[ $# -lt 2 || "${2:-}" =~ ^-- ]]; then
-				echo -e "${BOLD}${RED}Error: \`--nested-safe-nonce\` requires a value!${RESET}\n" >&2
+				echo -e "${BOLD}${RED}Error: The argument \`--nested-safe-nonce\` requires a value, but none was provided. Please specify a valid value after the flag!${RESET}\n" >&2
 				usage
 			fi
 			nested_safe_nonce="$2"
@@ -1192,7 +1192,7 @@ calculate_safe_hashes() {
 			;;
 		--message)
 			if [[ $# -lt 2 || "${2:-}" =~ ^-- ]]; then
-				echo -e "${BOLD}${RED}Error: \`--message\` requires a value!${RESET}\n" >&2
+				echo -e "${BOLD}${RED}Error: The argument \`--message\` requires a value, but none was provided. Please specify a valid value after the flag!${RESET}\n" >&2
 				usage
 			fi
 			message_file="$2"
@@ -1204,7 +1204,7 @@ calculate_safe_hashes() {
 			;;
 		--simulate)
 			if [[ $# -lt 2 || "${2:-}" =~ ^-- ]]; then
-				echo -e "${BOLD}${RED}Error: \`--simulate\` requires a value!${RESET}\n" >&2
+				echo -e "${BOLD}${RED}Error: The argument \`--simulate\` requires a value, but none was provided. Please specify a valid value after the flag!${RESET}\n" >&2
 				usage
 			fi
 			rpc_url="$2"
