@@ -71,7 +71,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - Mantle (identifier: `mantle`, chain ID: `5000`)
 - MegaETH (identifier: `megaeth`, chain ID: `4326`)
 - Monad (identifier: `monad`, chain ID: `143`)
-- Monad Testnet (identifier: `monad-testnet`, chain ID: `6342`)
+- Monad Testnet (identifier: `monad-testnet`, chain ID: `10143`)
 - opBNB (identifier: `opbnb`, chain ID: `204`)
 - OP (Optimism) (identifier: `optimism`, chain ID: `10`)
 - peaq (identifier: `peaq`, chain ID: `3338`)
