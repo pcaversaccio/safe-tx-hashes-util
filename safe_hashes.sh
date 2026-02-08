@@ -26,7 +26,7 @@ fi
 # - https://force-color.org for forcing colour output.
 # Only the exact value `true` is accepted to avoid accidental activation.
 # Also, we set the variable `CAST_COLOUR` used by `cast` (`auto`/`always`/`never`).
-# See: https://getfoundry.sh/cast/reference/cast/.
+# See: https://www.getfoundry.sh/reference/cast/cast.
 setup_colours() {
 	if [[ "${NO_COLOR:-false}" == "true" ]]; then
 		readonly COLOUR_ENABLED=0
