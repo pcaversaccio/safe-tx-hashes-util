@@ -91,7 +91,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 ## Usage
 
 > [!NOTE]
-> Ensure that [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast) and [`chisel`](https://github.com/foundry-rs/foundry/tree/master/crates/chisel) are installed locally. For installation instructions, refer to this [guide](). This [scrip://www.getfoundry.sh/introduction/installationt](./safe_hashes.sh) is designed to work with the latest _stable_ versions of [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast) and [`chisel`](https://github.com/foundry-rs/foundry/tree/master/crates/chisel), starting from version [`1.3.5`](https://github.com/foundry-rs/foundry/releases/tag/v1.3.5).
+> Ensure that [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast) and [`chisel`](https://github.com/foundry-rs/foundry/tree/master/crates/chisel) are installed locally. For installation instructions, refer to this [guide](https://www.getfoundry.sh/introduction/installation). This [script](./safe_hashes.sh) is designed to work with the latest _stable_ versions of [`cast`](https://github.com/foundry-rs/foundry/tree/master/crates/cast) and [`chisel`](https://github.com/foundry-rs/foundry/tree/master/crates/chisel), starting from version [`1.3.5`](https://github.com/foundry-rs/foundry/releases/tag/v1.3.5).
 
 > [!TIP]
 > For macOS users, please refer to the [macOS Users: Upgrading Bash](#macos-users-upgrading-bash) section. Alternatively, you can use the Docker container, which comes pre-installed with all required dependencies. For details, see the [Docker Usage](#docker-usage) section below.
