@@ -49,6 +49,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 
 - 0G (identifier: `0g`, chain ID: `16661`)
 - Arbitrum (identifier: `arbitrum`, chain ID: `42161`)
+- Arc Testnet (identifier: `arc-testnet`, chain ID: `5042002`)
 - Aurora (identifier: `aurora`, chain ID: `1313161554`)
 - Avalanche (identifier: `avalanche`, chain ID: `43114`)
 - Base (identifier: `base`, chain ID: `8453`)
@@ -59,6 +60,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - BSC (BNB Smart Chain) (identifier: `bsc`, chain ID: `56`)
 - Celo (identifier: `celo`, chain ID: `42220`)
 - Codex (identifier: `codex`, chain ID: `81224`)
+- Creditcoin (identifier: `creditcoin`, chain ID: `102030`)
 - Ethereum (identifier: `ethereum`, chain ID: `1`)
 - Gnosis (identifier: `gnosis`, chain ID: `100`)
 - Gnosis Chiado (identifier: `gnosis-chiado`, chain ID: `10200`)
