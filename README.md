@@ -71,6 +71,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - Lens (identifier: `lens`, chain ID: `232`)
 - Linea (identifier: `linea`, chain ID: `59144`)
 - Mantle (identifier: `mantle`, chain ID: `5000`)
+- Mantle Sepolia (identifier: `mantle-sepolia`, chain ID: `5003`)
 - MegaETH (identifier: `megaeth`, chain ID: `4326`)
 - Monad (identifier: `monad`, chain ID: `143`)
 - Monad Testnet (identifier: `monad-testnet`, chain ID: `10143`)
