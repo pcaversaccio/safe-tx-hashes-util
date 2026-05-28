@@ -49,7 +49,9 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 > The supported networks are ordered alphabetically by their identifier.
 
 - 0G (identifier: `0g`, chain ID: `16661`)
+- Aetherium (identifier: `aetherium`, chain ID: `4663`)
 - Arbitrum (identifier: `arbitrum`, chain ID: `42161`)
+- Arc (identifier: `arc`, chain ID: `5042`)
 - Arc Testnet (identifier: `arc-testnet`, chain ID: `5042002`)
 - Aurora (identifier: `aurora`, chain ID: `1313161554`)
 - Avalanche (identifier: `avalanche`, chain ID: `43114`)
@@ -60,9 +62,11 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - Botanix (identifier: `botanix`, chain ID: `3637`)
 - BSC (BNB Smart Chain) (identifier: `bsc`, chain ID: `56`)
 - Celo (identifier: `celo`, chain ID: `42220`)
+- Celo Sepolia (identifier: `celo-sepolia`, chain ID: `11142220`)
 - Codex (identifier: `codex`, chain ID: `81224`)
 - Creditcoin (identifier: `creditcoin`, chain ID: `102030`)
 - Ethereum (identifier: `ethereum`, chain ID: `1`)
+- Fluent (identifier: `fluent`, chain ID: `25363`)
 - Gnosis (identifier: `gnosis`, chain ID: `100`)
 - Gnosis Chiado (identifier: `gnosis-chiado`, chain ID: `10200`)
 - Hemi (identifier: `hemi`, chain ID: `43111`)
@@ -79,13 +83,17 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - opBNB (identifier: `opbnb`, chain ID: `204`)
 - OP (Optimism) (identifier: `optimism`, chain ID: `10`)
 - peaq (identifier: `peaq`, chain ID: `3338`)
+- Pharos (identifier: `pharos`, chain ID: `1672`)
 - Plasma (identifier: `plasma`, chain ID: `9745`)
 - Polygon (identifier: `polygon`, chain ID: `137`)
 - Polygon zkEVM (identifier: `polygon-zkevm`, chain ID: `1101`)
+- Robinhood Testnet (identifier: `robinhood-testnet`, chain ID: `46630`)
 - Scroll (identifier: `scroll`, chain ID: `534352`)
 - Sepolia (identifier: `sepolia`, chain ID: `11155111`)
 - Sonic (identifier: `sonic`, chain ID: `146`)
 - Stable (identifier: `stable`, chain ID: `988`)
+- Tempo (identifier: `tempo`, chain ID: `4217`)
+- Tempo Moderato (identifier: `tempo-moderato`, chain ID: `42431`)
 - Unichain (identifier: `unichain`, chain ID: `130`)
 - World Chain (identifier: `worldchain`, chain ID: `480`)
 - XDC Network (identifier: `xdc`, chain ID: `50`)
@@ -280,7 +288,7 @@ docker compose run --rm -e NO_COLOR=true safe-tx-hashes-util \
 
 ### Qubes OS
 
-A [Qubes OS](https://www.qubes-os.org) [Salt](https://doc.qubes-os.org/en/latest/user/advanced-topics/salt.html) configuration for building a minimal, reproducible template VM that includes this [script](./safe_hashes.sh) and the [Foundry](https://github.com/foundry-rs/foundry) toolchain is available [here](https://github.com/pcaversaccio/safe-tx-hashes-util-qubes).
+A [Qubes OS](https://www.qubes-os.org) [Salt](https://doc.qubes-os.org/en/latest/user/advanced-topics/salt.html) configuration for building a minimal, reproducible _template VM_ that includes this [script](./safe_hashes.sh) and the [Foundry](https://github.com/foundry-rs/foundry) toolchain is available [here](https://github.com/pcaversaccio/safe-tx-hashes-util-qubes).
 
 ## Safe Transaction Hashes
 
