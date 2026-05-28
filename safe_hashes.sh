@@ -374,25 +374,25 @@ Example for transaction hashes:
   $0 --network ethereum --address 0x1234...5678 --nonce 42
 
 Example for transaction hashes including simulation:
-  $0 --network ethereum --address 0x1234...5678 --nonce 42 --simulate https://eth.llamarpc.com
+  $0 --network ethereum --address 0x1234...5678 --nonce 42 --simulate https://eth.drpc.org
 
 Example for transaction hashes (interactive mode):
   $0 --network ethereum --address 0x1234...5678 --nonce 42 --interactive
 
 Example for transaction hashes (interactive mode) including simulation:
-  $0 --network ethereum --address 0x1234...5678 --nonce 42 --interactive --simulate https://eth.llamarpc.com
+  $0 --network ethereum --address 0x1234...5678 --nonce 42 --interactive --simulate https://eth.drpc.org
 
 Example for transaction hashes via a nested Safe multisig approval:
   $0 --network ethereum --address 0x1234...5678 --nonce 42 --nested-safe-address 0x8765...4321 --nested-safe-nonce 10
 
 Example for transaction hashes via a nested Safe multisig approval including simulation:
-  $0 --network ethereum --address 0x1234...5678 --nonce 42 --nested-safe-address 0x8765...4321 --nested-safe-nonce 10 --simulate https://eth.llamarpc.com
+  $0 --network ethereum --address 0x1234...5678 --nonce 42 --nested-safe-address 0x8765...4321 --nested-safe-nonce 10 --simulate https://eth.drpc.org
 
 Example for transaction hashes via a nested Safe multisig approval (interactive mode):
   $0 --network ethereum --address 0x1234...5678 --nonce 42 --nested-safe-address 0x8765...4321 --nested-safe-nonce 10 --interactive
 
 Example for transaction hashes via a nested Safe multisig approval (interactive mode) including simulation:
-  $0 --network ethereum --address 0x1234...5678 --nonce 42 --nested-safe-address 0x8765...4321 --nested-safe-nonce 10 --interactive --simulate https://eth.llamarpc.com
+  $0 --network ethereum --address 0x1234...5678 --nonce 42 --nested-safe-address 0x8765...4321 --nested-safe-nonce 10 --interactive --simulate https://eth.drpc.org
 
 Example for off-chain message hashes:
   $0 --network ethereum --address 0x1234...5678 --message message.txt
