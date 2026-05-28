@@ -242,7 +242,9 @@ readonly BASE_URL="https://api.safe.global/tx-service"
 # See https://docs.safe.global/advanced/smart-account-supported-networks?service=Transaction+Service.
 declare -A -r API_URLS=(
 	["0g"]="${BASE_URL}/0g"
+	["aetherium"]="${BASE_URL}/aeth"
 	["arbitrum"]="${BASE_URL}/arb1"
+	["arc"]="${BASE_URL}/arc"
 	["arc-testnet"]="${BASE_URL}/arc-testnet"
 	["aurora"]="${BASE_URL}/aurora"
 	["avalanche"]="${BASE_URL}/avax"
@@ -253,9 +255,11 @@ declare -A -r API_URLS=(
 	["botanix"]="${BASE_URL}/btc"
 	["bsc"]="${BASE_URL}/bnb"
 	["celo"]="${BASE_URL}/celo"
+	["celo-sepolia"]="${BASE_URL}/celo-sep"
 	["codex"]="${BASE_URL}/codex"
 	["creditcoin"]="${BASE_URL}/ctc"
 	["ethereum"]="${BASE_URL}/eth"
+	["fluent"]="${BASE_URL}/fluent"
 	["gnosis"]="${BASE_URL}/gno"
 	["gnosis-chiado"]="${BASE_URL}/chi"
 	["hemi"]="${BASE_URL}/hemi"
@@ -272,13 +276,17 @@ declare -A -r API_URLS=(
 	["opbnb"]="${BASE_URL}/opbnb"
 	["optimism"]="${BASE_URL}/oeth"
 	["peaq"]="${BASE_URL}/peaq"
+	["pharos"]="${BASE_URL}/pharos"
 	["plasma"]="${BASE_URL}/plasma"
 	["polygon"]="${BASE_URL}/pol"
 	["polygon-zkevm"]="${BASE_URL}/zkevm"
+	["robinhood-testnet"]="${BASE_URL}/robinhood-testnet"
 	["scroll"]="${BASE_URL}/scr"
 	["sepolia"]="${BASE_URL}/sep"
 	["sonic"]="${BASE_URL}/sonic"
 	["stable"]="${BASE_URL}/stable"
+	["tempo"]="${BASE_URL}/tempo"
+	["tempo-moderato"]="${BASE_URL}/tempo-moderato"
 	["unichain"]="${BASE_URL}/unichain"
 	["worldchain"]="${BASE_URL}/wc"
 	["xdc"]="${BASE_URL}/xdc"
@@ -289,7 +297,9 @@ declare -A -r API_URLS=(
 # Define the chain IDs of the supported networks from the Safe transaction service.
 declare -A -r CHAIN_IDS=(
 	["0g"]="16661"
+	["aetherium"]="4663"
 	["arbitrum"]="42161"
+	["arc"]="5042"
 	["arc-testnet"]="5042002"
 	["aurora"]="1313161554"
 	["avalanche"]="43114"
@@ -300,9 +310,11 @@ declare -A -r CHAIN_IDS=(
 	["botanix"]="3637"
 	["bsc"]="56"
 	["celo"]="42220"
+	["celo-sepolia"]="11142220"
 	["codex"]="81224"
 	["creditcoin"]="102030"
 	["ethereum"]="1"
+	["fluent"]="25363"
 	["gnosis"]="100"
 	["gnosis-chiado"]="10200"
 	["hemi"]="43111"
@@ -319,13 +331,17 @@ declare -A -r CHAIN_IDS=(
 	["opbnb"]="204"
 	["optimism"]="10"
 	["peaq"]="3338"
+	["pharos"]="1672"
 	["plasma"]="9745"
 	["polygon"]="137"
 	["polygon-zkevm"]="1101"
+	["robinhood-testnet"]="46630"
 	["scroll"]="534352"
 	["sepolia"]="11155111"
 	["sonic"]="146"
 	["stable"]="988"
+	["tempo"]="4217"
+	["tempo-moderato"]="42431"
 	["unichain"]="130"
 	["worldchain"]="480"
 	["xdc"]="50"
@@ -358,25 +374,25 @@ Example for transaction hashes:
   $0 --network ethereum --address 0x1234...5678 --nonce 42
 
 Example for transaction hashes including simulation:
-  $0 --network ethereum --address 0x1234...5678 --nonce 42 --simulate https://eth.llamarpc.com
+  $0 --network ethereum --address 0x1234...5678 --nonce 42 --simulate https://eth.drpc.org
 
 Example for transaction hashes (interactive mode):
   $0 --network ethereum --address 0x1234...5678 --nonce 42 --interactive
 
 Example for transaction hashes (interactive mode) including simulation:
-  $0 --network ethereum --address 0x1234...5678 --nonce 42 --interactive --simulate https://eth.llamarpc.com
+  $0 --network ethereum --address 0x1234...5678 --nonce 42 --interactive --simulate https://eth.drpc.org
 
 Example for transaction hashes via a nested Safe multisig approval:
   $0 --network ethereum --address 0x1234...5678 --nonce 42 --nested-safe-address 0x8765...4321 --nested-safe-nonce 10
 
 Example for transaction hashes via a nested Safe multisig approval including simulation:
-  $0 --network ethereum --address 0x1234...5678 --nonce 42 --nested-safe-address 0x8765...4321 --nested-safe-nonce 10 --simulate https://eth.llamarpc.com
+  $0 --network ethereum --address 0x1234...5678 --nonce 42 --nested-safe-address 0x8765...4321 --nested-safe-nonce 10 --simulate https://eth.drpc.org
 
 Example for transaction hashes via a nested Safe multisig approval (interactive mode):
   $0 --network ethereum --address 0x1234...5678 --nonce 42 --nested-safe-address 0x8765...4321 --nested-safe-nonce 10 --interactive
 
 Example for transaction hashes via a nested Safe multisig approval (interactive mode) including simulation:
-  $0 --network ethereum --address 0x1234...5678 --nonce 42 --nested-safe-address 0x8765...4321 --nested-safe-nonce 10 --interactive --simulate https://eth.llamarpc.com
+  $0 --network ethereum --address 0x1234...5678 --nonce 42 --nested-safe-address 0x8765...4321 --nested-safe-nonce 10 --interactive --simulate https://eth.drpc.org
 
 Example for off-chain message hashes:
   $0 --network ethereum --address 0x1234...5678 --message message.txt

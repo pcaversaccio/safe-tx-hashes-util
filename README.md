@@ -40,7 +40,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 **Read This Before Proceeding!**
 
 - **Rule 1**: Use a dedicated device running a secure operating system, such as [Tails](https://tails.net) or [Qubes OS](https://www.qubes-os.org), solely for verifying and signing transactions. This device **must not** be used for any other activities, such as browsing, messaging, emailing, or social media. It should only be powered on to connect to the multisig interface, execute this Bash [script](./safe_hashes.sh), verify the transaction, sign it, and then shut down immediately afterward. If you feel the urge to check X, don't, or I'll appear in your dreams!
-- **Rule 2**: Always independently decode and verify transaction calldata. Don't sign _untrusted_ delegate calls (see the main [script](./safe_hashes.sh) for a list of trusted `delegatecall`able contracts). Do not copy calldata from the Safe UI's copy button. Instead, manually copy the calldata directly from your wallet extension (e.g., MetaMask). You can decode the calldata using Etherscan's [Input Data Decoder](https://etherscan.io/inputdatadecoder). For further guidance on verifying Safe wallet transactions and performing basic transaction checks, **READ THESE RESOURCES AND ACT ON THEM**: [How to verify Safe wallet transactions on a hardware wallet](https://help.safe.global/en/articles/276344-how-to-verify-safe-wallet-transactions-on-a-hardware-wallet) and [How to perform basic transaction checks on Safe wallet](https://help.safe.global/en/articles/276343-how-to-perform-basic-transactions-checks-on-safe-wallet). **Do not skip this step!**
+- **Rule 2**: Always independently decode and verify transaction calldata. Don't sign _untrusted_ delegate calls (see the main [script](./safe_hashes.sh) for a list of trusted `delegatecall`able contracts). Do not copy calldata from the Safe UI's copy button. Instead, manually copy the calldata directly from your wallet extension (e.g., MetaMask). You can decode the calldata using Etherscan's [Input Data Decoder](https://etherscan.io/inputdatadecoder). For further guidance on verifying Safe wallet transactions and performing basic transaction checks, **READ THESE RESOURCES AND ACT ON THEM**: [How to verify Safe wallet transactions on a hardware wallet](https://help.safe.global/articles/4369997924-how-to-verify-safewallet-transactions-on-a-hardware-wallet) and [How to perform basic transaction checks on Safe wallet](https://help.safe.global/articles/2485383995-how-to-perform-basic-transactions-checks-on-safewallet). **Do not skip this step!**
 - **Rule 3**: Adhere strictly to Rule 1 and Rule 2, and follow [How to Multisig](https://howtomultisig.com) carefully.
 
 ## Supported Networks
@@ -49,7 +49,9 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 > The supported networks are ordered alphabetically by their identifier.
 
 - 0G (identifier: `0g`, chain ID: `16661`)
+- Aetherium (identifier: `aetherium`, chain ID: `4663`)
 - Arbitrum (identifier: `arbitrum`, chain ID: `42161`)
+- Arc (identifier: `arc`, chain ID: `5042`)
 - Arc Testnet (identifier: `arc-testnet`, chain ID: `5042002`)
 - Aurora (identifier: `aurora`, chain ID: `1313161554`)
 - Avalanche (identifier: `avalanche`, chain ID: `43114`)
@@ -60,9 +62,11 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - Botanix (identifier: `botanix`, chain ID: `3637`)
 - BSC (BNB Smart Chain) (identifier: `bsc`, chain ID: `56`)
 - Celo (identifier: `celo`, chain ID: `42220`)
+- Celo Sepolia (identifier: `celo-sepolia`, chain ID: `11142220`)
 - Codex (identifier: `codex`, chain ID: `81224`)
 - Creditcoin (identifier: `creditcoin`, chain ID: `102030`)
 - Ethereum (identifier: `ethereum`, chain ID: `1`)
+- Fluent (identifier: `fluent`, chain ID: `25363`)
 - Gnosis (identifier: `gnosis`, chain ID: `100`)
 - Gnosis Chiado (identifier: `gnosis-chiado`, chain ID: `10200`)
 - Hemi (identifier: `hemi`, chain ID: `43111`)
@@ -79,13 +83,17 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - opBNB (identifier: `opbnb`, chain ID: `204`)
 - OP (Optimism) (identifier: `optimism`, chain ID: `10`)
 - peaq (identifier: `peaq`, chain ID: `3338`)
+- Pharos (identifier: `pharos`, chain ID: `1672`)
 - Plasma (identifier: `plasma`, chain ID: `9745`)
 - Polygon (identifier: `polygon`, chain ID: `137`)
 - Polygon zkEVM (identifier: `polygon-zkevm`, chain ID: `1101`)
+- Robinhood Testnet (identifier: `robinhood-testnet`, chain ID: `46630`)
 - Scroll (identifier: `scroll`, chain ID: `534352`)
 - Sepolia (identifier: `sepolia`, chain ID: `11155111`)
 - Sonic (identifier: `sonic`, chain ID: `146`)
 - Stable (identifier: `stable`, chain ID: `988`)
+- Tempo (identifier: `tempo`, chain ID: `4217`)
+- Tempo Moderato (identifier: `tempo-moderato`, chain ID: `42431`)
 - Unichain (identifier: `unichain`, chain ID: `130`)
 - World Chain (identifier: `worldchain`, chain ID: `480`)
 - XDC Network (identifier: `xdc`, chain ID: `50`)
@@ -280,7 +288,7 @@ docker compose run --rm -e NO_COLOR=true safe-tx-hashes-util \
 
 ### Qubes OS
 
-A [Qubes OS](https://www.qubes-os.org) [Salt](https://doc.qubes-os.org/en/latest/user/advanced-topics/salt.html) configuration for building a minimal, reproducible template VM that includes this [script](./safe_hashes.sh) and the [Foundry](https://github.com/foundry-rs/foundry) toolchain is available [here](https://github.com/pcaversaccio/safe-tx-hashes-util-qubes).
+A [Qubes OS](https://www.qubes-os.org) [Salt](https://doc.qubes-os.org/en/latest/user/advanced-topics/salt.html) configuration for building a minimal, reproducible _template VM_ that includes this [script](./safe_hashes.sh) and the [Foundry](https://github.com/foundry-rs/foundry) toolchain is available [here](https://github.com/pcaversaccio/safe-tx-hashes-util-qubes).
 
 ## Safe Transaction Hashes
 
@@ -441,7 +449,7 @@ Safe transaction hash: 0xc818fceb1cace51c1a4039c4c66fc73d95eccc298104c9c52debac6
 You can simulate a transaction using the `--simulate` option with an RPC URL. This runs [`cast call --trace`](https://www.getfoundry.sh/reference/cast/call) against the _latest_ block to produce a detailed execution trace. Use this option to check exactly how the transaction will execute _before_ signing. As an example, invoke the following command:
 
 ```console
-./safe_hashes.sh --network ethereum --address 0x5EA1d9A6dDC3A0329378a327746D71A2019eC332 --nonce 6 --simulate https://eth.llamarpc.com
+./safe_hashes.sh --network ethereum --address 0x5EA1d9A6dDC3A0329378a327746D71A2019eC332 --nonce 6 --simulate https://eth.drpc.org
 ```
 
 The [script](./safe_hashes.sh) produces the following output:
@@ -472,7 +480,7 @@ cast call --color never --trace --from "0xD5AEB612f43919FCbfFd0eEa734D0E9130D14b
   "0x5EA1d9A6dDC3A0329378a327746D71A2019eC332" \
   --data "0x6a7612020000000000000000000000009641d764fc13c8b624c04430c7356c1c7c8102e200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000140000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000000000000000000001848d80ff0a0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000013200cfbfac74c26f8647cbdb8c5caf80bb5b32e4313400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044dd43a79f000000000000000000000000f46c6d6e62f59d9222f3812874211df07cf7b318000000000000000000000000000000000000000000000000000000000000000100a0b86991c6218b36c1d19d4a2e9eb0ce3606eb4800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044a9059cbb0000000000000000000000001fe27a73cd9f0b3c53b6e936d0b4f9b2f8ca3367000000000000000000000000000000000000000000000000000000002faf0800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004101427eae1606844b055aabb63778fc9e523e48b25dff5dbd1db76752c68f338a14ef6bb18733969e9db45e96d89fab546609f9404e1f779d15248203d7c7c5a91b00000000000000000000000000000000000000000000000000000000000000" \
   --override-state-diff "0x5EA1d9A6dDC3A0329378a327746D71A2019eC332:0x269bb0dc23923a25a8c39074e6cb0c85f1f29fd13f8dfa05d81baf046ed3b9af:1,0x5EA1d9A6dDC3A0329378a327746D71A2019eC332:4:1,0x5EA1d9A6dDC3A0329378a327746D71A2019eC332:0x4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c8:0,0x5EA1d9A6dDC3A0329378a327746D71A2019eC332:0xb104e0b93118902c651344349b610029d694cfdec91c589c91ebafbcd0289947:0" \
-  --rpc-url "https://eth.llamarpc.com"
+  --rpc-url "https://eth.drpc.org"
 ```
 
 > Execution Traces:
