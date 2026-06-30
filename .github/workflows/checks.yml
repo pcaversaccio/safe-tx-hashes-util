@@ -44,7 +44,7 @@ jobs:
         run: go install mvdan.cc/sh/v3/cmd/shfmt@2f3f5e36d9b0f8f14c998d50aa20a28832205ae8 # v3.13.1
 
       - name: Run Prettier
-        run: npx prettier -c '**/*.{md,yml,yaml}'
+        run: npx prettier@3.9.4 -c '**/*.{md,yml,yaml}'
 
       - name: Run `shfmt`
         run: shfmt -d safe_hashes.sh install.sh
