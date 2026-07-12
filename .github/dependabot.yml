@@ -10,6 +10,7 @@ updates:
     target-branch: "main"
     labels:
       - "dependencies 🔁"
+      - "ci/cd 👷‍♂️"
     assignees:
       - "pcaversaccio"
     groups:
