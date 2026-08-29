@@ -900,7 +900,7 @@ simulate_transaction() {
 	local rpc_url="${12}"
 
 	# Generate a random signing wallet.
-	local signer_wallet=$(cast wallet new)
+	local signer_wallet=$(cast wallet new 2>&1)
 	local signer_private_key=$(echo "$signer_wallet" | grep "Private key:" | awk '{print $3}')
 	local signer_address=$(echo "$signer_wallet" | grep "Address:" | awk '{print $2}')
 
