@@ -1251,7 +1251,7 @@ calculate_safe_hashes() {
 	# Get the Safe multisig version.
 	local version=$(curl -sf "${api_url}/api/v1/safes/${address}/" | jq -r ".version // \"0.0.0\"" || echo "0.0.0")
 
-	# Safe's API allows 1 request per second without authentication.
+	# Safe's API allows 2 requests per second without authentication.
 	# Wait slightly longer to allow for potential future requests without hitting rate limits.
 	sleep 1.2
 
@@ -1264,7 +1264,7 @@ calculate_safe_hashes() {
 		# Get the nested Safe multisig version.
 		nested_safe_version=$(curl -sf "${api_url}/api/v1/safes/${nested_safe_address}/" | jq -r ".version // \"0.0.0\"" || echo "0.0.0")
 
-		# Safe's API allows 1 request per second without authentication.
+		# Safe's API allows 2 requests per second without authentication.
 		# Wait slightly longer to allow for potential future requests without hitting rate limits.
 		sleep 1.2
 	fi
