@@ -1346,6 +1346,13 @@ EOF
 	if [[ -z "$interactive" ]]; then
 		local count=$(echo "$response" | jq -r ".count // \"0\"")
 
+		# The API response is untrusted and `count` is compared arithmetically below,
+		# which would expand command substitutions in array subscripts.
+		if [[ ! "$count" =~ ^[0-9]+$ ]]; then
+			echo -e "${BOLD}${RED}Invalid \`count\` value returned by the API. Must be a non-negative integer!${RESET}" >&2
+			exit 1
+		fi
+
 		# Inform the user that no transactions are available for the specified nonce.
 		if [[ $count -eq 0 ]]; then
 			echo "${YELLOW}No transaction is available for this nonce!${RESET}"
@@ -1398,6 +1405,13 @@ EOF
 	local gas_token=$(echo "$response" | jq -r ".results[$idx].gasToken // \"$ZERO_ADDRESS\"")
 	local refund_receiver=$(echo "$response" | jq -r ".results[$idx].refundReceiver // \"$ZERO_ADDRESS\"")
 	local data_decoded=$(echo "$response" | jq -r ".results[$idx].dataDecoded // \"0x\"")
+
+	# The API response is untrusted and `operation` is compared arithmetically in
+	# `warn_if_delegate_call`, which would expand command substitutions in array subscripts.
+	if [[ "$operation" != "0" && "$operation" != "1" ]]; then
+		echo -e "${BOLD}${RED}Invalid \`operation\` value returned by the API. Must be 0 (CALL) or 1 (DELEGATECALL)!${RESET}" >&2
+		exit 1
+	fi
 
 	# If --interactive mode is enabled, the parameter values can be overridden by the user's input.
 	# Overriding nested Safe transaction values is not allowed.
