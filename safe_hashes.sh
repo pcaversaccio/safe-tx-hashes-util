@@ -444,6 +444,15 @@ print_header() {
 	fi
 }
 
+# Remove terminal control characters from untrusted, service-provided strings before they
+# are displayed. `jq -r` decodes JSON escapes such as `\u001b`, so without this a crafted
+# API response could emit cursor-movement or screen-clearing sequences that rewrite the
+# transaction a signer is verifying. Valid hex, numeric, and address values contain none of
+# these characters and are unchanged.
+sanitize_untrusted() {
+	LC_ALL=C tr -d '\000-\037\177' <<<"$1"
+}
+
 # Utility function to print a labelled value.
 print_field() {
 	local label="$1"
@@ -561,8 +570,8 @@ print_decoded_data() {
 		print_field "Method" "Unavailable in interactive mode"
 		print_field "Parameters" "Unavailable in interactive mode"
 	else
-		local method=$(echo "$data_decoded" | jq -r ".method")
-		local parameters=$(echo "$data_decoded" | jq -r ".parameters")
+		local method=$(sanitize_untrusted "$(echo "$data_decoded" | jq -r ".method")")
+		local parameters=$(sanitize_untrusted "$(echo "$data_decoded" | jq -r ".parameters")")
 
 		print_field "Method" "$method"
 		print_field "Parameters" "$parameters"
@@ -1398,6 +1407,20 @@ EOF
 	local gas_token=$(echo "$response" | jq -r ".results[$idx].gasToken // \"$ZERO_ADDRESS\"")
 	local refund_receiver=$(echo "$response" | jq -r ".results[$idx].refundReceiver // \"$ZERO_ADDRESS\"")
 	local data_decoded=$(echo "$response" | jq -r ".results[$idx].dataDecoded // \"0x\"")
+
+	# In non-interactive mode these response fields are printed without further validation.
+	# Strip control characters so a crafted response cannot rewrite the displayed transaction;
+	# valid values are unchanged, so the computed hash is unaffected.
+	if [[ -z "$interactive" ]]; then
+		to=$(sanitize_untrusted "$to")
+		value=$(sanitize_untrusted "$value")
+		data=$(sanitize_untrusted "$data")
+		safe_tx_gas=$(sanitize_untrusted "$safe_tx_gas")
+		base_gas=$(sanitize_untrusted "$base_gas")
+		gas_price=$(sanitize_untrusted "$gas_price")
+		gas_token=$(sanitize_untrusted "$gas_token")
+		refund_receiver=$(sanitize_untrusted "$refund_receiver")
+	fi
 
 	# If --interactive mode is enabled, the parameter values can be overridden by the user's input.
 	# Overriding nested Safe transaction values is not allowed.
