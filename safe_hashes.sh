@@ -447,7 +447,7 @@ print_header() {
 # Remove terminal control characters from untrusted, service-provided strings before they
 # are displayed. `jq -r` decodes JSON escapes such as `\u001b`, so without this a crafted
 # API response could emit cursor-movement or screen-clearing sequences that rewrite the
-# transaction a signer is verifying. Only used for the free-form decoded fields; the scalar
+# transaction a signer is verifying. Only used for the decoded method name; the scalar
 # transaction fields are format-validated instead, so control characters are rejected there.
 sanitize_untrusted() {
 	LC_ALL=C tr -d '\000-\037\177' <<<"$1"
@@ -571,7 +571,9 @@ print_decoded_data() {
 		print_field "Parameters" "Unavailable in interactive mode"
 	else
 		local method=$(sanitize_untrusted "$(echo "$data_decoded" | jq -r ".method")")
-		local parameters=$(sanitize_untrusted "$(echo "$data_decoded" | jq -r ".parameters")")
+		# Without `-r`, `jq` JSON-encodes strings, which escapes control characters and keeps
+		# only its own line breaks, so the parameters stay readable.
+		local parameters=$(echo "$data_decoded" | jq ".parameters")
 
 		print_field "Method" "$method"
 		print_field "Parameters" "$parameters"
