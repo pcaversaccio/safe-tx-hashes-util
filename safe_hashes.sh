@@ -611,6 +611,12 @@ validate_version() {
 		exit 0
 	fi
 
+	# Validate the Safe multisig version format.
+	if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\+L2)?$ ]]; then
+		printf "%s\n" "${BOLD}${RED}Invalid Safe multisig version format: \"${version//[^[:print:]]/?}\"${RESET}" >&2
+		exit 1
+	fi
+
 	local clean_version=$(get_version "$version")
 
 	# Ensure that the Safe multisig version is `>= 0.1.0`.
@@ -1250,6 +1256,7 @@ calculate_safe_hashes() {
 
 	# Get the Safe multisig version.
 	local version=$(curl -sf "${api_url}/api/v1/safes/${address}/" | jq -r ".version // \"0.0.0\"" || echo "0.0.0")
+	# Validate the Safe multisig version format.
 	if [[ -n "$version" && ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\+L2)?$ ]]; then
 		printf "%s\n" "${BOLD}${RED}Invalid Safe multisig version \"${version//[^[:print:]]/?}\" returned by the API!${RESET}" >&2
 		exit 1
