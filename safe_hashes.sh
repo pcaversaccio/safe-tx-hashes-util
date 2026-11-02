@@ -1250,7 +1250,7 @@ calculate_safe_hashes() {
 
 	# Get the Safe multisig version.
 	local version=$(curl -sf "${api_url}/api/v1/safes/${address}/" | jq -r ".version // \"0.0.0\"" || echo "0.0.0")
-	if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\+L2)?$ ]]; then
+	if [[ -n "$version" && ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\+L2)?$ ]]; then
 		printf "%s\n" "${BOLD}${RED}Invalid Safe multisig version \"${version//[^[:print:]]/?}\" returned by the API!${RESET}" >&2
 		exit 1
 	fi
@@ -1267,7 +1267,7 @@ calculate_safe_hashes() {
 
 		# Get the nested Safe multisig version.
 		nested_safe_version=$(curl -sf "${api_url}/api/v1/safes/${nested_safe_address}/" | jq -r ".version // \"0.0.0\"" || echo "0.0.0")
-		if [[ ! "$nested_safe_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\+L2)?$ ]]; then
+		if [[ -n "$nested_safe_version" && ! "$nested_safe_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\+L2)?$ ]]; then
 			printf "%s\n" "${BOLD}${RED}Invalid nested Safe multisig version \"${nested_safe_version//[^[:print:]]/?}\" returned by the API!${RESET}" >&2
 			exit 1
 		fi
