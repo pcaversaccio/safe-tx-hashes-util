@@ -1251,7 +1251,7 @@ calculate_safe_hashes() {
 	# Get the Safe multisig version.
 	local version=$(curl -sf "${api_url}/api/v1/safes/${address}/" | jq -r ".version // \"0.0.0\"" || echo "0.0.0")
 	if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\+L2)?$ ]]; then
-		echo -e "${BOLD}${RED}Invalid Safe multisig version \"${version}\" returned by the API!${RESET}" >&2
+		printf "%s\n" "${BOLD}${RED}Invalid Safe multisig version \"${version//[^[:print:]]/?}\" returned by the API!${RESET}" >&2
 		exit 1
 	fi
 
@@ -1268,7 +1268,7 @@ calculate_safe_hashes() {
 		# Get the nested Safe multisig version.
 		nested_safe_version=$(curl -sf "${api_url}/api/v1/safes/${nested_safe_address}/" | jq -r ".version // \"0.0.0\"" || echo "0.0.0")
 		if [[ ! "$nested_safe_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\+L2)?$ ]]; then
-			echo -e "${BOLD}${RED}Invalid nested Safe multisig version \"${nested_safe_version}\" returned by the API!${RESET}" >&2
+			printf "%s\n" "${BOLD}${RED}Invalid nested Safe multisig version \"${nested_safe_version//[^[:print:]]/?}\" returned by the API!${RESET}" >&2
 			exit 1
 		fi
 
@@ -1298,7 +1298,7 @@ EOF
 		if [[ -n "$user_version" ]]; then
 			version="$user_version"
 		fi
-		validate_version $version
+		validate_version "$version"
 
 		# If a nested Safe is used, allow overriding its version as well.
 		if [[ -n "$nested_safe_address" ]]; then
@@ -1306,7 +1306,7 @@ EOF
 			if [[ -n "$user_nested_version" ]]; then
 				nested_safe_version="$user_nested_version"
 			fi
-			validate_version $nested_safe_version
+			validate_version "$nested_safe_version"
 		fi
 	fi
 
@@ -1354,10 +1354,9 @@ EOF
 	if [[ -z "$interactive" ]]; then
 		local count=$(echo "$response" | jq -r ".count // \"0\"")
 
-		# The API response is untrusted and `count` is compared arithmetically below,
-		# which would expand command substitutions in array subscripts.
+		# The API response is untrusted: validate `count` before it is used.
 		if [[ ! "$count" =~ ^(0|[1-9][0-9]*)$ ]]; then
-			echo -e "${BOLD}${RED}Invalid \`count\` value (number of transactions per nonce) \"${count}\" returned by the API. Must be a non-negative integer!${RESET}" >&2
+			printf "%s\n" "${BOLD}${RED}Invalid \`count\` value (number of transactions per nonce) \"${count//[^[:print:]]/?}\" returned by the API. Must be a non-negative integer!${RESET}" >&2
 			exit 1
 		fi
 
@@ -1414,10 +1413,9 @@ EOF
 	local refund_receiver=$(echo "$response" | jq -r ".results[$idx].refundReceiver // \"$ZERO_ADDRESS\"")
 	local data_decoded=$(echo "$response" | jq -r ".results[$idx].dataDecoded // \"0x\"")
 
-	# The API response is untrusted and `operation` is compared arithmetically in
-	# `warn_if_delegate_call`, which would expand command substitutions in array subscripts.
+	# The API response is untrusted: validate `operation` before it is used.
 	if [[ "$operation" != "0" && "$operation" != "1" ]]; then
-		echo -e "${BOLD}${RED}Invalid \`operation\` value \"${operation}\" returned by the API. Must be 0 (CALL) or 1 (DELEGATECALL)!${RESET}" >&2
+		printf "%s\n" "${BOLD}${RED}Invalid \`operation\` value \"${operation//[^[:print:]]/?}\" returned by the API. Must be 0 (CALL) or 1 (DELEGATECALL)!${RESET}" >&2
 		exit 1
 	fi
 
@@ -1426,7 +1424,7 @@ EOF
 	validate_address "$to"
 	validate_value "$value" "value"
 	if [[ ! "$data" =~ ^0x([0-9a-fA-F]{2})*$ ]]; then
-		echo -e "${BOLD}${RED}Invalid \`data\` value \"${data}\" returned by the API. Must be a valid hexadecimal string!${RESET}" >&2
+		printf "%s\n" "${BOLD}${RED}Invalid \`data\` value \"${data//[^[:print:]]/?}\" returned by the API. Must be a valid hexadecimal string!${RESET}" >&2
 		exit 1
 	fi
 	validate_value "$safe_tx_gas" "safeTxGas"
@@ -1464,15 +1462,15 @@ EOF
 
 		read -rp "Enter the \`safeTxGas\` (default: $safe_tx_gas): " safe_tx_gas_input
 		safe_tx_gas="${safe_tx_gas_input:-$safe_tx_gas}"
-		validate_value $safe_tx_gas "safeTxGas"
+		validate_value "$safe_tx_gas" "safeTxGas"
 
 		read -rp "Enter the \`baseGas\` (default: $base_gas): " base_gas_input
 		base_gas="${base_gas_input:-$base_gas}"
-		validate_value $base_gas "baseGas"
+		validate_value "$base_gas" "baseGas"
 
 		read -rp "Enter the \`gasPrice\` (default: $gas_price): " gas_price_input
 		gas_price="${gas_price_input:-$gas_price}"
-		validate_value $gas_price "gasPrice"
+		validate_value "$gas_price" "gasPrice"
 
 		read -rp "Enter the \`gasToken\` (default: $gas_token): " gas_token_input
 		gas_token="${gas_token_input:-$gas_token}"
