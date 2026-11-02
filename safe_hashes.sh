@@ -1451,8 +1451,18 @@ EOF
 		value="${value_input:-$value}"
 		validate_value "$value" "value"
 
-		read -erp "Enter the \`data\` (default: $data): " data_input
-		data="${data_input:-$data}"
+		while true; do
+			read -erp "Enter the \`data\` (default: $data): " data_input
+			data_input="${data_input:-$data}"
+			if [[ "$data_input" =~ ^0x([0-9a-fA-F]{2})*$ ]]; then
+				data="$data_input"
+				break
+			else
+				cat <<EOF
+${YELLOW}Invalid input. Please enter a valid hexadecimal string.${RESET}
+EOF
+			fi
+		done
 
 		while true; do
 			read -rp "Enter the \`operation\` (default: $operation; 0 = CALL, 1 = DELEGATECALL): " operation_input
