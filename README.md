@@ -49,10 +49,10 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 > The supported networks are ordered alphabetically by their identifier.
 
 - 0G (identifier: `0g`, chain ID: `16661`)
+- ADI Network (identifier: `adi`, chain ID: `36900`)
 - Arbitrum (identifier: `arbitrum`, chain ID: `42161`)
 - Arc (identifier: `arc`, chain ID: `5042`)
 - Arc Testnet (identifier: `arc-testnet`, chain ID: `5042002`)
-- ADI Network (identifier: `adi`, chain ID: `36900`)
 - Aurora (identifier: `aurora`, chain ID: `1313161554`)
 - Avalanche (identifier: `avalanche`, chain ID: `43114`)
 - Base (identifier: `base`, chain ID: `8453`)
