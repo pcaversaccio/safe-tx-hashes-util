@@ -67,7 +67,7 @@ This Bash [script](./safe_hashes.sh) calculates the Safe transaction hashes by r
 - Ethereum (identifier: `ethereum`, chain ID: `1`)
 - Fluent (identifier: `fluent`, chain ID: `25363`)
 - Fluent Testnet (identifier: `fluent-testnet`, chain ID: `20994`)
-- Gethereum Testnet (identifier: `gethereum-testnet`, chain ID: `42424242`)
+- Getherium Testnet (identifier: `getherium-testnet`, chain ID: `42424242`)
 - Gnosis (identifier: `gnosis`, chain ID: `100`)
 - Gnosis Chiado (identifier: `gnosis-chiado`, chain ID: `10200`)
 - Hemi (identifier: `hemi`, chain ID: `43111`)
