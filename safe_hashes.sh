@@ -1164,8 +1164,9 @@ validate_cli_argument() {
 #      parameter values and displays the resulting hashes.
 # 6. If a `nonce` is provided:
 #    - Fetches the transaction data from the Safe transaction service API.
-#    - Extracts the relevant transaction details from the API response.
-#    - If the interactive mode is specified, overrides the desired parameter values.
+#    - Validates the relevant transaction fields extracted from the API response.
+#    - Extracts the validated transaction details from the API response.
+#    - If the interactive mode is specified, overrides the desired parameter values after validating the user-provided inputs.
 #    - Warns the user if the transaction includes an untrusted delegate call.
 #    - Checks for a potential gas token attack.
 #    - Calls the `calculate_hashes` function to compute and display the results.
