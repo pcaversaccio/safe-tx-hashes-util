@@ -1258,7 +1258,7 @@ calculate_safe_hashes() {
 	local version=$(curl -sf "${api_url}/api/v1/safes/${address}/" | jq -r ".version // \"0.0.0\"" || echo "0.0.0")
 	# Validate the Safe multisig version format.
 	if [[ -n "$version" && ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\+L2)?$ ]]; then
-		printf "%s\n" "${BOLD}${RED}Invalid Safe multisig version \"${version//[^[:print:]]/?}\" returned by the API!${RESET}" >&2
+		printf "%s\n" "${BOLD}${RED}Invalid Safe multisig version \"${version//[^[:print:]]/?}\" returned by the Safe transaction service API!${RESET}" >&2
 		exit 1
 	fi
 
@@ -1275,7 +1275,7 @@ calculate_safe_hashes() {
 		# Get the nested Safe multisig version.
 		nested_safe_version=$(curl -sf "${api_url}/api/v1/safes/${nested_safe_address}/" | jq -r ".version // \"0.0.0\"" || echo "0.0.0")
 		if [[ -n "$nested_safe_version" && ! "$nested_safe_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\+L2)?$ ]]; then
-			printf "%s\n" "${BOLD}${RED}Invalid nested Safe multisig version \"${nested_safe_version//[^[:print:]]/?}\" returned by the API!${RESET}" >&2
+			printf "%s\n" "${BOLD}${RED}Invalid nested Safe multisig version \"${nested_safe_version//[^[:print:]]/?}\" returned by the Safe transaction service API!${RESET}" >&2
 			exit 1
 		fi
 
@@ -1363,7 +1363,7 @@ EOF
 
 		# The API response is untrusted: validate `count` before it is used.
 		if [[ ! "$count" =~ ^(0|[1-9][0-9]*)$ ]]; then
-			printf "%s\n" "${BOLD}${RED}Invalid \`count\` value (number of transactions per nonce) \"${count//[^[:print:]]/?}\" returned by the API. Must be a non-negative integer!${RESET}" >&2
+			printf "%s\n" "${BOLD}${RED}Invalid \`count\` value (number of transactions per nonce) \"${count//[^[:print:]]/?}\" returned by the Safe transaction service API. Must be a non-negative integer!${RESET}" >&2
 			exit 1
 		fi
 
@@ -1422,7 +1422,7 @@ EOF
 
 	# The API response is untrusted: validate `operation` before it is used.
 	if [[ "$operation" != "0" && "$operation" != "1" ]]; then
-		printf "%s\n" "${BOLD}${RED}Invalid \`operation\` value \"${operation//[^[:print:]]/?}\" returned by the API. Must be 0 (CALL) or 1 (DELEGATECALL)!${RESET}" >&2
+		printf "%s\n" "${BOLD}${RED}Invalid \`operation\` value \"${operation//[^[:print:]]/?}\" returned by the Safe transaction service API. Must be 0 (CALL) or 1 (DELEGATECALL)!${RESET}" >&2
 		exit 1
 	fi
 
@@ -1431,7 +1431,7 @@ EOF
 	validate_address "$to"
 	validate_value "$value" "value"
 	if [[ ! "$data" =~ ^0x([0-9a-fA-F]{2})*$ ]]; then
-		printf "%s\n" "${BOLD}${RED}Invalid \`data\` value \"${data//[^[:print:]]/?}\" returned by the API. Must be a valid hexadecimal string!${RESET}" >&2
+		printf "%s\n" "${BOLD}${RED}Invalid \`data\` value \"${data//[^[:print:]]/?}\" returned by the Safe transaction service API. Must be a valid hexadecimal string!${RESET}" >&2
 		exit 1
 	fi
 	validate_value "$safe_tx_gas" "safeTxGas"
