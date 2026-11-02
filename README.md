@@ -367,7 +367,7 @@ When using `--interactive` mode, you will be prompted to provide values for vari
 - Leaving a parameter empty will use the value retrieved from the Safe transaction service API, displayed as the "default value". If the value is unavailable (e.g. if the API endpoint is down), it will default to zero.
 - If multiple transactions share the same nonce, the first transaction in the array will be selected to provide the default values.
 - **No warnings will be shown if multiple transactions share the same nonce.** It's recommended to first run a validation without interactive mode enabled!
-- Some parameters (e.g., `version`, `to`, `operation`) enforce valid options, but not all inputs are strictly validated. **Please double-check your entries before proceeding.**
+- Parameters enforce format validation, but valid formatting does not guarantee that the values are semantically correct. **Please carefully verify all entries before proceeding.**
 
 As an example, invoke the following command:
 
@@ -387,8 +387,8 @@ IMPORTANT:
   If the value is unavailable (e.g. if the API endpoint is down), it will default to zero.
 - If multiple transactions share the same nonce, the first transaction in the array will be selected to provide the default values.
 - No warnings will be shown if multiple transactions share the same nonce. It's recommended to first run a validation without interactive mode enabled!
-- Some parameters (e.g., `version`, `to`, `operation`) enforce valid options, but not all inputs are strictly validated.
-  Please double-check your entries before proceeding.
+- Parameters enforce format validation, but valid formatting does not guarantee that the values are semantically correct.
+  Please carefully verify all entries before proceeding.
 
 Enter the Safe multisig version (default: 1.3.0+L2):
 Enter the `to` address (default: 0x111CEEee040739fD91D29C34C33E6B3E112F2177):
