@@ -1548,6 +1548,15 @@ EOF
 		exit 1
 	fi
 
+	# The decoded "Method" and "Parameters" are provided by the Safe transaction service API.
+	if [[ -z "$interactive" && "$data" != "0x" ]]; then
+		cat <<EOF
+
+${YELLOW}IMPORTANT: The decoded "Method" and "Parameters" are provided by the Safe transaction service API and are not verified by this script.
+Always independently decode the transaction "Data" yourself before you sign!${RESET}
+EOF
+	fi
+
 	# Simulate the transaction locally with `cast call` and print its trace if an RPC URL is provided.
 	if [[ -n "$rpc_url" ]]; then
 		simulate_transaction "$address" \
