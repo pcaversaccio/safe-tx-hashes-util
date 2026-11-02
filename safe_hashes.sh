@@ -1297,8 +1297,8 @@ ${YELLOW}IMPORTANT:
   If the value is unavailable (e.g. if the API endpoint is down), it will default to zero.
 - If multiple transactions share the same nonce, the first transaction in the array will be selected to provide the default values.
 - No warnings will be shown if multiple transactions share the same nonce. It's recommended to first run a validation without interactive mode enabled!
-- Some parameters (e.g., \`version\`, \`to\`, \`operation\`) enforce valid options, but not all inputs are strictly validated.
-  Please double-check your entries before proceeding.${RESET}
+- Parameters enforce format validation, but valid formatting does not guarantee that the values are semantically correct.
+  Please carefully verify all entries before proceeding.${RESET}
 
 EOF
 		read -rp "Enter the Safe multisig version (default: $version): " user_version
