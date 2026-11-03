@@ -444,20 +444,6 @@ print_header() {
 	fi
 }
 
-# Remove terminal control characters from untrusted, service-provided strings before they
-# are displayed. `jq -r` decodes JSON escapes such as `\u001b`, so without this a crafted
-# API response could emit cursor-movement or screen-clearing sequences that rewrite the
-# transaction a signer is verifying. This covers C0 except newline (which cannot rewrite
-# earlier lines), DEL, and the UTF-8 encoded C1 range U+0080-U+009F (`\xc2\x80`-`\xc2\x9f`),
-# which VTE-based terminals interpret, e.g. U+008D (reverse index) and U+009D (OSC).
-# Only used for the decoded fields; the scalar transaction fields are format-validated
-# instead, so control characters are rejected there.
-sanitize_untrusted() {
-	local LC_ALL=C
-	local value=$(tr -d '\000-\011\013-\037\177' <<<"$1")
-	printf "%s" "${value//$'\xc2'[$'\x80'-$'\x9f']/}"
-}
-
 # Utility function to print a labelled value.
 print_field() {
 	local label="$1"
@@ -575,10 +561,16 @@ print_decoded_data() {
 		print_field "Method" "Unavailable in interactive mode"
 		print_field "Parameters" "Unavailable in interactive mode"
 	else
-		local method=$(sanitize_untrusted "$(echo "$data_decoded" | jq -r ".method")")
-		# Without `-r`, `jq` JSON-encodes strings, which escapes C0 control characters but not
-		# C1, and keeps its own line breaks, so the parameters stay readable.
-		local parameters=$(sanitize_untrusted "$(echo "$data_decoded" | jq ".parameters")")
+		local method=$(echo "$data_decoded" | jq -r ".method")
+		# The decoded `method` is a function name, so only accept a valid identifier. This also
+		# rejects newlines, which would otherwise allow injecting forged output lines.
+		if [[ ! "$method" =~ ^[A-Za-z0-9_$]+$ ]]; then
+			printf "%s\n" "${BOLD}${RED}Invalid decoded \`method\` \"${method//[^[:print:]]/?}\" returned by the Safe transaction service API!${RESET}" >&2
+			exit 1
+		fi
+		# `jq` JSON-encodes strings, which escapes C0 control characters, and `-a` additionally escapes
+		# all non-ASCII characters (including C1, bidi overrides, and zero-width characters) as `\uXXXX`.
+		local parameters=$(echo "$data_decoded" | jq -a ".parameters")
 
 		print_field "Method" "$method"
 		print_field "Parameters" "$parameters"
