@@ -1024,6 +1024,13 @@ validate_message_file() {
 		echo -e "${BOLD}${RED}Message file is empty: \"${message_file}\"!${RESET}" >&2
 		exit 1
 	fi
+	# Reject terminal control characters (C0 except tab, LF, and CR; DEL; and the UTF-8 encoded
+	# C1 range U+0080-U+009F), which could rewrite the displayed message while the hash is
+	# computed over the real bytes. Other non-ASCII characters are valid message content.
+	if LC_ALL=C grep -aqE $'[\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\xc2[\x80-\x9f]' "$message_file"; then
+		echo -e "${BOLD}${RED}Message file \"${message_file}\" contains terminal control characters!${RESET}" >&2
+		exit 1
+	fi
 }
 
 # Utility function to calculate the domain and message hashes for off-chain messages.
