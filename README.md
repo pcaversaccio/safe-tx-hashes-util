@@ -351,6 +351,9 @@ WARNING: The "addOwnerWithThreshold" function modifies the owners or threshold o
 Domain hash: 0x1CF7F9B1EFE3BC47FE02FD27C649FEA19E79D66040683A1C86C7490C80BF7291
 Message hash: 0xD9109EA63C50ECD3B80B6B27ED5C5A9FD3D546C2169DFB69BFA7BA24CD14C7A5
 Safe transaction hash: 0x0cb7250b8becd7069223c54e2839feaed4cee156363fbfe5dd0a48e75c4e25b3
+
+IMPORTANT: The decoded "Method" and "Parameters" are provided by the Safe transaction service API and are not verified by this script.
+Always independently decode the transaction "Data" yourself before you sign!
 ```
 
 > To see an example of a standard ETH transfer, run the command: `./safe_hashes.sh --network ethereum --address 0x8FA3b4570B4C96f8036C13b64971BA65867eEB48 --nonce 39` and review the output.
@@ -373,7 +376,7 @@ When using `--interactive` mode, you will be prompted to provide values for vari
 - Leaving a parameter empty will use the value retrieved from the Safe transaction service API, displayed as the "default value". If the value is unavailable (e.g. if the API endpoint is down), it will default to zero.
 - If multiple transactions share the same nonce, the first transaction in the array will be selected to provide the default values.
 - **No warnings will be shown if multiple transactions share the same nonce.** It's recommended to first run a validation without interactive mode enabled!
-- Some parameters (e.g., `version`, `to`, `operation`) enforce valid options, but not all inputs are strictly validated. **Please double-check your entries before proceeding.**
+- Parameters enforce format validation, but valid formatting does not guarantee that the values are semantically correct. **Please carefully verify all entries before proceeding.**
 
 As an example, invoke the following command:
 
@@ -393,8 +396,8 @@ IMPORTANT:
   If the value is unavailable (e.g. if the API endpoint is down), it will default to zero.
 - If multiple transactions share the same nonce, the first transaction in the array will be selected to provide the default values.
 - No warnings will be shown if multiple transactions share the same nonce. It's recommended to first run a validation without interactive mode enabled!
-- Some parameters (e.g., `version`, `to`, `operation`) enforce valid options, but not all inputs are strictly validated.
-  Please double-check your entries before proceeding.
+- Parameters enforce format validation, but valid formatting does not guarantee that the values are semantically correct.
+  Please carefully verify all entries before proceeding.
 
 Enter the Safe multisig version (default: 1.3.0+L2):
 Enter the `to` address (default: 0x111CEEee040739fD91D29C34C33E6B3E112F2177):
@@ -467,6 +470,9 @@ The [script](./safe_hashes.sh) produces the following output:
 Domain hash: 0x58122EA8F001782FACC66EE5495A6B8B29730FADF352D8608CA86BD31569FCF5
 Message hash: 0xE992E061576268328FAC9175D6AEA3DEFD4C3BEF83A0C6FE08F6AA5A222CBC45
 Safe transaction hash: 0x27a0c4abf624b15b776f544a4b31ed4d50dee2b677c6497fbadf4f7a73be705e
+
+IMPORTANT: The decoded "Method" and "Parameters" are provided by the Safe transaction service API and are not verified by this script.
+Always independently decode the transaction "Data" yourself before you sign!
 
 ==========================
 = Transaction Simulation =
@@ -606,6 +612,9 @@ Parameters: [
 Domain hash: 0x55F6C329A7834E2A4E789F5526F328FA75D14FE75B97B0001BE40CAF46CA92A1
 Message hash: 0xCD411EE5D49344391EF8D37B76E19DFACF505BBB20E856AC907ACB5958ECBDF0
 Safe transaction hash: 0x86eb3f93f2670d119a4ecb8eeaa4dafe31a28abcafe06688d47e195a3dd7abb0
+
+IMPORTANT: The decoded "Method" and "Parameters" are provided by the Safe transaction service API and are not verified by this script.
+Always independently decode the transaction "Data" yourself before you sign!
 ```
 
 The nested Safe `approveHash` transaction is constructed with the following parameters:
