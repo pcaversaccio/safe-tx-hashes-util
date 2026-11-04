@@ -578,8 +578,8 @@ print_decoded_data() {
 			printf "%s\n" "${BOLD}${RED}Invalid decoded \`method\` \"${method//[^[:print:]]/?}\" returned by the Safe transaction service API!${RESET}" >&2
 			exit 1
 		fi
-		# `jq` JSON-encodes strings, which escapes C0 control characters, and `-a` additionally escapes
-		# all non-ASCII characters (including C1, bidi overrides, and zero-width characters) as `\uXXXX`.
+		# `jq` JSON-encodes strings, which escapes `C0` control characters, and `-a` additionally escapes
+		# all non-ASCII characters (including `C1`, `BiDi` controls, and zero-width characters) as `\uXXXX`.
 		local parameters=$(echo "$data_decoded" | jq -a ".parameters")
 
 		print_field "Method" "$method"
