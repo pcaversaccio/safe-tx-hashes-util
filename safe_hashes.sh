@@ -572,7 +572,15 @@ print_decoded_data() {
 		print_field "Parameters" "Unavailable in interactive mode"
 	else
 		local method=$(echo "$data_decoded" | jq -r ".method")
-		local parameters=$(echo "$data_decoded" | jq -r ".parameters")
+		# The decoded `method` is a function name, so only accept a valid identifier. This also
+		# rejects newlines, which would otherwise allow injecting forged output lines.
+		if [[ ! "$method" =~ ^[A-Za-z0-9_$]+$ ]]; then
+			printf "%s\n" "${BOLD}${RED}Invalid decoded \`method\` \"${method//[^[:print:]]/?}\" returned by the Safe transaction service API!${RESET}" >&2
+			exit 1
+		fi
+		# `jq` JSON-encodes strings, which escapes `C0` control characters, and `-a` additionally escapes
+		# all non-ASCII characters (including `C1`, `BiDi` controls, and zero-width characters) as `\uXXXX`.
+		local parameters=$(echo "$data_decoded" | jq -a ".parameters")
 
 		print_field "Method" "$method"
 		print_field "Parameters" "$parameters"
@@ -1024,6 +1032,13 @@ validate_message_file() {
 	fi
 	if [[ ! -s "$message_file" ]]; then
 		echo -e "${BOLD}${RED}Message file is empty: \"${message_file}\"!${RESET}" >&2
+		exit 1
+	fi
+	# Reject terminal control characters (`C0` except tab, `LF`, and `CR`; `DEL`; and the UTF-8
+	# encoded `C1` range `U+0080-U+009F`), which could rewrite the displayed message while the
+	# hash is computed over the real bytes. Other non-ASCII characters are valid message content.
+	if LC_ALL=C grep -aqE $'[\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\xc2[\x80-\x9f]' "$message_file"; then
+		echo -e "${BOLD}${RED}Message file \"${message_file}\" contains terminal control characters!${RESET}" >&2
 		exit 1
 	fi
 }
