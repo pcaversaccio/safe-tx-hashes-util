@@ -692,6 +692,9 @@ Safe message hash: 0x1866b559f56261ada63528391b93a1fe8e2e33baf7cace94fc6b42202d1
 ```
 
 > [!NOTE]
+> The [script](./safe_hashes.sh) rejects message files that contain terminal control characters (`C0` control characters other than tab, line feed (`LF`), and carriage return (`CR`), `DEL`, and the UTF-8 encoded `C1` range `U+0080` to `U+009F`), as they could rewrite the displayed message while the hashes are computed over the real bytes. Other non-ASCII characters are valid message content. **A UTF-8 terminal is assumed**: stray 8-bit control bytes (`0x80` to `0x9f`) that are not part of a valid UTF-8 sequence are _not_ rejected, so terminals running in 8-bit control mode are not supported.
+
+> [!NOTE]
 > The `--interactive` mode is not supported when calculating Safe message hashes. If using a nested Safe as the signer for the primary message, you must provide the `--nested-safe-address` argument along with the other parameters to retrieve the additional computed hashes for the nested Safe.
 
 ## Trust Assumptions
