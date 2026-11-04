@@ -1575,7 +1575,10 @@ EOF
 	fi
 
 	# The decoded "Method" and "Parameters" are provided by the Safe transaction service API.
-	if [[ -z "$interactive" && "$data" != "0x" ]]; then
+	# Always display the warning for nested Safe transactions because of the `approveHash` transaction.
+	# Only check `nested_safe_address` because the preceding validation ensures that both nested Safe
+	# parameters are provided together.
+	if [[ -z "$interactive" && ("$data" != "0x" || -n "$nested_safe_address") ]]; then
 		cat <<EOF
 
 ${YELLOW}IMPORTANT: The decoded "Method" and "Parameters" are provided by the Safe transaction service API and are not verified by this script.
