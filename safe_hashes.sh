@@ -1581,8 +1581,7 @@ EOF
 	if [[ -z "$interactive" && ("$data" != "0x" || -n "$nested_safe_address") ]]; then
 		cat <<EOF
 
-${YELLOW}IMPORTANT: The decoded "Method" and "Parameters" are provided by the Safe transaction service API and are not verified by this script.
-Always independently decode the transaction "Data" yourself before you sign!${RESET}
+${YELLOW}IMPORTANT: The decoded "Method" and "Parameters" are provided by the Safe transaction service API and are not verified by this script. Always independently decode the transaction "Data" yourself before you sign!${RESET}
 EOF
 	fi
 
